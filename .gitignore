@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.env
+*.pyc
+db.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+log/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Local development
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Dependencies
+node_modules/

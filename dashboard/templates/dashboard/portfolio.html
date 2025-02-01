@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | Stock Market Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="portfolio.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="navbar">
+            <h1> Stock Dashboard</h1>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="live-stocks.html">Live Stocks</a>
+                <a href="features.html">Features</a>
+                <a href="portfolio.html" class="active">Portfolio</a>
+                <a href="trending stocks.html">Trending Stocks</a>
+                <a href="login.html" class="login-btn">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="portfolio-container">
+        <!-- Portfolio Overview -->
+        <section class="portfolio-overview">
+            <h2>Portfolio Overview</h2>
+            <div class="overview-cards">
+                <div class="overview-card total-value">
+                    <i class="fas fa-wallet"></i>
+                    <div class="card-content">
+                        <h3>Total Value</h3>
+                        <div class="value">₹15,45,678</div>
+                        <div class="change up">
+                            <i class="fas fa-arrow-up"></i>
+                            +₹12,450 (2.3%)
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric">
+                                <span class="metric-label">Day High</span>
+                                <span class="metric-value">₹15,68,920</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Day Low</span>
+                                <span class="metric-value">₹15,32,450</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-card day-gain">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="card-content">
+                        <h3>Today's Gain/Loss</h3>
+                        <div class="value">₹5,890</div>
+                        <div class="change up">
+                            <i class="fas fa-arrow-up"></i>
+                            +1.2%
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric">
+                                <span class="metric-label">Realized</span>
+                                <span class="metric-value">₹2,450</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Unrealized</span>
+                                <span class="metric-value">₹3,440</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-card total-investment">
+                    <i class="fas fa-coins"></i>
+                    <div class="card-content">
+                        <h3>Total Investment</h3>
+                        <div class="value">₹14,25,000</div>
+                        <div class="metrics-row">
+                            <div class="metric">
+                                <span class="metric-label">Stocks</span>
+                                <span class="metric-value">85%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Mutual Funds</span>
+                                <span class="metric-value">15%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-card returns">
+                    <i class="fas fa-chart-pie"></i>
+                    <div class="card-content">
+                        <h3>Overall Returns</h3>
+                        <div class="value">₹1,20,678</div>
+                        <div class="change up">
+                            <i class="fas fa-arrow-up"></i>
+                            +8.47%
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric">
+                                <span class="metric-label">XIRR</span>
+                                <span class="metric-value">12.5%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Absolute</span>
+                                <span class="metric-value">8.47%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfolio Analytics Section -->
+        <section class="portfolio-analytics">
+            <h2>Portfolio Analytics</h2>
+            <div class="analytics-grid">
+                <div class="analytics-card risk-metrics">
+                    <h3>Risk Metrics</h3>
+                    <div class="risk-meter">
+                        <div class="risk-level" style="width: 65%"></div>
+                        <div class="risk-labels">
+                            <span>Low</span>
+                            <span>Medium</span>
+                            <span>High</span>
+                        </div>
+                    </div>
+                    <div class="metrics-list">
+                        <div class="metric-item">
+                            <span>Beta</span>
+                            <span>1.2</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>Sharpe Ratio</span>
+                            <span>1.8</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>Alpha</span>
+                            <span>3.5%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card diversification">
+                    <h3>Diversification Score</h3>
+                    <div class="score-circle">
+                        <svg viewBox="0 0 36 36">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4a90e2" stroke-width="2" stroke-dasharray="75, 100"/>
+                            <text x="18" y="20" text-anchor="middle" fill="#ffffff">75%</text>
+                        </svg>
+                    </div>
+                    <div class="recommendations">
+                        <p>Suggestions to improve:</p>
+                        <ul>
+                            <li>Consider adding international stocks</li>
+                            <li>Increase mid-cap exposure</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="analytics-card performance-comparison">
+                    <h3>Benchmark Comparison</h3>
+                    
+                    <div class="benchmark-metrics">
+                        <div class="metric-item">
+                            <span>Portfolio</span>
+                            <span class="up">+12.5%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>NIFTY 50</span>
+                            <span class="up">+10.2%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>SENSEX</span>
+                            <span class="up">+8.7%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>Bank NIFTY</span>
+                            <span class="down">-1.3%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>Gold</span>
+                            <span class="up">+6.2%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>Crude Oil</span>
+                            <span class="down">-2.8%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span>USD/INR</span>
+                            <span class="up">+0.5%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfolio Insights Section -->
+        <section class="portfolio-insights">
+            <h2>Smart Insights</h2>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="insight-content">
+                        <h4>Overweight in IT Sector</h4>
+                        <p>Your IT sector allocation is 35%, consider rebalancing to reduce concentration risk.</p>
+                        <a href="#" class="insight-action">View Details</a>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="insight-content">
+                        <h4>Dividend Opportunity</h4>
+                        <p>3 stocks in your portfolio have upcoming dividend announcements.</p>
+                        <a href="#" class="insight-action">Track Dividends</a>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="insight-content">
+                        <h4>Risk Alert</h4>
+                        <p>High volatility detected in 2 stocks. Consider setting stop-loss orders.</p>
+                        <a href="#" class="insight-action">Manage Risk</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfolio Performance Chart -->
+        <section class="portfolio-performance">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2>Portfolio Performance</h2>
+                    <div class="chart-controls">
+                        <button class="time-filter active">1D</button>
+                        <button class="time-filter">1W</button>
+                        <button class="time-filter">1M</button>
+                        <button class="time-filter">3M</button>
+                        <button class="time-filter">1Y</button>
+                        <button class="time-filter">ALL</button>
+                    </div>
+                </div>
+                <canvas id="portfolioChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Holdings Section -->
+        <section class="holdings-section">
+            <div class="section-header">
+                <h2>Your Holdings</h2>
+                <div class="holdings-controls">
+                    <button id="addStockBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Add Stock
+                    </button>
+                    <div class="filter-group">
+                        <input type="text" placeholder="Search stocks..." id="stockSearch">
+                        <select id="sortHoldings">
+                            <option value="alphabetical">A-Z</option>
+                            <option value="value">Value: High to Low</option>
+                            <option value="returns">Returns: High to Low</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="holdings-table-container">
+                <table class="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>Stock <i class="fas fa-sort"></i></th>
+                            <th>Quantity <i class="fas fa-sort"></i></th>
+                            <th>Avg. Cost <i class="fas fa-sort"></i></th>
+                            <th>LTP <i class="fas fa-sort"></i></th>
+                            <th>Current Value <i class="fas fa-sort"></i></th>
+                            <th>P&L <i class="fas fa-sort"></i></th>
+                            <th>Net Returns <i class="fas fa-sort"></i></th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holdingsTableBody">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Portfolio Analysis -->
+        <!--<section class="portfolio-analysis">
+            <div class="analysis-grid">
+                <div class="analysis-card sector-distribution">
+                    <h3>Sector Distribution</h3>
+                    <canvas id="sectorChart"></canvas>
+                </div>
+                <div class="analysis-card risk-analysis">
+                    <h3>Risk Analysis</h3>
+                    <div class="risk-meter">
+                        <div class="risk-indicator" style="width: 65%;"></div>
+                    </div>
+                    <div class="risk-labels">
+                        <span>Low Risk</span>
+                        <span>Moderate</span>
+                        <span>High Risk</span>
+                    </div>
+                    <div class="risk-stats">
+                        <div class="stat">
+                            <label>Beta</label>
+                            <value>1.2</value>
+                        </div>
+                        <div class="stat">
+                            <label>Volatility</label>
+                            <value>15.4%</value>
+                        </div>
+                        <div class="stat">
+                            <label>Sharpe Ratio</label>
+                            <value>1.8</value>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>-->
+        <div class="sector-distribution">
+            <div class="sector-header">Sector Distribution</div>
+            <div class="sector-chart-container">
+                <div class="sector-bars">
+                    <div class="sector-bar sector-it" style="width: 30%"></div>
+                    <div class="sector-bar sector-banking" style="width: 25%"></div>
+                    <div class="sector-bar sector-pharma" style="width: 15%"></div>
+                    <div class="sector-bar sector-auto" style="width: 20%"></div>
+                    <div class="sector-bar sector-fmcg" style="width: 10%"></div>
+                </div>
+            </div>
+            <div class="sector-legend">
+                <div class="legend-item">
+                    <span class="legend-color sector-it"></span>
+                    <span>IT (30%)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color sector-banking"></span>
+                    <span>Banking (25%)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color sector-pharma"></span>
+                    <span>Pharma (15%)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color sector-auto"></span>
+                    <span>Auto (20%)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color sector-fmcg"></span>
+                    <span>FMCG (10%)</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Stock Modal -->
+    <div id="addStockModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Stock</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addStockForm">
+                <div class="form-group">
+                    <label>Stock Symbol</label>
+                    <input type="text" id="stockSymbol" required>
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="quantity" required>
+                </div>
+                <div class="form-group">
+                    <label>Purchase Price</label>
+                    <input type="number" id="purchasePrice" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Purchase Date</label>
+                    <input type="date" id="purchaseDate" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelAdd">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2024 Stock Dashboard. All rights reserved.</p>
+        <p><a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a></p>
+    </footer>
+
+    <script src="portfolio.js"></script>
+</body>
+</html> 

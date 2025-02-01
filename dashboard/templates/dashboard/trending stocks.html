@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trending Stocks | Stock Market Dashboard</title>
+    <link rel="stylesheet" href="trending-stocks.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="navbar">
+            <h1><i class="fas fa-chart-line"></i>Stock Dashboard</h1>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="live-stocks.html">Live Stocks</a>
+                <a href="features.html">Features</a>
+                <a href="portfolio.html">Portfolio</a>
+                <a href="trending stocks.html">Trending Stocks</a>
+                <a href="login.html" class="login-btn">Login</a>
+              </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="trending-stocks">
+            <h1>Trending Stocks Today</h1>
+            <p class="description">View the most trending stocks today based on key metrics.</p>
+
+            <div class="filters">
+                <select id="categoryFilter" onchange="filterCategory()">
+                    <option value="all">All Categories</option>
+                    <option value="gainers">Top Gainers</option>
+                    <option value="losers">Top Losers</option>
+                    <option value="traded">Most Traded</option>
+                    <option value="52high">52 Week High</option>
+                    <option value="52low">52 Week Low</option>
+                </select>
+                <div class="search-box">
+                    <input type="text" id="searchStocks" placeholder="Search stocks..." onkeyup="searchStocks()">
+                </div>
+            </div>
+
+            <!-- Top Gainers Table -->
+            <div class="stock-section" id="gainers">
+                <h2>Top Gainers</h2>
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Company Name</th>
+                            <th>LTP</th>
+                            <th>Change</th>
+                            <th>Volume</th>
+                            <th>Market Cap</th>
+                            <th>P/E Ratio</th>
+                            <th>52W High</th>
+                            <th>52W Low</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gainers-body">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Top Losers Table -->
+            <div class="stock-section" id="losers">
+                <h2>Top Losers</h2>
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Company Name</th>
+                            <th>LTP</th>
+                            <th>Change</th>
+                            <th>Volume</th>
+                            <th>Market Cap</th>
+                            <th>P/E Ratio</th>
+                            <th>52W High</th>
+                            <th>52W Low</th>
+                        </tr>
+                    </thead>
+                    <tbody id="losers-body">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Most Traded Table -->
+            <div class="stock-section" id="most-traded">
+                <h2>Most Traded</h2>
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Company Name</th>
+                            <th>LTP</th>
+                            <th>Change</th>
+                            <th>Volume</th>
+                            <th>Market Cap</th>
+                            <th>P/E Ratio</th>
+                            <th>52W High</th>
+                            <th>52W Low</th>
+                        </tr>
+                    </thead>
+                    <tbody id="most-traded-body">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Market Sentiment Section -->
+            <div class="market-sentiment">
+                <h2>Market Sentiment</h2>
+                <div class="sentiment-grid">
+                    <div class="sentiment-card">
+                        <div class="sentiment-header">
+                            <i class="fas fa-chart-pie"></i>
+                            <h3>Market Breadth</h3>
+                        </div>
+                        <div class="breadth-stats">
+                            <div class="stat-item advance">
+                                <span class="label">Advancing</span>
+                                <span class="value">1,234</span>
+                            </div>
+                            <div class="stat-item decline">
+                                <span class="label">Declining</span>
+                                <span class="value">856</span>
+                            </div>
+                            <div class="stat-item unchanged">
+                                <span class="label">Unchanged</span>
+                                <span class="value">123</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sentiment-card">
+                        <div class="sentiment-header">
+                            <i class="fas fa-signal"></i>
+                            <h3>Volatility Index</h3>
+                        </div>
+                        <div class="vix-meter">
+                            <div class="vix-value">16.24</div>
+                            <div class="vix-change down">-0.45 (-2.7%)</div>
+                            <div class="vix-scale">
+                                <span>Low</span>
+                                <span>Moderate</span>
+                                <span>High</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="market-movers">
+                <h2>Sector Performance</h2>
+                <div class="sector-performance">
+                    <div class="sector-grid">
+            <div class="sector-performance-container">
+                <div class="sector-item">
+                  <h3>Information Technology</h3>
+                  <p>Performance: <span class="positive">+2.45%</span></p>
+                  <p>Volume: 145.2M</p>
+                  <p>Top Companies: TCS, Infosys, HCL</p>
+                </div>
+                <div class="sector-item">
+                  <h3>Automobile</h3>
+                  <p>Performance: <span class="positive">+0.95%</span></p>
+                  <p>Volume: -</p>
+                  <p>Top Companies: -</p>
+                </div>
+                <div class="sector-item">
+                  <h3>Banking & Finance</h3>
+                  <p>Performance: <span class="negative">-1.23%</span></p>
+                  <p>Volume: 234.8M</p>
+                  <p>Top Companies: HDFC, ICICI, SBI</p>
+                </div>
+                <div class="sector-item">
+                  <h3>FMCG</h3>
+                  <p>Performance: <span class="negative">-0.56%</span></p>
+                  <p>Volume: -</p>
+                  <p>Top Companies: -</p>
+                </div>
+                <div class="sector-item">
+                  <h3>Pharmaceuticals</h3>
+                  <p>Performance: <span class="positive">+1.87%</span></p>
+                  <p>Volume: 98.5M</p>
+                  <p>Top Companies: Sun Pharma, Dr Reddy's</p>
+                </div>
+                <div class="sector-item">
+                  <h3>Manufacturing</h3>
+                  <p>Performance: <span class="positive">+1.34%</span></p>
+                  <p>Volume: -</p>
+                  <p>Top Companies: -</p>
+                </div>
+                <div class="sector-item">
+                  <h3>Energy</h3>
+                  <p>Performance: <span class="negative">-0.89%</span></p>
+                  <p>Volume: 189.2M</p>
+                  <p>Top Companies: Reliance, ONGC</p>
+                </div>
+                <div class="sector-item">
+                  <h3>Retail</h3>
+                  <p>Performance: <span class="positive">+0.78%</span></p>
+                  <p>Volume: 121.6M</p>
+                  <p>Top Companies: Future Group, DMart</p>
+                </div>
+                <div class="sector-item">
+                  <h3>Telecommunications</h3>
+                  <p>Performance: <span class="negative">-1.45%</span></p>
+                  <p>Volume: 78.9M</p>
+                  <p>Top Companies: Airtel, Jio, BSNL</p>
+                </div>
+              </div>
+              
+              
+            <!-- Market Analysis Section -->
+            <div class="market-analysis">
+                <h2>Market Analysis</h2>
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <div class="card-header">
+                            <i class="fas fa-globe"></i>
+                            <h3>Global Markets Impact</h3>
+                        </div>
+                        <div class="market-indicators">
+                            <div class="indicator">
+                                <span>DOW</span>
+                                <span class="value up">+1.2%</span>
+                            </div>
+                            <div class="indicator">
+                                <span>NASDAQ</span>
+                                <span class="value up">+0.8%</span>
+                            </div>
+                            <div class="indicator">
+                                <span>FTSE</span>
+                                <span class="value down">-0.3%</span>
+                            </div>
+                            <div class="indicator">
+                                <span>S&P 500</span>
+                                <span class="value up">+0.5%</span>
+                            </div>
+                            <div class="indicator">
+                                <span>Hang Seng</span>
+                                <span class="value down">-1.1%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-bar"></i>
+                            <h3>Market Depth</h3>
+                        </div>
+                        
+                        <!-- Add Market Summary above chart -->
+                        <div class="market-summary">
+                            <div class="summary-item">
+                                <span class="label">Total Buy Orders</span>
+                                <span class="value positive">₹2,45,678 Cr</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Total Sell Orders</span>
+                                <span class="value negative">₹2,12,345 Cr</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Buy-Sell Ratio</span>
+                                <span class="value">1.16</span>
+                            </div>
+                        </div>
+                        <!-- Add Order Book below chart -->
+                        <div class="order-book">
+                            <div class="order-column buy">
+                                <h4>Buy Orders</h4>
+                                <div class="order-list">
+                                    <div class="order-item">
+                                        <span class="price">₹3,456.70</span>
+                                        <span class="quantity">1,245</span>
+                                    </div>
+                                    <div class="order-item">
+                                        <span class="price">₹3,455.90</span>
+                                        <span class="quantity">2,367</span>
+                                    </div>
+                                    <div class="order-item">
+                                        <span class="price">₹3,455.20</span>
+                                        <span class="quantity">1,890</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="order-column sell">
+                                <h4>Sell Orders</h4>
+                                <div class="order-list">
+                                    <div class="order-item">
+                                        <span class="price">₹3,457.30</span>
+                                        <span class="quantity">1,678</span>
+                                    </div>
+                                    <div class="order-item">
+                                        <span class="price">₹3,458.10</span>
+                                        <span class="quantity">2,123</span>
+                                    </div>
+                                    <div class="order-item">
+                                        <span class="price">₹3,458.80</span>
+                                        <span class="quantity">1,456</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Indicators Section -->
+            <div class="technical-indicators">
+                <h2>Technical Indicators</h2>
+                <div class="indicators-grid">
+                    <div class="indicator-card">
+                        <h3>Moving Averages</h3>
+                        <div class="ma-signals">
+                            <div class="signal">
+                                <span>MA20</span>
+                                <span class="value">17,856.45</span>
+                                <span class="trend up">Above</span>
+                            </div>
+                            <div class="signal">
+                                <span>MA50</span>
+                                <span class="value">17,234.89</span>
+                                <span class="trend up">Above</span>
+                            </div>
+                            <div class="signal">
+                                <span>MA200</span>
+                                <span class="value">16,789.32</span>
+                                <span class="trend up">Above</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="indicator-card">
+                        <h3>Momentum Indicators</h3>
+                        <div class="momentum-signals">
+                            <div class="signal">
+                                <span>RSI (14)</span>
+                                <span class="value">62.5</span>
+                                <span class="status neutral">Neutral</span>
+                            </div>
+                            <div class="signal">
+                                <span>MACD</span>
+                                <span class="value">+125.45</span>
+                                <span class="status bullish">Bullish</span>
+                            </div>
+                            <div class="signal">
+                                <span>Stochastic</span>
+                                <span class="value">78.34</span>
+                                <span class="status bullish">Bullish</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market News Section -->
+            <div class="market-news">
+                <h2>Latest Market News</h2>
+                <div class="news-grid">
+                    <div class="news-card">
+                        <div class="news-time">10:30 AM</div>
+                        <h4>Nifty IT Index Surges 2% Led by Major Tech Stocks</h4>
+                        <p>Major IT companies show strong momentum following positive global cues...</p>
+                        <a href="#" class="read-more">Read More</a>
+                    </div>
+                    <div class="news-card">
+                        <div class="news-time">11:15 AM</div>
+                        <h4>Banking Sector Witnesses Profit Booking</h4>
+                        <p>Banking stocks face selling pressure after recent rally...</p>
+                        <a href="#" class="read-more">Read More</a>
+                    </div>
+                    <div class="news-card">
+                        <div class="news-time">12:00 PM</div>
+                        <h4>FII Activity Shows Strong Buying Interest</h4>
+                        <p>Foreign institutional investors continue their buying spree...</p>
+                        <a href="#" class="read-more">Read More</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2024 Stock Dashboard. All rights reserved.</p>
+        <p>
+            <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
+        </p>
+    </footer>
+
+    <script>
+        // Sample data structure for real-time updates
+        const stockData = {
+            gainers: [
+                {
+                    name: "Apollo Hospitals",
+                    ltp: "7,400.80",
+                    change: "+1.43%",
+                    volume: "1.2M",
+                    marketCap: "106,245",
+                    pe: "75.4",
+                    high52: "7,590.00",
+                    low52: "4,120.00"
+                },
+                {
+                    name: "Asian Paints",
+                    ltp: "2,298.55",
+                    change: "+0.75%",
+                    volume: "890K",
+                    marketCap: "220,456",
+                    pe: "68.2",
+                    high52: "2,456.00",
+                    low52: "1,975.00"
+                },
+                {
+                    name: "Reliance Industries",
+                    ltp: "2,890.30",
+                    change: "+2.15%",
+                    volume: "3.4M",
+                    marketCap: "1,856,789",
+                    pe: "22.5",
+                    high52: "2,950.00",
+                    low52: "1,987.00"
+                },
+                {
+                    name: "HDFC Bank",
+                    ltp: "1,678.45",
+                    change: "+1.87%",
+                    volume: "2.1M",
+                    marketCap: "945,678",
+                    pe: "18.9",
+                    high52: "1,724.00",
+                    low52: "1,460.00"
+                },
+                {
+                    name: "TCS",
+                    ltp: "3,890.60",
+                    change: "+1.65%",
+                    volume: "980K",
+                    marketCap: "1,234,567",
+                    pe: "28.4",
+                    high52: "4,045.00",
+                    low52: "3,120.00"
+                },
+                {
+                    name: "Adani Ports",
+                    ltp: "892.45",
+                    change: "+3.21%",
+                    volume: "2.8M",
+                    marketCap: "189,567",
+                    pe: "24.6",
+                    high52: "915.00",
+                    low52: "545.00"
+                },
+                {
+                    name: "Bharti Airtel",
+                    ltp: "1,123.60",
+                    change: "+2.34%",
+                    volume: "1.5M",
+                    marketCap: "678,234",
+                    pe: "31.2",
+                    high52: "1,200.00",
+                    low52: "890.00"
+                },
+                {
+                    name: "HCL Tech",
+                    ltp: "1,567.80",
+                    change: "+1.98%",
+                    volume: "1.1M",
+                    marketCap: "456,789",
+                    pe: "26.8",
+                    high52: "1,600.00",
+                    low52: "1,100.00"
+                },
+                {
+                    name: "Titan Company",
+                    ltp: "3,456.75",
+                    change: "+2.45%",
+                    volume: "750K",
+                    marketCap: "345,678",
+                    pe: "82.4",
+                    high52: "3,500.00",
+                    low52: "2,800.00"
+                },
+                {
+                    name: "SBI",
+                    ltp: "678.90",
+                    change: "+1.76%",
+                    volume: "4.2M",
+                    marketCap: "567,890",
+                    pe: "12.5",
+                    high52: "710.00",
+                    low52: "490.00"
+                }
+            ],
+            losers: [
+                {
+                    name: "Bajaj Auto",
+                    ltp: "8,625.20",
+                    change: "-1.97%",
+                    volume: "456K",
+                    marketCap: "249,876",
+                    pe: "45.6",
+                    high52: "9,250.00",
+                    low52: "7,120.00"
+                },
+                {
+                    name: "Infosys",
+                    ltp: "1,456.75",
+                    change: "-2.34%",
+                    volume: "1.8M",
+                    marketCap: "678,234",
+                    pe: "24.3",
+                    high52: "1,785.00",
+                    low52: "1,230.00"
+                },
+                {
+                    name: "ITC Limited",
+                    ltp: "423.45",
+                    change: "-1.56%",
+                    volume: "2.5M",
+                    marketCap: "534,123",
+                    pe: "26.7",
+                    high52: "499.00",
+                    low52: "380.00"
+                },
+                {
+                    name: "Axis Bank",
+                    ltp: "987.30",
+                    change: "-1.89%",
+                    volume: "1.4M",
+                    marketCap: "345,678",
+                    pe: "16.8",
+                    high52: "1,154.00",
+                    low52: "875.00"
+                },
+                {
+                    name: "Wipro",
+                    ltp: "456.80",
+                    change: "-2.12%",
+                    volume: "1.1M",
+                    marketCap: "234,567",
+                    pe: "19.5",
+                    high52: "524.00",
+                    low52: "385.00"
+                },
+                {
+                    name: "ONGC",
+                    ltp: "234.56",
+                    change: "-2.67%",
+                    volume: "3.2M",
+                    marketCap: "289,567",
+                    pe: "8.9",
+                    high52: "280.00",
+                    low52: "210.00"
+                },
+                {
+                    name: "Coal India",
+                    ltp: "345.67",
+                    change: "-1.78%",
+                    volume: "2.7M",
+                    marketCap: "198,765",
+                    pe: "11.2",
+                    high52: "390.00",
+                    low52: "290.00"
+                },
+                {
+                    name: "UPL Limited",
+                    ltp: "567.89",
+                    change: "-3.21%",
+                    volume: "890K",
+                    marketCap: "145,678",
+                    pe: "15.6",
+                    high52: "650.00",
+                    low52: "480.00"
+                },
+                {
+                    name: "Tata Steel",
+                    ltp: "123.45",
+                    change: "-2.34%",
+                    volume: "5.6M",
+                    marketCap: "456,789",
+                    pe: "9.8",
+                    high52: "150.00",
+                    low52: "90.00"
+                },
+                {
+                    name: "M&M",
+                    ltp: "1,234.56",
+                    change: "-1.98%",
+                    volume: "980K",
+                    marketCap: "345,678",
+                    pe: "21.4",
+                    high52: "1,400.00",
+                    low52: "980.00"
+                }
+            ],
+            mostTraded: [
+                {
+                    name: "HDFC Bank",
+                    ltp: "1,678.45",
+                    change: "+1.87%",
+                    volume: "5.6M",
+                    marketCap: "945,678",
+                    pe: "18.9",
+                    high52: "1,724.00",
+                    low52: "1,460.00"
+                },
+                {
+                    name: "Reliance Industries",
+                    ltp: "2,890.30",
+                    change: "+2.15%",
+                    volume: "4.8M",
+                    marketCap: "1,856,789",
+                    pe: "22.5",
+                    high52: "2,950.00",
+                    low52: "1,987.00"
+                },
+                {
+                    name: "TCS",
+                    ltp: "3,890.60",
+                    change: "+1.65%",
+                    volume: "3.2M",
+                    marketCap: "1,234,567",
+                    pe: "28.4",
+                    high52: "4,045.00",
+                    low52: "3,120.00"
+                },
+                {
+                    name: "Infosys",
+                    ltp: "1,456.75",
+                    change: "-2.34%",
+                    volume: "3.1M",
+                    marketCap: "678,234",
+                    pe: "24.3",
+                    high52: "1,785.00",
+                    low52: "1,230.00"
+                },
+                {
+                    name: "ITC Limited",
+                    ltp: "423.45",
+                    change: "-1.56%",
+                    volume: "2.9M",
+                    marketCap: "534,123",
+                    pe: "26.7",
+                    high52: "499.00",
+                    low52: "380.00"
+                },
+                {
+                    name: "SBI",
+                    ltp: "678.90",
+                    change: "+1.76%",
+                    volume: "2.8M",
+                    marketCap: "567,890",
+                    pe: "12.5",
+                    high52: "710.00",
+                    low52: "490.00"
+                },
+                {
+                    name: "Axis Bank",
+                    ltp: "987.30",
+                    change: "-1.89%",
+                    volume: "2.7M",
+                    marketCap: "345,678",
+                    pe: "16.8",
+                    high52: "1,154.00",
+                    low52: "875.00"
+                },
+                {
+                    name: "Bharti Airtel",
+                    ltp: "1,123.60",
+                    change: "+2.34%",
+                    volume: "2.6M",
+                    marketCap: "678,234",
+                    pe: "31.2",
+                    high52: "1,200.00",
+                    low52: "890.00"
+                },
+                {
+                    name: "ICICI Bank",
+                    ltp: "945.30",
+                    change: "+0.87%",
+                    volume: "2.5M",
+                    marketCap: "789,012",
+                    pe: "19.8",
+                    high52: "980.00",
+                    low52: "780.00"
+                },
+                {
+                    name: "HUL",
+                    ltp: "2,567.80",
+                    change: "-0.45%",
+                    volume: "2.4M",
+                    marketCap: "654,321",
+                    pe: "65.4",
+                    high52: "2,800.00",
+                    low52: "2,200.00"
+                }
+            ],
+            week52High: [
+                {
+                    name: "Tata Motors",
+                    ltp: "987.65",
+                    change: "+0.87%",
+                    volume: "2.3M",
+                    marketCap: "456,789",
+                    pe: "21.4",
+                    high52: "990.00",
+                    low52: "567.00"
+                },
+                {
+                    name: "L&T",
+                    ltp: "3,456.78",
+                    change: "+1.23%",
+                    volume: "1.2M",
+                    marketCap: "789,123",
+                    pe: "32.1",
+                    high52: "3,460.00",
+                    low52: "2,345.00"
+                },
+                {
+                    name: "Adani Ports",
+                    ltp: "892.45",
+                    change: "+3.21%",
+                    volume: "2.8M",
+                    marketCap: "189,567",
+                    pe: "24.6",
+                    high52: "915.00",
+                    low52: "545.00"
+                },
+                {
+                    name: "Titan Company",
+                    ltp: "3,456.75",
+                    change: "+2.45%",
+                    volume: "750K",
+                    marketCap: "345,678",
+                    pe: "82.4",
+                    high52: "3,500.00",
+                    low52: "2,800.00"
+                },
+                {
+                    name: "Asian Paints",
+                    ltp: "2,298.55",
+                    change: "+0.75%",
+                    volume: "890K",
+                    marketCap: "220,456",
+                    pe: "68.2",
+                    high52: "2,456.00",
+                    low52: "1,975.00"
+                }
+            ],
+            week52Low: [
+                {
+                    name: "Tech Mahindra",
+                    ltp: "876.54",
+                    change: "-1.45%",
+                    volume: "980K",
+                    marketCap: "234,567",
+                    pe: "15.6",
+                    high52: "1,234.00",
+                    low52: "875.00"
+                },
+                {
+                    name: "Sun Pharma",
+                    ltp: "1,234.56",
+                    change: "-0.98%",
+                    volume: "750K",
+                    marketCap: "345,678",
+                    pe: "28.9",
+                    high52: "1,567.00",
+                    low52: "1,234.00"
+                },
+                {
+                    name: "Wipro",
+                    ltp: "456.80",
+                    change: "-2.12%",
+                    volume: "1.1M",
+                    marketCap: "234,567",
+                    pe: "19.5",
+                    high52: "524.00",
+                    low52: "385.00"
+                },
+                {
+                    name: "Coal India",
+                    ltp: "345.67",
+                    change: "-1.78%",
+                    volume: "2.7M",
+                    marketCap: "198,765",
+                    pe: "11.2",
+                    high52: "390.00",
+                    low52: "290.00"
+                },
+                {
+                    name: "UPL Limited",
+                    ltp: "567.89",
+                    change: "-3.21%",
+                    volume: "890K",
+                    marketCap: "145,678",
+                    pe: "15.6",
+                    high52: "650.00",
+                    low52: "480.00"
+                }
+            ]
+        };
+
+        // Function to update tables with real-time data
+        function updateTables() {
+            // Update Gainers
+            const gainersBody = document.getElementById('gainers-body');
+            gainersBody.innerHTML = stockData.gainers.map(stock => `
+                <tr>
+                    <td>${stock.name}</td>
+                    <td>₹${stock.ltp}</td>
+                    <td class="${stock.change.includes('+') ? 'green' : 'red'}">${stock.change}</td>
+                    <td>${stock.volume}</td>
+                    <td>${stock.marketCap}</td>
+                    <td>${stock.pe}</td>
+                    <td>${stock.high52}</td>
+                    <td>${stock.low52}</td>
+                </tr>
+            `).join('');
+
+            // Update Losers
+            const losersBody = document.getElementById('losers-body');
+            losersBody.innerHTML = stockData.losers.map(stock => `
+                <tr>
+                    <td>${stock.name}</td>
+                    <td>₹${stock.ltp}</td>
+                    <td class="red">${stock.change}</td>
+                    <td>${stock.volume}</td>
+                    <td>${stock.marketCap}</td>
+                    <td>${stock.pe}</td>
+                    <td>${stock.high52}</td>
+                    <td>${stock.low52}</td>
+                </tr>
+            `).join('');
+
+            // Update Most Traded
+            const mostTradedBody = document.getElementById('most-traded-body');
+            mostTradedBody.innerHTML = stockData.mostTraded.map(stock => `
+                <tr>
+                    <td>${stock.name}</td>
+                    <td>₹${stock.ltp}</td>
+                    <td class="${stock.change.includes('+') ? 'green' : 'red'}">${stock.change}</td>
+                    <td>${stock.volume}</td>
+                    <td>${stock.marketCap}</td>
+                    <td>${stock.pe}</td>
+                    <td>${stock.high52}</td>
+                    <td>${stock.low52}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Function to filter categories
+        function filterCategory() {
+            const category = document.getElementById('categoryFilter').value;
+            const sections = document.querySelectorAll('.stock-section');
+            
+            sections.forEach(section => {
+                if (category === 'all' || section.id === category) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        }
+
+        // Function to search stocks
+        function searchStocks() {
+            const searchText = document.getElementById('searchStocks').value.toLowerCase();
+            const rows = document.querySelectorAll('.stock-table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchText) ? '' : 'none';
+            });
+        }
+
+        // Initial load
+        updateTables();
+
+        // Update every 5 seconds (simulating real-time updates)
+        setInterval(updateTables, 5000);
+
+        // Initialize stock ticker
+        function initializeTicker() {
+            const tickerContent = document.getElementById('ticker-content');
+            tickerContent.innerHTML = `
+                <span class="up">NIFTY 50: 22,212.70 ▲ 0.45%</span>
+                <span class="down">SENSEX: 73,158.24 ▼ 0.32%</span>
+                <span class="up">BANK NIFTY: 46,785.90 ▲ 0.28%</span>
+            `;
+        }
+
+        initializeTicker();
+    </script>
+</body>
+</html>

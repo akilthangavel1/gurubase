@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Stocks | Stock Market Dashboard</title>
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Add Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="live-stocks.css">
+</head>
+<body>
+    
+    <!-- Header -->
+    <header>
+        <div class="navbar">
+            <h1> Stock Dashboard</h1>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="live-stocks.html">Live Stocks</a>
+                <a href="features.html">Features</a>
+                <a href="portfolio.html">Portfolio</a>
+                <a href="trending stocks.html">Trending Stocks</a>
+                <a href="login.html" class="login-btn">Login</a>
+              </nav>
+        </div>
+    </header>
+
+    <main class="live-stocks-container">
+        <!-- Market Overview -->
+        <section class="market-overview">
+            <h2><i class="fas fa-globe"></i> Market Overview</h2>
+            <div class="market-cards">
+                <div class="market-card">
+                    <h3>NIFTY 50</h3>
+                    <div class="price">19,674.25</div>
+                    <div class="change up">+1.23%</div>
+                    <div class="chart-mini"></div>
+                </div>
+                <div class="market-card">
+                    <h3>SENSEX</h3>
+                    <div class="price">65,987.32</div>
+                    <div class="change down">-0.45%</div>
+                    <div class="chart-mini"></div>
+                </div>
+                <div class="market-card">
+                    <h3>BANK NIFTY</h3>
+                    <div class="price">44,124.95</div>
+                    <div class="change up">+0.89%</div>
+                    <div class="chart-mini"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Stock Updates -->
+        <section class="live-updates">
+            <div class="section-header">
+                <h2><i class="fas fa-sync"></i> Live Stock Updates</h2>
+                <div class="last-updated">
+                    Last Updated: <span id="lastUpdated">Just now</span>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="stockSearch" placeholder="Search stocks...">
+                </div>
+                <div class="filter-options">
+                    <select id="sectorFilter">
+                        <option value="all">All Sectors</option>
+                        <option value="it">IT</option>
+                        <option value="banking">Banking</option>
+                        <option value="auto">Auto</option>
+                        <option value="pharma">Pharma</option>
+                    </select>
+                    <select id="marketCapFilter">
+                        <option value="all">All Market Caps</option>
+                        <option value="large">Large Cap</option>
+                        <option value="mid">Mid Cap</option>
+                        <option value="small">Small Cap</option>
+                    </select>
+                </div>
+                <div class="view-options">
+                    <button class="active" data-view="table">
+                        <i class="fas fa-table"></i> Table
+                    </button>
+                    <button data-view="grid">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                </div>
+            </div>
+
+            <div class="stocks-table-container">
+                <table class="stocks-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol <i class="fas fa-sort"></i></th>
+                            <th>Company <i class="fas fa-sort"></i></th>
+                            <th>LTP <i class="fas fa-sort"></i></th>
+                            <th>Change <i class="fas fa-sort"></i></th>
+                            <th>Volume <i class="fas fa-sort"></i></th>
+                            <th>52W High <i class="fas fa-sort"></i></th>
+                            <th>52W Low <i class="fas fa-sort"></i></th>
+                            <th>Market Cap <i class="fas fa-sort"></i></th>
+                            <th>P/E <i class="fas fa-sort"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="stocksTableBody">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Grid View (hidden by default) -->
+            <div class="stocks-grid-container" style="display: none;">
+                <div id="stocksGrid" class="stocks-grid">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Depth -->
+        <section class="market-depth">
+            <h2><i class="fas fa-layer-group"></i> Market Depth</h2>
+            <div id="selectedStockDepth" class="depth-container">
+                <div class="buy-orders">
+                    <h3><i class="fas fa-arrow-down"></i> Buy Orders</h3>
+                    <div class="depth-data" id="buyDepth"></div>
+                </div>
+                <div class="sell-orders">
+                    <h3><i class="fas fa-arrow-up"></i> Sell Orders</h3>
+                    <div class="depth-data" id="sellDepth"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2024 Stock Dashboard. All rights reserved.</p>
+        <p><a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a></p>
+    </footer>
+
+    <script src="live-stocks.js"></script>
+</body>
+</html> 

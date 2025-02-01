@@ -1,0 +1,57 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Historical Data</h2>
+    
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    {% if data %}
+        {% for ticker, ticker_data in data.items %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>{{ ticker }}</h3>
+            </div>
+            <div class="card-body">
+                {% if ticker_data %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>DateTime</th>
+                                <th>Open</th>
+                                <th>High</th>
+                                <th>Low</th>
+                                <th>Close</th>
+                                <th>Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in ticker_data %}
+                            <tr>
+                                <td>{{ row.datetime|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ row.open_price }}</td>
+                                <td>{{ row.high_price }}</td>
+                                <td>{{ row.low_price }}</td>
+                                <td>{{ row.close_price }}</td>
+                                <td>{{ row.volume }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No data available for this ticker.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">No historical data available.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}GuruBase - Home{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">Welcome to GuruBase</h1>
+        <p class="lead mb-4">Your personal stock market analysis platform</p>
+    </div>
+</div>
+
+<div class="row g-4 py-3">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Stock Screener</h5>
+                <p class="card-text">Scan and filter stocks based on your custom criteria.</p>
+                <a href="{% url 'live-stocks' %}" class="btn btn-primary">Open Screener</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Portfolio Management</h5>
+                <p class="card-text">Manage and track your stock portfolio performance.</p>
+                <a href="{% url 'portfolio' %}" class="btn btn-primary">View Portfolio</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Getting Started</h5>
+                <p class="card-text">
+                    New to GuruBase? Follow these steps:
+                </p>
+                <ol class="mb-0">
+                    <li>Create an account or sign in</li>
+                    <li>Use the stock screener to find opportunities</li>
+                    <li>Build your portfolio</li>
+                    <li>Track your investments</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
