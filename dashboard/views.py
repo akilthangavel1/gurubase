@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from fyers_apiv3 import fyersModel
 from django.conf import settings
 import json
@@ -12,6 +12,8 @@ import time
 from .fyers_functions import get_stock_quotes
 from django.db import connection
 import logging
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -301,4 +303,81 @@ def view_historical_data(request, ticker_symbol=None):
         return render(request, 'dashboard/historical_data.html', {
             'error': f"An error occurred: {str(e)}"
         })
+    
+
+def ticker_list(request):
+    tickers = TickerBase.objects.all().order_by('ticker_sector', 'ticker_name')
+    context = {
+        'tickers': tickers,
+        'sectors': TickerBase.SECTOR_CHOICES,
+        'market_caps': TickerBase.MARKET_CAP_CHOICES
+    }
+    return render(request, 'dashboard/ticker_list.html', context)
+
+
+def ticker_create(request):
+    if request.method == 'POST':
+        try:
+            ticker_data = {
+                'ticker_name': request.POST['ticker_name'].strip(),
+                'ticker_symbol': request.POST['ticker_symbol'].strip().upper(),
+                'ticker_sector': request.POST['ticker_sector'],
+                'ticker_sub_sector': request.POST.get('ticker_sub_sector', '').strip() or None,
+                'ticker_market_cap': request.POST['ticker_market_cap']
+            }
+            
+            ticker = TickerBase.objects.create(**ticker_data)
+            messages.success(request, f'Ticker {ticker.ticker_name} created successfully!')
+            return redirect('ticker_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating ticker: {str(e)}')
+    
+    context = {
+        'sectors': TickerBase.SECTOR_CHOICES,
+        'market_caps': TickerBase.MARKET_CAP_CHOICES
+    }
+    return render(request, 'dashboard/ticker_form.html', context)
+
+
+def ticker_update(request, pk):
+    ticker = get_object_or_404(TickerBase, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            ticker.ticker_name = request.POST['ticker_name'].strip()
+            ticker.ticker_symbol = request.POST['ticker_symbol'].strip().upper()
+            ticker.ticker_sector = request.POST['ticker_sector']
+            ticker.ticker_sub_sector = request.POST.get('ticker_sub_sector', '').strip() or None
+            ticker.ticker_market_cap = request.POST['ticker_market_cap']
+            
+            ticker.save()
+            messages.success(request, f'Ticker {ticker.ticker_name} updated successfully!')
+            return redirect('ticker_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating ticker: {str(e)}')
+    
+    context = {
+        'ticker': ticker,
+        'sectors': TickerBase.SECTOR_CHOICES,
+        'market_caps': TickerBase.MARKET_CAP_CHOICES
+    }
+    return render(request, 'dashboard/ticker_form.html', context)
+
+
+def ticker_delete(request, pk):
+    ticker = get_object_or_404(TickerBase, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            ticker_name = ticker.ticker_name
+            ticker.delete()
+            messages.success(request, f'Ticker {ticker_name} deleted successfully!')
+        except Exception as e:
+            messages.error(request, f'Error deleting ticker: {str(e)}')
+        return redirect('ticker_list')
+    
+    context = {'ticker': ticker}
+    return render(request, 'dashboard/ticker_confirm_delete.html', context)
     

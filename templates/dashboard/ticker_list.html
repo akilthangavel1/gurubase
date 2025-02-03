@@ -1,0 +1,44 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Tickers List{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Tickers</h2>
+    <a href="{% url 'ticker_create' %}" class="btn btn-primary">Add New Ticker</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Symbol</th>
+                <th>Sector</th>
+                <th>Sub Sector</th>
+                <th>Market Cap</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticker in tickers %}
+            <tr>
+                <td>{{ ticker.ticker_name }}</td>
+                <td>{{ ticker.ticker_symbol }}</td>
+                <td>{{ ticker.ticker_sector }}</td>
+                <td>{{ ticker.ticker_sub_sector|default:"-" }}</td>
+                <td>{{ ticker.ticker_market_cap }}</td>
+                <td>
+                    <a href="{% url 'ticker_update' ticker.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="{% url 'ticker_delete' ticker.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No tickers found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

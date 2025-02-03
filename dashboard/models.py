@@ -67,7 +67,7 @@ class TickerBase(models.Model):
         choices=MARKET_CAP_CHOICES,
         default=LARGE_CAP,
     )
-
+    
     def __str__(self):
         return f"{self.ticker_symbol.upper()} ({self.ticker_name})"
 

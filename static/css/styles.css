@@ -1,0 +1,36 @@
+/* Navbar Brand Styling */
+.navbar-brand h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 1000;
+    background: linear-gradient(45deg, #2196F3, #00BCD4);   
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0.5rem 0;
+    transition: transform 0.3s ease;
+    font-family: 'Roboto', sans-serif;  
+}
+
+.navbar-brand:hover h1 {
+    transform: scale(1.05);
+}
+
+/* Add a subtle text shadow for depth */
+.navbar-brand h1::after {
+    content: 'GuruBase';
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    color: rgba(33, 150, 243, 0.1);
+    filter: blur(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar-brand h1 {
+        font-size: 1.5rem;
+    }
+}

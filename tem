@@ -1,0 +1,43 @@
+CREATE DATABASE gurubase;
+CREATE USER akil WITH PASSWORD 'Akil@2007';
+ALTER ROLE akil SET client_encoding TO 'utf8';
+ALTER ROLE akil SET default_transaction_isolation TO 'read committed';
+ALTER ROLE akil SET timezone TO 'Asia/Kolkata';
+GRANT ALL PRIVILEGES ON DATABASE gurubase TO akil;
+ALTER DATABASE gurubase OWNER TO akil;
+
+
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/gurubase
+ExecStart=/home/ubuntu/gurubase/venv/bin/gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          -k uvicorn.workers.UvicornWorker \
+          gurubase.asgi:application
+
+[Install]
+WantedBy=multi-user.target
+
+
+server {
+    listen 80;
+    server_name 3.108.191.73 abunduswealth.com www.abunduswealth.com;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /home/ubuntu/gurubase;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/run/gunicorn.sock;
+    }
+}

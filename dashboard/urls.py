@@ -16,4 +16,8 @@ urlpatterns = [
     path('api/stocks/stream/', views.sse_stocks_data, name='sse_stocks_data'),
     path('historical-data/', views.view_historical_data, name='historical_data'),
     path('historical-data/<str:ticker_symbol>/', views.view_historical_data, name='historical_data_ticker'),
+    path('tickers/', views.ticker_list, name='ticker_list'),
+    path('tickers/create/', views.ticker_create, name='ticker_create'),
+    path('tickers/<int:pk>/update/', views.ticker_update, name='ticker_update'),
+    path('tickers/<int:pk>/delete/', views.ticker_delete, name='ticker_delete'),
 ] 

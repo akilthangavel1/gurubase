@@ -1,0 +1,70 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{% if ticker %}Edit Ticker{% else %}New Ticker{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    {% if ticker %}Edit Ticker{% else %}New Ticker{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="ticker_name" class="form-label">Ticker Name</label>
+                        <input type="text" class="form-control" id="ticker_name" name="ticker_name" 
+                               value="{{ ticker.ticker_name|default:'' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ticker_symbol" class="form-label">Ticker Symbol</label>
+                        <input type="text" class="form-control" id="ticker_symbol" name="ticker_symbol" 
+                               value="{{ ticker.ticker_symbol|default:'' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ticker_sector" class="form-label">Sector</label>
+                        <select class="form-select" id="ticker_sector" name="ticker_sector" required>
+                            {% for sector_value, sector_label in sectors %}
+                                <option value="{{ sector_value }}" 
+                                    {% if ticker.ticker_sector == sector_value %}selected{% endif %}>
+                                    {{ sector_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ticker_sub_sector" class="form-label">Sub Sector</label>
+                        <input type="text" class="form-control" id="ticker_sub_sector" name="ticker_sub_sector" 
+                               value="{{ ticker.ticker_sub_sector|default:'' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ticker_market_cap" class="form-label">Market Cap</label>
+                        <select class="form-select" id="ticker_market_cap" name="ticker_market_cap" required>
+                            {% for cap_value, cap_label in market_caps %}
+                                <option value="{{ cap_value }}"
+                                    {% if ticker.ticker_market_cap == cap_value %}selected{% endif %}>
+                                    {{ cap_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'ticker_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if ticker %}Update{% else %}Create{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
