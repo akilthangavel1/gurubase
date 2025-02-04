@@ -135,7 +135,7 @@ async def generate_event_stream():
                 try:
                     symbols = ["NSE:SBIN-EQ", "NSE:RELIANCE-EQ", "NSE:TCS-EQ"] 
                     response = get_stock_quotes(symbols)
-                    
+                    print(response)
 
                     # hist_data = await get_hist_data()
 
@@ -228,84 +228,8 @@ async def sse_stocks_data(request):
     response['X-Accel-Buffering'] = 'no'
     return response
 
-def view_historical_data(request, ticker_symbol=None):
-    try:
-        # Get all tickers if no specific ticker is provided
-        if ticker_symbol:
-            tickers = TickerBase.objects.filter(ticker_symbol=ticker_symbol)
-        else:
-            tickers = TickerBase.objects.all()
-        
-        all_data = {}
-        
-        for ticker in tickers:
-            table_name = f"{ticker.ticker_symbol}_future_historical_data"
-            
-            # Fetch data from the specific table
-            with connection.cursor() as cursor:
-                try:
-                    # First check if table exists - fixed query syntax
-                    cursor.execute("""
-                        SELECT EXISTS (
-                            SELECT 1 
-                            FROM information_schema.tables 
-                            WHERE table_name = %s
-                        )
-                    """, [table_name.lower()])  # PostgreSQL table names are lowercase
-                    
-                    table_exists = cursor.fetchone()[0]
-                    
-                    if not table_exists:
-                        logger.error(f"Table {table_name} does not exist")
-                        continue
-                    
-                    # Fixed query syntax - using proper string formatting for table name
-                    query = """
-                        SELECT datetime, open_price, high_price, low_price, 
-                               close_price, volume 
-                        FROM "{}"
-                        ORDER BY datetime DESC
-                        LIMIT 100
-                    """.format(table_name)
-                    
-                    cursor.execute(query)
-                    
-                    columns = [col[0] for col in cursor.description]
-                    data = cursor.fetchall()
-                    
-                    # Convert to list of dictionaries
-                    ticker_data = []
-                    for row in data:
-                        ticker_data.append(dict(zip(columns, row)))
-                    
-                    all_data[ticker.ticker_symbol] = ticker_data
-                    
-                except Exception as db_error:
-                    logger.error(f"Database error for {table_name}: {str(db_error)}")
-                    continue
-        
-        if not all_data:
-            return render(request, 'dashboard/historical_data.html', {
-                'error': "No data available or tables not found",
-                'tickers': tickers
-            })
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'data': all_data})
-        else:
-            return render(request, 'dashboard/historical_data.html', {
-                'data': all_data,
-                'tickers': tickers
-            })
-            
-    except Exception as e:
-        logger.error(f"View error: {str(e)}")
-        return render(request, 'dashboard/historical_data.html', {
-            'error': f"An error occurred: {str(e)}"
-        })
-    
 
-def ticker_list(request):
+def ticker_list_view(request):
     tickers = TickerBase.objects.all().order_by('ticker_sector', 'ticker_name')
     context = {
         'tickers': tickers,
@@ -314,6 +238,57 @@ def ticker_list(request):
     }
     return render(request, 'dashboard/ticker_list.html', context)
 
+def historical_data(request):
+    """Display list of all tickers"""
+    tickers = TickerBase.objects.all().order_by('ticker_sector', 'ticker_name')
+    return render(request, 'dashboard/historical_data_list.html', {'tickers': tickers})
+
+def historical_data_detail(request, ticker_symbol):
+    """Display historical data for a specific ticker"""
+    ticker = get_object_or_404(TickerBase, ticker_symbol=ticker_symbol)
+    
+    try:
+        table_name = f"{ticker_symbol}_future_historical_data"
+        
+        with connection.cursor() as cursor:
+            # Check if table exists
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 
+                    FROM information_schema.tables 
+                    WHERE table_name = %s
+                )
+            """, [table_name.lower()])
+            
+            if not cursor.fetchone()[0]:
+                return render(request, 'dashboard/historical_data_detail.html', {
+                    'ticker': ticker,
+                    'error': "No historical data available for this ticker"
+                })
+            
+            # Fetch data
+            query = """
+                SELECT datetime, open_price, high_price, low_price, 
+                       close_price, volume 
+                FROM "{}"
+                ORDER BY datetime DESC
+                LIMIT 100
+            """.format(table_name)
+            
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+            return render(request, 'dashboard/historical_data_detail.html', {
+                'ticker': ticker,
+                'data': data
+            })
+            
+    except Exception as e:
+        return render(request, 'dashboard/historical_data_detail.html', {
+            'ticker': ticker,
+            'error': f"An error occurred: {str(e)}"
+        })
 
 def ticker_create(request):
     if request.method == 'POST':

@@ -1,0 +1,144 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Historical Data - {{ ticker.ticker_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Ticker Information Header -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">{{ ticker.ticker_name }} ({{ ticker.ticker_symbol }})</h2>
+                    <p class="text-muted mb-0">{{ ticker.ticker_sector }} | {{ ticker.ticker_market_cap }}</p>
+                </div>
+                <a href="{% url 'historical_data' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Tickers
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% elif data %}
+        <!-- Historical Data Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Historical Data</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Open</th>
+                                <th>High</th>
+                                <th>Low</th>
+                                <th>Close</th>
+                                <th>Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                <td>{{ row.datetime|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ row.open_price }}</td>
+                                <td>{{ row.high_price }}</td>
+                                <td>{{ row.low_price }}</td>
+                                <td>{{ row.close_price }}</td>
+                                <td>{{ row.volume }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No historical data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Chart -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Price Chart</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="priceChart" height="300"></canvas>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            No historical data available for this ticker.
+        </div>
+    {% endif %}
+</div>
+
+{% if data %}
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    
+    // Extract data from the table
+    const tableRows = document.querySelectorAll('table tbody tr');
+    const chartData = {
+        labels: [],
+        prices: []
+    };
+    
+    tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            chartData.labels.unshift(cells[0].textContent);
+            chartData.prices.unshift(parseFloat(cells[4].textContent)); // Close price
+        }
+    });
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Close Price',
+                data: chartData.prices,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Historical Price Chart'
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Price'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

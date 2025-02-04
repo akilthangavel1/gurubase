@@ -41,3 +41,4 @@ server {
         proxy_pass http://unix:/run/gunicorn.sock;
     }
 }
+python manage.py import_tickers tickerdata.xlsx

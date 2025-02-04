@@ -9,6 +9,7 @@ from django.db import connection
 from fyers_apiv3 import fyersModel
 import logging
 from datetime import datetime
+from .fyers_functions import initialize_fyers   
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ def update_historical_data():
     for ticker in tickers:
         symbol = f"NSE:{ticker.ticker_symbol.upper()}-EQ"
         table_name = f"{ticker.ticker_symbol}_future_historical_data"
-        fyers = fyersModel.FyersModel(client_id="MMKQTWNJH3-100", token=access_token,is_async=False, log_path="")
+        fyers = initialize_fyers()
 
 
         try:
