@@ -49,7 +49,7 @@ def update_historical_data():
             data = {
                 "symbol": symbol,
                 "resolution": "5",
-                "range_from": str(int(time.time()) - (500 * 60)),
+                "range_from": str(int(time.time()) - (1000 * 60)),
                 "range_to": str(int(time.time())),
                 "date_format":"0",
                 "cont_flag":"1"
