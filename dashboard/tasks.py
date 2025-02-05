@@ -27,8 +27,8 @@ def update_historical_data():
     
     # Get access token
     try:
-        # access_token = AccessToken.objects.first().value
-        access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3Mzg2MTk0MTUsImV4cCI6MTczODYyOTAxNSwibmJmIjoxNzM4NjE5NDE1LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbm9Ub1g2eXppNTkxRXR6UkpSVkhhcURUVEhqb1RWc2tlVXFkX0haenhST3dCdWdQVzJCdEE3WDVINXEyOGlfdUEzS3M1MkFUcWNOY2NFVXY2Z3FEYm9yWV9fZzZDSFl4amNZYmp1cHFfMXhLXzJLOD0iLCJkaXNwbGF5X25hbWUiOiJBS0lMIFRIQU5HQVZFTCIsIm9tcyI6IksxIiwiaHNtX2tleSI6ImJlY2M0NDU4NmZjN2MyOTFhMWZjYTAwZmVjMjA2YmQ0MjNiOThlZDRiYWY4Mjc3YjZhMWI5Y2U2IiwiaXNEZHBpRW5hYmxlZCI6Ik4iLCJpc010ZkVuYWJsZWQiOiJOIiwiZnlfaWQiOiJZQTI5Mzk2IiwiYXBwVHlwZSI6MTAwLCJwb2FfZmxhZyI6Ik4ifQ.mfYyPl7LtrinNooOikwA8ns_53STfkwMInjirlpToWU"
+        access_token = AccessToken.objects.first().value
+        # access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3Mzg2MTk0MTUsImV4cCI6MTczODYyOTAxNSwibmJmIjoxNzM4NjE5NDE1LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbm9Ub1g2eXppNTkxRXR6UkpSVkhhcURUVEhqb1RWc2tlVXFkX0haenhST3dCdWdQVzJCdEE3WDVINXEyOGlfdUEzS3M1MkFUcWNOY2NFVXY2Z3FEYm9yWV9fZzZDSFl4amNZYmp1cHFfMXhLXzJLOD0iLCJkaXNwbGF5X25hbWUiOiJBS0lMIFRIQU5HQVZFTCIsIm9tcyI6IksxIiwiaHNtX2tleSI6ImJlY2M0NDU4NmZjN2MyOTFhMWZjYTAwZmVjMjA2YmQ0MjNiOThlZDRiYWY4Mjc3YjZhMWI5Y2U2IiwiaXNEZHBpRW5hYmxlZCI6Ik4iLCJpc010ZkVuYWJsZWQiOiJOIiwiZnlfaWQiOiJZQTI5Mzk2IiwiYXBwVHlwZSI6MTAwLCJwb2FfZmxhZyI6Ik4ifQ.mfYyPl7LtrinNooOikwA8ns_53STfkwMInjirlpToWU"
 
     except:
         print("No access token found")
@@ -42,8 +42,7 @@ def update_historical_data():
     for ticker in tickers:
         symbol = f"NSE:{ticker.ticker_symbol.upper()}-EQ"
         table_name = f"{ticker.ticker_symbol}_future_historical_data"
-        fyers = initialize_fyers()
-
+        fyers = fyersModel.FyersModel(client_id="MMKQTWNJH3-100", is_async=False, token=access_token, log_path="")
 
         try:
            
