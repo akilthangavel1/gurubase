@@ -10,6 +10,8 @@ from fyers_apiv3 import fyersModel
 import logging
 from datetime import datetime
 from .fyers_functions import initialize_fyers   
+from dashboard.models import TickerBase, AccessToken
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +21,7 @@ def symbol_format(symbol):
 
 @shared_task
 def update_historical_data():
-    from dashboard.models import TickerBase, AccessToken
-    import time
+
 
     # Get all tickers
     tickers = TickerBase.objects.all()
@@ -38,14 +39,13 @@ def update_historical_data():
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
-
+    # fyers = fyersModel.FyersModel(client_id="MMKQTWNJH3-100", is_async=False, token=access_token, log_path="")
+    fyers = initialize_fyers()
     for ticker in tickers:
         symbol = f"NSE:{ticker.ticker_symbol.upper()}-EQ"
         table_name = f"{ticker.ticker_symbol}_future_historical_data"
-        fyers = fyersModel.FyersModel(client_id="MMKQTWNJH3-100", is_async=False, token=access_token, log_path="")
-
+        time.sleep(1)
         try:
-           
             data = {
                 "symbol": symbol,
                 "resolution": "5",

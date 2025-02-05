@@ -34,7 +34,6 @@ def get_stock_quotes(symbol_quotes):
 def initialize_fyers():
     access_token = get_fyers_access_token()
     fyers = fyersModel.FyersModel(client_id="MMKQTWNJH3-100", is_async=False, token=access_token, log_path="")
-    print(fyers)
     # Use the access token from database
     is_async = False
     fyers.token = access_token
