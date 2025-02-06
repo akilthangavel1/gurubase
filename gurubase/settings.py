@@ -72,9 +72,9 @@ ASGI_APPLICATION = 'gurubase.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gurubase',          # database name
-        'USER': 'akil',          # database user
-        'PASSWORD': 'Akil@2007',      # database password
+        'NAME': 'gurubase',        
+        'USER': 'akil',         
+        'PASSWORD': 'Akil@2007',   
         'HOST': 'localhost',         # database host
         'PORT': '5432',             # database port
     }

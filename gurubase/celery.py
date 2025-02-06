@@ -16,6 +16,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'update-historical-data-every-5-minutes': {
         'task': 'dashboard.tasks.update_historical_data',
-        'schedule': 300.0,  # 300 seconds = 5 minutes
+        'schedule': 30.0,  # 300 seconds = 5 minutes
     },
 } 
