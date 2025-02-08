@@ -40,10 +40,6 @@ build/
 *.egg-info/
 
 # Local development
-.env.local
-.env.development
-.env.test
-.env.production
 
 # Dependencies
 node_modules/
