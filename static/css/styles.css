@@ -34,3 +34,15 @@
         font-size: 1.5rem;
     }
 }
+
+.btn-google {
+    color: #fff;
+    background-color: #dd4b39;
+    border-color: #dd4b39;
+}
+
+.btn-google:hover {
+    color: #fff;
+    background-color: #c23321;
+    border-color: #b91f1f;
+}

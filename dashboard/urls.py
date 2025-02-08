@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -20,4 +21,6 @@ urlpatterns = [
     path('tickers/create/', views.ticker_create, name='ticker_create'),
     path('tickers/<int:pk>/update/', views.ticker_update, name='ticker_update'),
     path('tickers/<int:pk>/delete/', views.ticker_delete, name='ticker_delete'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('profile/', views.profile, name='profile'),
 ] 

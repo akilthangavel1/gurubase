@@ -14,10 +14,12 @@ from django.db import connection
 import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login as auth_login, authenticate
 
 logger = logging.getLogger(__name__)
 
 # Create your views here.
+
 
 def index(request):
     try:
@@ -58,6 +60,17 @@ def live_stocks(request):
     return render(request, 'dashboard/live-stocks.html')
 
 def login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        user = authenticate(request, username=email, password=password)
+        
+        if user is not None:
+            auth_login(request, user)
+            return redirect('index')
+        else:
+            messages.error(request, 'Invalid email or password')
+    
     return render(request, 'dashboard/login.html')
 
 def portfolio(request):
@@ -355,4 +368,8 @@ def ticker_delete(request, pk):
     
     context = {'ticker': ticker}
     return render(request, 'dashboard/ticker_confirm_delete.html', context)
+
+@login_required
+def profile(request):
+    return render(request, 'dashboard/profile.html')
     
