@@ -153,7 +153,7 @@ CELERY_TIMEZONE = 'Asia/Kolkata'  # Set to Indian timezone
 SECURE_SSL_REDIRECT = True # Set to True in production
 SESSION_COOKIE_SECURE = True # Set to True in production
 CSRF_COOKIE_SECURE = True # Set to True in production
-SECURE_PROXY_SSL_HEADER = True  # Set to True in production
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 
 # Remove or comment out these HSTS settings in development
