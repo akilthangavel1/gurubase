@@ -149,20 +149,17 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Kolkata'  # Set to Indian timezone
 
-# Security Settings
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Security Settings - Disable SSL redirect in development
+SECURE_SSL_REDIRECT = False # Set to True in production
+SESSION_COOKIE_SECURE = False # Set to True in production
+CSRF_COOKIE_SECURE = False # Set to True in production
+SECURE_PROXY_SSL_HEADER = None  # Set to True in production
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 
-# Session and Cookie Security
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_HTTPONLY = True
-
-# HTTP Strict Transport Security
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# Remove or comment out these HSTS settings in development
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
 
 # Additional Security Headers
 SECURE_BROWSER_XSS_FILTER = True
@@ -173,7 +170,7 @@ X_FRAME_OPTIONS = 'DENY'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_URL = 'logout'
-LOGOUT_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'login'
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
@@ -187,7 +184,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET')
 
 # Add these settings
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
-SOCIAL_AUTH_REDIRECT_IS_HTTPS = True  # Enable for HTTPS
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = False  # Set to True in production
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -198,20 +195,3 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
-
-# Add these social auth settings
-SOCIAL_AUTH_PIPELINE = (
-    'social_core.pipeline.social_auth.social_details',
-    'social_core.pipeline.social_auth.social_uid',
-    'social_core.pipeline.social_auth.auth_allowed',
-    'social_core.pipeline.social_auth.social_user',
-    'social_core.pipeline.user.get_username',
-    'social_core.pipeline.user.create_user',
-    'social_core.pipeline.social_auth.associate_user',
-    'social_core.pipeline.social_auth.load_extra_data',
-    'social_core.pipeline.user.user_details',
-)
-
-# State parameter settings
-SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['state']
-SOCIAL_AUTH_GOOGLE_OAUTH2_STATE = True

@@ -1,0 +1,147 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Live Data - GuruBase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Live Market Data</h1>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="refreshToggle">
+            <label class="form-check-label" for="refreshToggle">Auto Refresh</label>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Name</th>
+                            <th>Exchange</th>
+                            <th>Asset Type</th>
+                            <th>Sector</th>
+                            <th>Market Cap</th>
+                            <th>Last Price</th>
+                            <th>Change %</th>
+                            <th>Volume</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticker in tickers %}
+                        <tr data-symbol="{{ ticker.ticker_symbol }}">
+                            <td>{{ ticker.ticker_symbol }}</td>
+                            <td>{{ ticker.ticker_name }}</td>
+                            <td>NSE</td>
+                            <td>EQ</td>
+                            <td>{{ ticker.ticker_sector }}</td>
+                            <td>{{ ticker.ticker_market_cap }}</td>
+                            <td class="text-end" id="price-{{ ticker.ticker_symbol }}">-</td>
+                            <td class="text-end" id="change-{{ ticker.ticker_symbol }}">-</td>
+                            <td class="text-end" id="volume-{{ ticker.ticker_symbol }}">-</td>
+                            <td id="updated-{{ ticker.ticker_symbol }}">-</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center">No tickers found in the database.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global state
+let eventSource = null;
+
+// DOM Elements
+const SELECTORS = {
+    refreshToggle: '#refreshToggle',
+    row: symbol => `tr[data-symbol="${symbol}"]`,
+    price: symbol => `#price-${symbol}`,
+    change: symbol => `#change-${symbol}`,
+    volume: symbol => `#volume-${symbol}`,
+    updated: symbol => `#updated-${symbol}`
+};
+
+// Event handlers
+function handleRefreshToggle(e) {
+    if (e.target.checked) {
+        connectSSE();
+    } else {
+        disconnectSSE();
+    }
+}
+
+function disconnectSSE() {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+}
+
+function connectSSE() {
+    if (eventSource) return;  // Prevent multiple connections
+    
+    eventSource = new EventSource('/api/stocks/sse-stocks-data/');
+    
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        updateTable(data);
+    };
+
+    eventSource.onerror = function(error) {
+        console.error('SSE Error:', error);
+        disconnectSSE();
+    };
+}
+
+function updateTable(data) {
+    data.forEach(stock => {
+        const row = document.querySelector(SELECTORS.row(stock.symbol));
+        if (!row) return;
+
+        const elements = {
+            price: row.querySelector(SELECTORS.price(stock.symbol)),
+            change: row.querySelector(SELECTORS.change(stock.symbol)),
+            volume: row.querySelector(SELECTORS.volume(stock.symbol)),
+            updated: row.querySelector(SELECTORS.updated(stock.symbol))
+        };
+
+        // Update price
+        if (elements.price) {
+            elements.price.textContent = stock.price || '-';
+        }
+
+        // Update change percentage
+        if (elements.change) {
+            elements.change.textContent = stock.change ? `${stock.change}%` : '-';
+            elements.change.className = `text-end ${parseFloat(stock.change) >= 0 ? 'text-success' : 'text-danger'}`;
+        }
+
+        // Update volume
+        if (elements.volume) {
+            elements.volume.textContent = stock.volume || '-';
+        }
+
+        // Update timestamp
+        if (elements.updated) {
+            elements.updated.textContent = new Date().toLocaleTimeString();
+        }
+    });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    connectSSE();  // Start initial connection
+    document.querySelector(SELECTORS.refreshToggle)
+        .addEventListener('change', handleRefreshToggle);
+});
+</script>
+{% endblock %} 

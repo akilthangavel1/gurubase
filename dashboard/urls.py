@@ -15,6 +15,7 @@ urlpatterns = [
     path('futures/scanner/', views.future_scanner, name='future-scanner'),
     path('options/', views.options, name='options'),
     path('api/stocks/stream/', views.sse_stocks_data, name='sse_stocks_data'),
+    path('api/stocks/sse-stocks-data/', views.sse_stocks_data, name='sse_stocks_data'),
     path('historical-data/', views.historical_data, name='historical_data'),
     path('historical-data/<str:ticker_symbol>/', views.historical_data_detail, name='historical_data_detail'),
     path('tickers/', views.ticker_list_view, name='ticker_list'),
@@ -23,4 +24,5 @@ urlpatterns = [
     path('tickers/<int:pk>/delete/', views.ticker_delete, name='ticker_delete'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('profile/', views.profile, name='profile'),
+    path('live-data/', views.live_data, name='live_data'),
 ] 

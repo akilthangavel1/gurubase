@@ -1,6 +1,6 @@
 from fyers_apiv3 import fyersModel
 from django.conf import settings
-from .models import AccessToken
+from .models import AccessToken, TickerBase
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -17,19 +17,10 @@ def get_access_token():
 
 # Replace the static access_token with a function call
 def get_fyers_access_token():
-    access_token = AccessToken.objects.first().value
+    access_token = get_access_token()
     if not access_token:
         raise ValueError("No access token found in database")
     return access_token
-
-def get_stock_quotes(symbol_quotes):
-    fyers = initialize_fyers()
-    data = {    
-        "symbols":"NSE:SBIN-EQ,NSE:IDEA-EQ"
-    }
-
-    response = fyers.quotes(data=data)
-    return response
 
 def initialize_fyers():
     access_token = get_fyers_access_token()
@@ -39,3 +30,13 @@ def initialize_fyers():
     fyers.token = access_token
     return fyers
 
+def get_live_data():
+    fyers = initialize_fyers()
+    tickers = TickerBase.objects.all()
+    # Create comma-separated string of symbols in required format
+    symbols = ','.join([f"NSE:{ticker.ticker_symbol.upper()}-EQ" for ticker in tickers])
+    data = {
+        "symbols": symbols
+    }
+    data = fyers.quotes(data)
+    return data

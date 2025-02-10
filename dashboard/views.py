@@ -9,12 +9,13 @@ import pandas as pd
 from asgiref.sync import sync_to_async
 from .models import TickerBase
 import time
-from .fyers_functions import get_stock_quotes
+from .fyers_functions import get_live_data
 from django.db import connection
 import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login, authenticate
+from django.core.serializers.json import DjangoJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -138,100 +139,35 @@ def calculate_changes(df):
 
 
 
+@sync_to_async
+def get_live_data_async():
+    return get_live_data()
+
 async def generate_event_stream():
     while True:
         try:
-            tickers = await get_tickers()
-            ticker_list = []
-            time.sleep(1)
-            for ticker in tickers:
-                try:
-                    symbols = ["NSE:SBIN-EQ", "NSE:RELIANCE-EQ", "NSE:TCS-EQ"] 
-                    response = get_stock_quotes(symbols)
-                    print(response)
-
-                    # hist_data = await get_hist_data()
-
-                #     hist_data = await get_hist_data(ticker.ticker_symbol)
-                #     tick_data = await get_tick_data(ticker.ticker_symbol)
-                    
-                #     # Process historical data
-                #     hist_df = pd.DataFrame(hist_data).drop('id', axis=1)
-                #     hist_df.rename(columns={
-                #         'open_price': 'open',
-                #         'high_price': 'high',
-                #         'low_price': 'low',
-                #         'close_price': 'close'
-                #     }, inplace=True)
-                #     hist_df.set_index('datetime', inplace=True)
-                    
-                #     # Process tick data
-                #     tick_df = pd.DataFrame(tick_data)
-                #     tick_df['timestamp'] = tick_df['timestamp'].dt.floor('min')
-                #     tick_ohlc_df = tick_df.groupby('timestamp').agg(
-                #         open=('ltp', 'first'),
-                #         high=('ltp', 'max'),
-                #         low=('ltp', 'min'),
-                #         close=('ltp', 'last')
-                #     ).reset_index()
-                #     tick_ohlc_df['volume'] = 0
-                #     tick_ohlc_df.set_index('timestamp', inplace=True)
-                #     tick_ohlc_df.index.name = 'datetime'
-
-                #     # Combine historical and tick data
-                #     hist_df.reset_index(inplace=True)
-                #     tick_ohlc_df.reset_index(inplace=True)
-                #     df = pd.concat([hist_df, tick_ohlc_df], ignore_index=True)
-                #     df['datetime'] = pd.to_datetime(df['datetime'])
-                #     df.set_index('datetime', inplace=True)
-                    
-                #     # Calculate daily aggregates
-                #     daily_df = df.resample('D').agg({
-                #         'open': 'first',
-                #         'high': 'max',
-                #         'low': 'min',
-                #         'close': 'last',
-                #         'volume': 'sum'
-                #     }).dropna()
-                    
-                #     # Calculate changes and get latest values
-                #     daily_df = daily_df.reset_index()
-                #     latest_close, daily_change, weekly_change = calculate_changes(daily_df)
-                #     previous_day_data = daily_df.iloc[-2]
-                #     latest_data = daily_df.iloc[-1]
-
-                #     ticker_data = {
-                #         "name": ticker.name,
-                #         "symbol": ticker.ticker_symbol,
-                #         "sector": ticker.sector,
-                #         "sub_sector": ticker.sub_sector,
-                #         "market_cap": ticker.market_cap,
-                #         "ltp": latest_close,
-                #         "daily_change": daily_change,
-                #         "weekly_change": weekly_change,
-                #         "previous_day_open": float(previous_day_data['open']),
-                #         "previous_day_high": float(previous_day_data['high']),
-                #         "previous_day_low": float(previous_day_data['low']),
-                #         "previous_day_close": float(previous_day_data['close']),
-                #         "latest_open": float(latest_data['open']),
-                #         "latest_high": float(latest_data['high']),
-                #         "latest_low": float(latest_data['low']),
-                #     }
-                    
-                #     ticker_list.append(ticker_data)
-                    
-                except Exception as e:
-                    print(f"Error processing {ticker.ticker_symbol}: {str(e)}")
-                    continue
-
-            # yield f"data: {json.dumps(ticker_list)}\n\n"
+            response = await get_live_data_async()
+            # print(response)
+            print("##########################")
+            if response and response.get('s') == 'ok':
+                data = response.get('d', [])
+                formatted_data = []
+                for stock_data in data:
+                    formatted_data.append({
+                        'symbol': stock_data.get('n', '').split(':')[1].split('-')[0],
+                        'price': stock_data.get('v', {}).get('lp', '-'),
+                        'change': stock_data.get('v', {}).get('cp', '-'),
+                        'volume': stock_data.get('v', {}).get('vol', '-'),
+                    })
+                print(formatted_data)
+                yield f"data: {json.dumps(formatted_data, cls=DjangoJSONEncoder)}\n\n"
+            await asyncio.sleep(1)
         except Exception as e:
             print(f"Exception occurred: {str(e)}")
-            yield f"data: Exception occurred: {str(e)}\n\n"
-        
-        await asyncio.sleep(1)
+            yield f"data: {json.dumps({'error': str(e)}, cls=DjangoJSONEncoder)}\n\n"
+            await asyncio.sleep(1)
 
-async def sse_stocks_data(request):
+def sse_stocks_data(request):
     """SSE endpoint for real-time stock updates"""
     response = StreamingHttpResponse(
         generate_event_stream(),
@@ -372,4 +308,12 @@ def ticker_delete(request, pk):
 @login_required
 def profile(request):
     return render(request, 'dashboard/profile.html')
+
+def live_data(request):
+    """View for displaying live stock data using SSE"""
+    tickers = TickerBase.objects.all()
+    context = {
+        'tickers': tickers,
+    }
+    return render(request, 'dashboard/live_data.html', context)
     
