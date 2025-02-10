@@ -2,11 +2,234 @@
 
 {% block title %}GuruBase - Home{% endblock %}
 
+{% block extra_css %}
+<style>
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #0d6efd;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #0d6efd, #0099ff);
+        color: white;
+        border: none;
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .testimonial-card {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+    }
+    
+    .service-card {
+        transition: transform 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .service-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .hero-section {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                    url('/static/images/trading-bg.jpg');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .pricing-card {
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .pricing-card:hover {
+        transform: translateY(-10px);
+    }
+    
+    .pricing-popular {
+        border: 2px solid #0d6efd;
+    }
+    
+    .feature-grid-item {
+        padding: 2rem;
+        border-radius: 10px;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-grid-item:hover {
+        background: #e9ecef;
+        transform: scale(1.02);
+    }
+    
+    .news-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+    
+    .news-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .tech-stack-icon {
+        font-size: 2rem;
+        color: #6c757d;
+        margin: 1rem;
+        transition: color 0.3s ease;
+    }
+    
+    .tech-stack-icon:hover {
+        color: #0d6efd;
+    }
+
+    .animated-number {
+        font-size: 3rem;
+        font-weight: bold;
+        background: linear-gradient(45deg, #0d6efd, #00ff88);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .market-update {
+        background: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .scroll-animation {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.6s ease;
+    }
+
+    .scroll-animation.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Intersection Observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.scroll-animation').forEach((el) => observer.observe(el));
+    });
+</script>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 text-center">
-        <h1 class="display-4 mb-4">Welcome to GuruBase</h1>
-        <p class="lead mb-4">Your personal stock market analysis platform</p>
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h1 class="display-4 mb-4">Welcome to GuruBase</h1>
+                <p class="lead mb-4">Your comprehensive platform for advanced stock market trading and analysis</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started</a>
+                    <a href="{% url 'home' %}" class="btn btn-outline-light btn-lg">Watch Demo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-center p-3">
+                <h3 class="mb-0">50K+</h3>
+                <p class="mb-0">Active Users</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center p-3">
+                <h3 class="mb-0">₹100M+</h3>
+                <p class="mb-0">Daily Volume</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center p-3">
+                <h3 class="mb-0">99.9%</h3>
+                <p class="mb-0">Uptime</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center p-3">
+                <h3 class="mb-0">24/7</h3>
+                <p class="mb-0">Support</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 py-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Advanced Stock Screener</h5>
+                <p class="card-text">Discover trading opportunities with our powerful screening tools featuring:</p>
+                <ul class="list-unstyled">
+                    <li>✓ Real-time market data</li>
+                    <li>✓ Technical indicators</li>
+                    <li>✓ Custom screening criteria</li>
+                </ul>
+                <a href="{% url 'live-stocks' %}" class="btn btn-primary">Open Screener</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Automated Trading</h5>
+                <p class="card-text">Execute trades automatically with precision:</p>
+                <ul class="list-unstyled">
+                    <li>✓ Set custom trading rules</li>
+                    <li>✓ Real-time order execution</li>
+                    <li>✓ Risk management tools</li>
+                </ul>
+                <a href="" class="btn btn-primary">Setup Auto Trading</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Portfolio Management</h5>
+                <p class="card-text">Track and optimize your investments:</p>
+                <ul class="list-unstyled">
+                    <li>✓ Performance analytics</li>
+                    <li>✓ Risk assessment</li>
+                    <li>✓ Portfolio rebalancing</li>
+                </ul>
+                <a href="{% url 'portfolio' %}" class="btn btn-primary">View Portfolio</a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -14,19 +237,29 @@
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Stock Screener</h5>
-                <p class="card-text">Scan and filter stocks based on your custom criteria.</p>
-                <a href="{% url 'live-stocks' %}" class="btn btn-primary">Open Screener</a>
+                <h5 class="card-title">Algorithm Development Services</h5>
+                <p class="card-text">Custom trading strategy development:</p>
+                <ul class="list-unstyled">
+                    <li>✓ Professional algo development</li>
+                    <li>✓ Strategy backtesting</li>
+                    <li>✓ Performance optimization</li>
+                </ul>
+                <a href="" class="btn btn-primary">Learn More</a>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Portfolio Management</h5>
-                <p class="card-text">Manage and track your stock portfolio performance.</p>
-                <a href="{% url 'portfolio' %}" class="btn btn-primary">View Portfolio</a>
+                <h5 class="card-title">Market Research & Analysis</h5>
+                <p class="card-text">Deep market insights and research:</p>
+                <ul class="list-unstyled">
+                    <li>✓ Market trend analysis</li>
+                    <li>✓ Expert recommendations</li>
+                    <li>✓ Real-time market news</li>
+                </ul>
+                <a href="" class="btn btn-primary">View Research</a>
             </div>
         </div>
     </div>
@@ -36,18 +269,263 @@
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Getting Started</h5>
+                <h5 class="card-title">Why Choose GuruBase?</h5>
                 <p class="card-text">
-                    New to GuruBase? Follow these steps:
+                    Experience the power of professional-grade trading tools and services:
                 </p>
-                <ol class="mb-0">
-                    <li>Create an account or sign in</li>
-                    <li>Use the stock screener to find opportunities</li>
-                    <li>Build your portfolio</li>
-                    <li>Track your investments</li>
-                </ol>
+                <ul class="mb-0">
+                    <li>Advanced technical analysis and screening capabilities</li>
+                    <li>Automated trading systems with proven strategies</li>
+                    <li>Professional algorithm development services</li>
+                    <li>Comprehensive portfolio management tools</li>
+                    <li>Expert market research and analysis</li>
+                </ul>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Platform Features</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="bi bi-graph-up feature-icon"></i>
+                <h4>Real-time Analytics</h4>
+                <p>Advanced charting tools and technical indicators for informed decision-making</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="bi bi-shield-check feature-icon"></i>
+                <h4>Secure Trading</h4>
+                <p>Bank-grade security with 2FA and encrypted transactions</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="bi bi-lightning feature-icon"></i>
+                <h4>Lightning Fast</h4>
+                <p>Ultra-low latency execution with dedicated servers</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Testimonials Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">What Our Users Say</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card testimonial-card">
+                <div class="card-body">
+                    <p class="card-text">"GuruBase's automated trading system has transformed my trading strategy. The results speak for themselves."</p>
+                    <footer class="blockquote-footer mt-2">Rajesh Kumar, Professional Trader</footer>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card testimonial-card">
+                <div class="card-body">
+                    <p class="card-text">"The stock screener is incredibly powerful. I've discovered numerous opportunities I would have missed otherwise."</p>
+                    <footer class="blockquote-footer mt-2">Priya Sharma, Investment Analyst</footer>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card testimonial-card">
+                <div class="card-body">
+                    <p class="card-text">"Their algo development service helped me implement my trading strategy with precision. Excellent support team!"</p>
+                    <footer class="blockquote-footer mt-2">Amit Patel, Fund Manager</footer>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="container mb-5">
+    <div class="card bg-primary text-white">
+        <div class="card-body text-center py-5">
+            <h2 class="card-title">Ready to Start Trading?</h2>
+            <p class="card-text">Join thousands of successful traders using GuruBase's advanced trading platform.</p>
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg">Create Free Account</a>
+        </div>
+    </div>
+</div>
+
+<!-- Partners Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Trusted By</h2>
+    <div class="row align-items-center justify-content-center g-4">
+        <div class="col-md-2 col-6 text-center">
+            <img src="/static/images/partner1.png" alt="Partner 1" class="img-fluid" style="max-height: 60px;">
+        </div>
+        <div class="col-md-2 col-6 text-center">
+            <img src="/static/images/partner2.png" alt="Partner 2" class="img-fluid" style="max-height: 60px;">
+        </div>
+        <div class="col-md-2 col-6 text-center">
+            <img src="/static/images/partner3.png" alt="Partner 3" class="img-fluid" style="max-height: 60px;">
+        </div>
+        <div class="col-md-2 col-6 text-center">
+            <img src="/static/images/partner4.png" alt="Partner 4" class="img-fluid" style="max-height: 60px;">
+        </div>
+    </div>
+</div>
+
+<!-- Market Updates Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Live Market Updates</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="market-update">
+                <h5>NIFTY 50</h5>
+                <div class="d-flex justify-content-between">
+                    <span>19,425.35</span>
+                    <span class="text-success">+1.2%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="market-update">
+                <h5>SENSEX</h5>
+                <div class="d-flex justify-content-between">
+                    <span>64,718.56</span>
+                    <span class="text-success">+0.9%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="market-update">
+                <h5>BANK NIFTY</h5>
+                <div class="d-flex justify-content-between">
+                    <span>43,915.20</span>
+                    <span class="text-danger">-0.3%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Features Grid -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Advanced Trading Features</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-grid-item scroll-animation">
+                <i class="bi bi-cpu feature-icon"></i>
+                <h4>AI-Powered Analysis</h4>
+                <p>Machine learning algorithms analyze market patterns and predict potential movements</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-grid-item scroll-animation">
+                <i class="bi bi-clock-history feature-icon"></i>
+                <h4>Backtesting Engine</h4>
+                <p>Test your strategies against historical data with our advanced backtesting tools</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-grid-item scroll-animation">
+                <i class="bi bi-bell feature-icon"></i>
+                <h4>Smart Alerts</h4>
+                <p>Customizable alerts for price movements, technical indicators, and news events</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pricing Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Choose Your Plan</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card pricing-card">
+                <div class="card-body text-center">
+                    <h3>Basic</h3>
+                    <div class="py-4">
+                        <h4 class="mb-0">₹999</h4>
+                        <p class="text-muted">per month</p>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">✓ Basic Stock Screener</li>
+                        <li class="mb-2">✓ Market Data</li>
+                        <li class="mb-2">✓ 5 Custom Alerts</li>
+                        <li class="mb-2">✓ Email Support</li>
+                    </ul>
+                    <a href="{% url 'home' %}?plan=basic" class="btn btn-outline-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card pricing-card pricing-popular">
+                <div class="card-body text-center">
+                    <h3>Pro</h3>
+                    <div class="py-4">
+                        <h4 class="mb-0">₹2,499</h4>
+                        <p class="text-muted">per month</p>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">✓ Advanced Screener</li>
+                        <li class="mb-2">✓ Real-time Data</li>
+                        <li class="mb-2">✓ Unlimited Alerts</li>
+                        <li class="mb-2">✓ Priority Support</li>
+                        <li class="mb-2">✓ Automated Trading</li>
+                    </ul>
+                    <a href="{% url 'home' %}?plan=pro" class="btn btn-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card pricing-card">
+                <div class="card-body text-center">
+                    <h3>Enterprise</h3>
+                    <div class="py-4">
+                        <h4 class="mb-0">Custom</h4>
+                        <p class="text-muted">contact us</p>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">✓ All Pro Features</li>
+                        <li class="mb-2">✓ Custom Solutions</li>
+                        <li class="mb-2">✓ API Access</li>
+                        <li class="mb-2">✓ Dedicated Support</li>
+                        <li class="mb-2">✓ Custom Algorithms</li>
+                    </ul>
+                    <a href="{% url 'home' %}" class="btn btn-outline-primary">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest News Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Latest Market News</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card news-card">
+                <img src="/static/images/news1.jpg" class="card-img-top" alt="Market News">
+                <div class="card-body">
+                    <h5 class="card-title">RBI Policy Update</h5>
+                    <p class="card-text">Latest monetary policy decisions and their impact on markets...</p>
+                    <a href="#" class="btn btn-link">Read More →</a>
+                </div>
+            </div>
+        </div>
+        <!-- Add more news cards as needed -->
+    </div>
+</div>
+
+<!-- Technology Stack -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Powered By Latest Technology</h2>
+    <div class="text-center">
+        <i class="bi bi-cpu-fill tech-stack-icon"></i>
+        <i class="bi bi-cloud-fill tech-stack-icon"></i>
+        <i class="bi bi-shield-fill-check tech-stack-icon"></i>
+        <i class="bi bi-graph-up tech-stack-icon"></i>
+        <i class="bi bi-database-fill tech-stack-icon"></i>
     </div>
 </div>
 {% endblock %}
