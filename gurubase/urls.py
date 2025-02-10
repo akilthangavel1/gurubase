@@ -7,5 +7,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('dashboard.urls')),
     path('social-auth/', include('social_django.urls', namespace='social')),
+    path('blog/', include('blog.urls')),
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-4-yjb8&k%l434=^!-n+rx17-aaynyy0olz%3-9=4zhjw!y^f-5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'channels',
     'django_celery_beat',
     'social_django',
+    'blog',
 ]
 
 MIDDLEWARE = [
