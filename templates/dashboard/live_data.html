@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Live Market Data</h1>
         <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="refreshToggle">
+            <input class="form-check-input" type="checkbox" id="refreshToggle" checked>
             <label class="form-check-label" for="refreshToggle">Auto Refresh</label>
         </div>
     </div>
@@ -25,28 +25,36 @@
                             <th>Sector</th>
                             <th>Market Cap</th>
                             <th>Last Price</th>
-                            <th>Change %</th>
+                            <th>Change</th>
+                            <th>High</th>
+                            <th>Low</th>
                             <th>Volume</th>
+                            <th>Open</th>
+                            <th>Prev Close</th>
                             <th>Last Updated</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for ticker in tickers %}
-                        <tr data-symbol="{{ ticker.ticker_symbol }}">
+                        <tr data-symbol="{{ ticker.ticker_symbol|upper }}">
                             <td>{{ ticker.ticker_symbol }}</td>
                             <td>{{ ticker.ticker_name }}</td>
                             <td>NSE</td>
                             <td>EQ</td>
                             <td>{{ ticker.ticker_sector }}</td>
                             <td>{{ ticker.ticker_market_cap }}</td>
-                            <td class="text-end" id="price-{{ ticker.ticker_symbol }}">-</td>
-                            <td class="text-end" id="change-{{ ticker.ticker_symbol }}">-</td>
-                            <td class="text-end" id="volume-{{ ticker.ticker_symbol }}">-</td>
-                            <td id="updated-{{ ticker.ticker_symbol }}">-</td>
+                            <td class="text-end" id="price-{{ ticker.ticker_symbol|upper }}">-</td>
+                            <td class="text-end" id="change-{{ ticker.ticker_symbol|upper }}">-</td>
+                            <td class="text-end" id="high-{{ ticker.ticker_symbol|upper }}">-</td>
+                            <td class="text-end" id="low-{{ ticker.ticker_symbol|upper }}">-</td>
+                            <td class="text-end" id="volume-{{ ticker.ticker_symbol|upper }}">-</td>
+                            <td class="text-end" id="open-{{ ticker.ticker_symbol|upper }}">-</td>
+                            <td class="text-end" id="prev-close-{{ ticker.ticker_symbol|upper }}">-</td>
+                            <td id="updated-{{ ticker.ticker_symbol|upper }}">-</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="10" class="text-center">No tickers found in the database.</td>
+                            <td colspan="14" class="text-center">No tickers found in the database.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -66,15 +74,22 @@ const SELECTORS = {
     row: symbol => `tr[data-symbol="${symbol}"]`,
     price: symbol => `#price-${symbol}`,
     change: symbol => `#change-${symbol}`,
+    high: symbol => `#high-${symbol}`,
+    low: symbol => `#low-${symbol}`,
     volume: symbol => `#volume-${symbol}`,
+    open: symbol => `#open-${symbol}`,
+    prevClose: symbol => `#prev-close-${symbol}`,
     updated: symbol => `#updated-${symbol}`
 };
 
 // Event handlers
 function handleRefreshToggle(e) {
+    console.log('Toggle clicked:', e.target.checked);  // Debug log
     if (e.target.checked) {
+        console.log('Attempting to connect...');
         connectSSE();
     } else {
+        console.log('Disconnecting...');
         disconnectSSE();
     }
 }
@@ -89,46 +104,87 @@ function disconnectSSE() {
 function connectSSE() {
     if (eventSource) return;  // Prevent multiple connections
     
+    console.log('Attempting to connect to SSE...');
     eventSource = new EventSource('/api/stocks/sse-stocks-data/');
     
     eventSource.onmessage = function(event) {
+        console.log('Received SSE data:', event.data);
         const data = JSON.parse(event.data);
         updateTable(data);
+    };
+
+    eventSource.onopen = function(event) {
+        console.log('SSE connection established');
     };
 
     eventSource.onerror = function(error) {
         console.error('SSE Error:', error);
         disconnectSSE();
+        
+        // Attempt to reconnect after 5 seconds
+        setTimeout(() => {
+            if (document.querySelector(SELECTORS.refreshToggle).checked) {
+                console.log('Attempting to reconnect...');
+                connectSSE();
+            }
+        }, 5000);
     };
 }
 
 function updateTable(data) {
+    console.log('Updating table with data:', data);
+    
+    // Log all available symbols in the table
+    const allRows = document.querySelectorAll('tr[data-symbol]');
+    console.log('Available symbols in table:', 
+        Array.from(allRows).map(row => row.dataset.symbol));
+    
     data.forEach(stock => {
-        const row = document.querySelector(SELECTORS.row(stock.symbol));
-        if (!row) return;
+        // Remove the -EQ suffix and ensure uppercase for matching
+        const baseSymbol = stock.symbol.replace('-EQ', '').toUpperCase();
+        
+        console.log('Looking for symbol:', baseSymbol);
+        
+        const row = document.querySelector(`tr[data-symbol="${baseSymbol}"]`);
+        if (!row) {
+            console.warn(`No row found for symbol: ${baseSymbol}`);
+            return;
+        }
 
         const elements = {
-            price: row.querySelector(SELECTORS.price(stock.symbol)),
-            change: row.querySelector(SELECTORS.change(stock.symbol)),
-            volume: row.querySelector(SELECTORS.volume(stock.symbol)),
-            updated: row.querySelector(SELECTORS.updated(stock.symbol))
+            price: document.querySelector(SELECTORS.price(baseSymbol)),
+            change: document.querySelector(SELECTORS.change(baseSymbol)),
+            high: document.querySelector(SELECTORS.high(baseSymbol)),
+            low: document.querySelector(SELECTORS.low(baseSymbol)),
+            volume: document.querySelector(SELECTORS.volume(baseSymbol)),
+            open: document.querySelector(SELECTORS.open(baseSymbol)),
+            prevClose: document.querySelector(SELECTORS.prevClose(baseSymbol)),
+            updated: document.querySelector(SELECTORS.updated(baseSymbol))
         };
 
         // Update price
         if (elements.price) {
-            elements.price.textContent = stock.price || '-';
+            elements.price.textContent = stock.last_price || '-';
         }
 
-        // Update change percentage
+        // Update change percentage with both change and change percent
         if (elements.change) {
-            elements.change.textContent = stock.change ? `${stock.change}%` : '-';
-            elements.change.className = `text-end ${parseFloat(stock.change) >= 0 ? 'text-success' : 'text-danger'}`;
+            const changeText = stock.change && stock.change_percent ? 
+                `${stock.change} (${stock.change_percent}%)` : '-';
+            elements.change.textContent = changeText;
+            elements.change.className = `text-end ${parseFloat(stock.change_percent || 0) >= 0 ? 'text-success' : 'text-danger'}`;
         }
+
+        // Update high/low
+        if (elements.high) elements.high.textContent = stock.high || '-';
+        if (elements.low) elements.low.textContent = stock.low || '-';
 
         // Update volume
-        if (elements.volume) {
-            elements.volume.textContent = stock.volume || '-';
-        }
+        if (elements.volume) elements.volume.textContent = stock.volume || '-';
+
+        // Update open/prev close
+        if (elements.open) elements.open.textContent = stock.open || '-';
+        if (elements.prevClose) elements.prevClose.textContent = stock.prev_close || '-';
 
         // Update timestamp
         if (elements.updated) {
@@ -139,9 +195,19 @@ function updateTable(data) {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    connectSSE();  // Start initial connection
-    document.querySelector(SELECTORS.refreshToggle)
-        .addEventListener('change', handleRefreshToggle);
+    console.log('DOM Content Loaded');
+    const toggleButton = document.querySelector(SELECTORS.refreshToggle);
+    if (!toggleButton) {
+        console.error('Toggle button not found!');
+        return;
+    }
+    
+    console.log('Adding event listener to toggle button');
+    toggleButton.addEventListener('change', handleRefreshToggle);
+    
+    // Start initial connection
+    console.log('Starting initial connection');
+    connectSSE();
 });
 </script>
 {% endblock %} 

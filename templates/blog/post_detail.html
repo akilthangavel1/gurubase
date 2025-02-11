@@ -1,0 +1,68 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <article class="blog-post">
+        <!-- Post Header -->
+        <header class="post-header mb-4">
+            <div class="post-category text-primary mb-2">{{ post.category.name }}</div>
+            <h1 class="post-title">{{ post.title }}</h1>
+            <div class="post-meta text-muted">
+                <span class="author">By {{ post.author.get_full_name }}</span>
+                <span class="date">{{ post.created_at|date:"F d, Y" }}</span>
+                <span class="views">{{ post.views }} views</span>
+            </div>
+        </header>
+
+        <!-- Featured Image -->
+        {% if post.featured_image %}
+        <div class="post-image mb-4">
+            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="img-fluid rounded">
+        </div>
+        {% endif %}
+
+        <!-- Post Content -->
+        <div class="post-content mb-5">
+            {{ post.content|safe }}
+        </div>
+
+        <!-- Comments Section -->
+        <section class="comments-section">
+            <h3 class="mb-4">Comments ({{ comments.count }})</h3>
+            
+            {% if user.is_authenticated %}
+            <div class="comment-form mb-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ comment_form.content }}
+                    <button type="submit" class="btn btn-primary mt-3">Post Comment</button>
+                </form>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Please <a href="{% url 'login' %}">login</a> to leave a comment.
+            </div>
+            {% endif %}
+
+            <!-- Comments List -->
+            <div class="comments-list">
+                {% for comment in comments %}
+                <div class="comment card mb-3">
+                    <div class="card-body">
+                        <div class="comment-meta d-flex justify-content-between mb-2">
+                            <strong>{{ comment.author.get_full_name }}</strong>
+                            <small class="text-muted">{{ comment.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        <p class="comment-content mb-0">{{ comment.content }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">No comments yet. Be the first to comment!</p>
+                {% endfor %}
+            </div>
+        </section>
+    </article>
+</div>
+{% endblock %} 

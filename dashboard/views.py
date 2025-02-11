@@ -13,7 +13,7 @@ from .fyers_functions import get_live_data
 from django.db import connection
 import logging
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login, authenticate
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -147,23 +147,30 @@ async def generate_event_stream():
     while True:
         try:
             response = await get_live_data_async()
-            # print(response)
-            print("##########################")
-            if response and response.get('s') == 'ok':
-                data = response.get('d', [])
+            
+            if response and response.get('s') == 'ok' and 'd' in response:
+                data = response['d']
                 formatted_data = []
+                
                 for stock_data in data:
+                    v = stock_data.get('v', {})
                     formatted_data.append({
-                        'symbol': stock_data.get('n', '').split(':')[1].split('-')[0],
-                        'price': stock_data.get('v', {}).get('lp', '-'),
-                        'change': stock_data.get('v', {}).get('cp', '-'),
-                        'volume': stock_data.get('v', {}).get('vol', '-'),
+                        'symbol': stock_data['n'].split(':')[1],  # Remove 'NSE:' prefix
+                        'last_price': v.get('lp', '-'),
+                        'change': v.get('ch', '-'),
+                        'change_percent': v.get('chp', '-'),
+                        'high': v.get('high_price', '-'),
+                        'low': v.get('low_price', '-'),
+                        'volume': v.get('volume', '-'),
+                        'open': v.get('open_price', '-'),
+                        'prev_close': v.get('prev_close_price', '-'),
+                        'bid': v.get('bid', '-'),
+                        'ask': v.get('ask', '-')
                     })
-                print(formatted_data)
                 yield f"data: {json.dumps(formatted_data, cls=DjangoJSONEncoder)}\n\n"
             await asyncio.sleep(1)
         except Exception as e:
-            print(f"Exception occurred: {str(e)}")
+            logger.error(f"Error in generate_event_stream: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)}, cls=DjangoJSONEncoder)}\n\n"
             await asyncio.sleep(1)
 
@@ -316,4 +323,60 @@ def live_data(request):
         'tickers': tickers,
     }
     return render(request, 'dashboard/live_data.html', context)
+
+def is_staff(user):
+    return user.is_staff
+
+# @login_required
+# @user_passes_test(is_staff)
+def clear_ticker_data(request):
+    if request.method == 'POST':
+        ticker_symbol = request.POST.get('ticker_symbol')
+        try:
+            with connection.cursor() as cursor:
+                # Clear historical data
+                table_name = f"{ticker_symbol}_historical_data"
+                cursor.execute(f"TRUNCATE TABLE {table_name}")
+                
+                # Clear future historical data
+                future_table_name = f"{ticker_symbol}_future_historical_data"
+                cursor.execute(f"TRUNCATE TABLE {future_table_name}")
+                
+            messages.success(request, f'Successfully cleared data for {ticker_symbol}')
+        except Exception as e:
+            messages.error(request, f'Error clearing data: {str(e)}')
+        
+    return redirect('ticker_list')
+
+# @login_required
+# @user_passes_test(is_staff)
+def data_management(request):
+    tickers = TickerBase.objects.all()
+    ticker_data = []
+    
+    with connection.cursor() as cursor:
+        for ticker in tickers:
+            # Get historical data count
+            try:
+                cursor.execute(f"SELECT COUNT(*) FROM {ticker.ticker_symbol}_historical_data")
+                historical_count = cursor.fetchone()[0]
+            except:
+                historical_count = 0
+                
+            # Get future historical data count
+            try:
+                cursor.execute(f"SELECT COUNT(*) FROM {ticker.ticker_symbol}_future_historical_data")
+                future_count = cursor.fetchone()[0]
+            except:
+                future_count = 0
+                
+            ticker_data.append({
+                'ticker_symbol': ticker.ticker_symbol,
+                'historical_count': historical_count,
+                'future_count': future_count
+            })
+    
+    return render(request, 'dashboard/data_management.html', {
+        'tickers': ticker_data
+    })
     

@@ -25,4 +25,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('profile/', views.profile, name='profile'),
     path('live-data/', views.live_data, name='live_data'),
+    path('clear-ticker-data/', views.clear_ticker_data, name='clear_ticker_data'),
+    path('data-management/', views.data_management, name='data_management'),
 ] 

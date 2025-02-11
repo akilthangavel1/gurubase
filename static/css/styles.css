@@ -138,3 +138,85 @@
 .blog-card-link:hover {
     text-decoration: underline;
 }
+.note-editor {
+    margin-bottom: 1rem;
+}
+
+.note-editor.note-frame {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+.note-editor .note-toolbar {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ced4da;
+}
+
+.note-editor .note-statusbar {
+    background-color: #f8f9fa;
+    border-top: 1px solid #ced4da;
+}
+
+.featured-image-preview {
+    max-width: 100%;
+    height: auto;
+    margin-top: 1rem;
+}
+
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.help-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Blog Post Detail Styles */
+.blog-post {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.post-header {
+    text-align: center;
+}
+
+.post-title {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.post-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 0.9rem;
+}
+
+.post-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444;
+}
+
+.comments-section {
+    border-top: 1px solid #dee2e6;
+    padding-top: 2rem;
+}
+
+.comment-form textarea {
+    min-height: 100px;
+}
+
+.comment {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.comment-meta {
+    font-size: 0.9rem;
+}

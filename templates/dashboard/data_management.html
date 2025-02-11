@@ -1,0 +1,68 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Data Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Data Management</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Warning: Clearing data is irreversible. Please be careful when using these options.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ticker Symbol</th>
+                                    <th>Historical Data</th>
+                                    <th>Future Historical Data</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticker in tickers %}
+                                <tr>
+                                    <td>{{ ticker.ticker_symbol }}</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ ticker.historical_count }} records
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ ticker.future_count }} records
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="post" action="{% url 'clear_ticker_data' %}" 
+                                              onsubmit="return confirm('Are you sure you want to clear all data for {{ ticker.ticker_symbol }}?');"
+                                              style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="ticker_symbol" value="{{ ticker.ticker_symbol }}">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash-alt me-1"></i> Clear Data
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No tickers found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
