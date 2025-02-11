@@ -140,8 +140,14 @@ function updateTable(data) {
         Array.from(allRows).map(row => row.dataset.symbol));
     
     data.forEach(stock => {
-        // Remove the -EQ suffix and ensure uppercase for matching
-        const baseSymbol = stock.symbol.replace('-EQ', '').toUpperCase();
+        // Remove the futures contract info and -EQ suffix and ensure uppercase
+        const baseSymbol = stock.symbol
+            .replace(/-EQ$/, '')           // Remove -EQ suffix
+            .replace(/\d+FEBFUT$/, '')     // Remove date and FUT suffix
+            .replace(/\d+MARFUT$/, '')     // Remove date and FUT suffix
+            .replace(/\d+APRFUT$/, '')     // Remove date and FUT suffix
+            .replace(/\d+MAYFUT$/, '')     // Remove date and FUT suffix
+            .toUpperCase();                // Convert to uppercase
         
         console.log('Looking for symbol:', baseSymbol);
         
@@ -162,34 +168,20 @@ function updateTable(data) {
             updated: document.querySelector(SELECTORS.updated(baseSymbol))
         };
 
-        // Update price
-        if (elements.price) {
-            elements.price.textContent = stock.last_price || '-';
-        }
-
-        // Update change percentage with both change and change percent
+        // Update the values if elements exist
+        if (elements.price) elements.price.textContent = stock.last_price || '-';
         if (elements.change) {
             const changeText = stock.change && stock.change_percent ? 
                 `${stock.change} (${stock.change_percent}%)` : '-';
             elements.change.textContent = changeText;
             elements.change.className = `text-end ${parseFloat(stock.change_percent || 0) >= 0 ? 'text-success' : 'text-danger'}`;
         }
-
-        // Update high/low
         if (elements.high) elements.high.textContent = stock.high || '-';
         if (elements.low) elements.low.textContent = stock.low || '-';
-
-        // Update volume
         if (elements.volume) elements.volume.textContent = stock.volume || '-';
-
-        // Update open/prev close
         if (elements.open) elements.open.textContent = stock.open || '-';
         if (elements.prevClose) elements.prevClose.textContent = stock.prev_close || '-';
-
-        // Update timestamp
-        if (elements.updated) {
-            elements.updated.textContent = new Date().toLocaleTimeString();
-        }
+        if (elements.updated) elements.updated.textContent = new Date().toLocaleTimeString();
     });
 }
 
