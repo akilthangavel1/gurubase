@@ -27,4 +27,5 @@ urlpatterns = [
     path('live-data/', views.live_data, name='live_data'),
     path('clear-ticker-data/', views.clear_ticker_data, name='clear_ticker_data'),
     path('data-management/', views.data_management, name='data_management'),
+    path('clear-all-data/', views.clear_all_data, name='clear_all_data'),
 ] 

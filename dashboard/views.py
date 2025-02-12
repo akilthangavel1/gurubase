@@ -146,8 +146,20 @@ def get_live_data_async():
 async def generate_event_stream():
     while True:
         try:
-            response = await get_live_data_async()
+            # Check if current time is within market hours
+            current_time = pd.Timestamp.now('Asia/Kolkata')
+            market_start = current_time.replace(hour=9, minute=0, second=0)
+            market_end = current_time.replace(hour=15, minute=30, second=0)
             
+            # Check if it's a weekday (Monday = 0, Sunday = 6)
+            is_weekday = current_time.weekday() < 5
+            
+            if not is_weekday or not (market_start <= current_time <= market_end):
+                yield f"data: {json.dumps({'message': 'Market is closed'}, cls=DjangoJSONEncoder)}\n\n"
+                await asyncio.sleep(60)  # Check every minute during off-market hours
+                continue
+                
+            response = await get_live_data_async()
             if response and response.get('s') == 'ok' and 'd' in response:
                 data = response['d']
                 formatted_data = []
@@ -379,4 +391,32 @@ def data_management(request):
     return render(request, 'dashboard/data_management.html', {
         'tickers': ticker_data
     })
+
+# @login_required
+def clear_all_data(request):
+    if request.method == 'POST':
+        try:
+            # Get all tickers
+            tickers = TickerBase.objects.all()
+            
+            with connection.cursor() as cursor:
+                for ticker in tickers:
+                    try:
+                        # Clear historical data
+                        table_name = f"{ticker.ticker_symbol}_historical_data"
+                        cursor.execute(f"TRUNCATE TABLE {table_name}")
+                        
+                        # Clear future historical data
+                        future_table_name = f"{ticker.ticker_symbol}_future_historical_data"
+                        cursor.execute(f"TRUNCATE TABLE {future_table_name}")
+                        
+                    except Exception as e:
+                        # Log the error but continue with other tickers
+                        logger.error(f"Error clearing data for {ticker.ticker_symbol}: {str(e)}")
+                        continue
+                
+            messages.success(request, 'Successfully cleared all ticker data')
+        except Exception as e:
+            messages.error(request, f'Error clearing data: {str(e)}')
+    return redirect('data_management')
     
