@@ -41,8 +41,8 @@ def post_detail(request, slug):
         'comment_form': comment_form
     })
 
-@login_required
-@user_passes_test(is_staff)
+# @login_required
+# @user_passes_test(is_staff)
 def post_create(request):
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
@@ -60,8 +60,8 @@ def post_create(request):
         'title': 'Create New Post'
     })
 
-@login_required
-@user_passes_test(is_staff)
+# @login_required
+# @user_passes_test(is_staff)
 def category_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
