@@ -149,7 +149,7 @@ async def generate_event_stream():
             # Check if current time is within market hours
             current_time = pd.Timestamp.now('Asia/Kolkata')
             market_start = current_time.replace(hour=9, minute=0, second=0)
-            market_end = current_time.replace(hour=15, minute=30, second=0)
+            market_end = current_time.replace(hour=15, minute=45, second=0)
             
             # Check if it's a weekday (Monday = 0, Sunday = 6)
             is_weekday = current_time.weekday() < 5
