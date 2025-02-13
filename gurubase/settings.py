@@ -168,11 +168,6 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-# Authentication settings
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'index'
-LOGOUT_URL = 'logout'
-LOGOUT_REDIRECT_URL = 'login'
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (

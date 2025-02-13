@@ -80,8 +80,8 @@
                         </a>
                     </li>
 
-                    <!-- Staff Dropdown (New) -->
-                   
+                    <!-- Staff Dropdown (Only visible for staff) -->
+                    {% if user.is_staff %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-shield me-1"></i> Staff
@@ -113,6 +113,7 @@
                             </a></li>
                         </ul>
                     </li>
+                    {% endif %}
                
                 </ul>
 
