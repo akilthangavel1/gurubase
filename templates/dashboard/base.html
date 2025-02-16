@@ -32,45 +32,30 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <!-- Main Navigation -->
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <!-- Stocks Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-chart-bar me-1"></i> Stocks
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'stocks' %}">
-                                <i class="fas fa-list me-2"></i> Stock List
-                            </a></li>
-                            <li><a class="dropdown-item" href="#">
-                                <i class="fas fa-search me-2"></i> Stock Screener
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">
-                                <i class="fas fa-star me-2"></i> Watchlist
-                            </a></li>
-                        </ul>
-                    </li>
-
+                    
                     <!-- Futures Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-clock me-1"></i> Futures
                         </a>
                         <ul class="dropdown-menu">
+
                             <li><a class="dropdown-item" href="{% url 'future-scanner' %}">
-                                <i class="fas fa-radar me-2"></i> Future Scanner
-                            </a></li>
-                            <li><a class="dropdown-item" href="#">
                                 <i class="fas fa-chart-line me-2"></i> Future Analysis
                             </a></li>
                         </ul>
                     </li>
 
-                    <!-- Options -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
+                    <!-- Options Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-layer-group me-1"></i> Options
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'table_stream' %}">
+                                <i class="fas fa-chart-pie me-2"></i> Option Analysis
+                            </a></li>
+                        </ul>
                     </li>
 
                     <!-- Portfolio -->

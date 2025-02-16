@@ -9,7 +9,17 @@ def is_staff(user):
     return user.is_staff
 
 def blog_list(request):
-    posts = Post.objects.filter(status='published')
+    category_id = request.GET.get('category')
+    search_query = request.GET.get('search')
+    
+    posts = Post.objects.filter(status='published').order_by('-created_at')
+    
+    if category_id:
+        posts = posts.filter(category_id=category_id)
+    if search_query:
+        posts = posts.filter(title__icontains=search_query) | \
+                posts.filter(content__icontains=search_query)
+    
     categories = Category.objects.all()
     paginator = Paginator(posts, 6)
     page = request.GET.get('page')
@@ -17,7 +27,9 @@ def blog_list(request):
     
     return render(request, 'blog/blog_list.html', {
         'posts': posts,
-        'categories': categories
+        'categories': categories,
+        'selected_category': category_id,
+        'search_query': search_query
     })
 
 def post_detail(request, slug):

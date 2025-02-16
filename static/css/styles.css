@@ -1,3 +1,161 @@
+body {
+    background-color: #f4f6f8;
+    font-family: Arial, sans-serif;
+}
+
+.container-95 {
+    max-width: 95%;
+    margin: auto;
+}
+
+.nifty-header {
+    background-color: #ffffff;
+    color: #0d6efd;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nifty-left {
+    text-align: left;
+}
+
+.nifty-left h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+    color: #084298;
+}
+
+.nifty-left .nifty-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0d6efd;
+    margin-top: 10px;
+}
+
+.nifty-right {
+    text-align: right;
+}
+
+.nifty-right .filter-container {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.nifty-right input[type="date"] {
+    width: 200px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.nifty-right .btn-filter {
+    padding: 10px 20px;
+    border-radius: 5px;
+    background-color: #0d6efd;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nifty-right .btn-filter:hover {
+    background-color: #084298;
+}
+
+.table-container {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    color: #0d6efd;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+tbody td {
+    text-align: center;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    padding: 10px;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+    background-color: #e8f4fd;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: #007bff;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: #0056b3;
+}
+
+.navbar-light .navbar-toggler-icon {
+    background-color: #007bff;
+}
+
+.navbar-brand {
+    color: #007bff;
+}
+
+.navbar-brand:hover {
+    color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nifty-left h1 {
+        font-size: 1.2rem;
+    }
+
+    .nifty-left .nifty-value {
+        font-size: 1.8rem;
+    }
+
+    .nifty-right .filter-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .nifty-right input[type="date"],
+    .nifty-right .btn-filter {
+        width: 100%;
+    }
+}
+
 /* Navbar Brand Styling */
 .navbar-brand h1 {
     margin: 0;
