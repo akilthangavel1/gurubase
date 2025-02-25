@@ -1,0 +1,139 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Technical Indicators</h3>
+                    <div class="market-status alert" id="market-status" role="alert"></div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="indicators-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Hull MA</th>
+                                    <th>SMA</th>
+                                    <th>EMA</th>
+                                    <th>MACD</th>
+                                    <th>Awesome Oscillator</th>
+                                    <th>Supertrend</th>
+                                    <th>Camrilla Pivots</th>
+                                    <th>Classical Pivots</th>
+                                    <th>Keltner Channel</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const eventSource = new EventSource("{% url 'sse_stocks_data' %}");
+    const tableBody = document.getElementById('indicators-table').getElementsByTagName('tbody')[0];
+    const marketStatus = document.getElementById('market-status');
+
+    function calculateIndicators(data) {
+        // Here you would implement the actual indicator calculations
+        return {
+            hullMA: (Math.random() * 100).toFixed(2),
+            sma: (Math.random() * 100).toFixed(2),
+            ema: (Math.random() * 100).toFixed(2),
+            macd: (Math.random() * 10 - 5).toFixed(2),
+            awesome: (Math.random() * 10 - 5).toFixed(2),
+            supertrend: Math.random() > 0.5 ? 'Bullish' : 'Bearish',
+            camrilla: (Math.random() * 100).toFixed(2),
+            classical: (Math.random() * 100).toFixed(2),
+            keltner: `${(Math.random() * 100).toFixed(2)} / ${(Math.random() * 100).toFixed(2)}`
+        };
+    }
+
+    function updateTable(data) {
+        tableBody.innerHTML = '';
+        
+        data.forEach(stock => {
+            const indicators = calculateIndicators(stock);
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td>${stock.symbol}</td>
+                <td>${indicators.hullMA}</td>
+                <td>${indicators.sma}</td>
+                <td>${indicators.ema}</td>
+                <td>${indicators.macd}</td>
+                <td>${indicators.awesome}</td>
+                <td class="${indicators.supertrend === 'Bullish' ? 'text-success' : 'text-danger'}">
+                    ${indicators.supertrend}
+                </td>
+                <td>${indicators.camrilla}</td>
+                <td>${indicators.classical}</td>
+                <td>${indicators.keltner}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
+
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        
+        if (data.message) {
+            marketStatus.textContent = data.message;
+            marketStatus.className = 'alert alert-warning';
+            return;
+        }
+
+        if (data.error) {
+            marketStatus.textContent = `Error: ${data.error}`;
+            marketStatus.className = 'alert alert-danger';
+            return;
+        }
+
+        marketStatus.textContent = 'Market is Open - Live Updates';
+        marketStatus.className = 'alert alert-success';
+        updateTable(data);
+    };
+
+    eventSource.onerror = function(error) {
+        console.error('EventSource failed:', error);
+        marketStatus.textContent = 'Connection lost. Attempting to reconnect...';
+        marketStatus.className = 'alert alert-danger';
+    };
+});
+</script>
+
+<style>
+.market-status {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    margin-bottom: 1rem;
+}
+
+.table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.text-success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.text-danger {
+    color: #dc3545;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <!-- Timeframe Selection Card -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Data Settings</h4>
+                </div>
+                <div class="card-body">
+                    <form id="timeframeForm" class="row g-3 align-items-end">
+                        <!-- Timeframe Selection -->
+                        <div class="col-md-2">
+                            <label for="timeframeSelect" class="form-label">Timeframe</label>
+                            <select class="form-select" id="timeframeSelect" required>
+                                <option value="1">1 Minute</option>
+                                <option value="5" selected>5 Minutes</option>
+                                <option value="15">15 Minutes</option>
+                                <option value="30">30 Minutes</option>
+                                <option value="60">1 Hour</option>
+                                <option value="D">Daily</option>
+                                <option value="W">Weekly</option>
+                            </select>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i> Update
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Display Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Dynamic Data</h4>
+                    <div class="d-flex align-items-center">
+                        
+                        <div id="market-status" class="alert mb-0" role="alert"></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="dynamicDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Timestamp</th>
+                                    <th>Open</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                                    <th>Close</th>
+                                    <th>Volume</th>
+                                    <th>VWAP</th>
+                                    <th>OI</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form Submit Handler
+    document.getElementById('timeframeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetchData();
+    });
+
+    function fetchData() {
+        const ticker = document.getElementById('tickerSelect').value;
+        const timeframe = document.getElementById('timeframeSelect').value;
+
+        // Show loading state
+        const tableBody = document.getElementById('dynamicDataTable').getElementsByTagName('tbody')[0];
+        tableBody.innerHTML = '<tr><td colspan="10" class="text-center">Loading data...</td></tr>';
+
+        // Fetch data from your backend
+        fetch(`/api/future-data/?ticker=${ticker}&timeframe=${timeframe}`)
+            .then(response => response.json())
+            .then(data => {
+                updateTable(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>';
+            });
+    }
+
+    function updateTable(data) {
+        const tableBody = document.getElementById('dynamicDataTable').getElementsByTagName('tbody')[0];
+        tableBody.innerHTML = '';
+
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.ticker_symbol}</td>
+                <td>${new Date(row.timestamp).toLocaleString()}</td>
+                <td>${row.open}</td>
+                <td>${row.high}</td>
+                <td>${row.low}</td>
+                <td>${row.close}</td>
+                <td>${row.volume}</td>
+                <td>${row.vwap}</td>
+                <td>${row.oi}</td>
+                <td class="${row.change >= 0 ? 'text-success' : 'text-danger'}">${row.change}</td>
+                <td class="${row.change_percent >= 0 ? 'text-success' : 'text-danger'}">${row.change_percent}%</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    }
+});
+</script>
+
+<style>
+.market-status {
+    margin-bottom: 1rem;
+}
+
+.table th {
+    white-space: nowrap;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.card {
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}

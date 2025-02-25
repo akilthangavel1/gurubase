@@ -90,4 +90,4 @@ def category_create(request):
     
     return render(request, 'blog/category_form.html', {
         'categories': Category.objects.all()
-    })
+    })  

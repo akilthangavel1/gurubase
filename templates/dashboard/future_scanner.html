@@ -1,143 +1,199 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}Future Scanner{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Future Scanner</h1>
-            
-            <!-- Main Analysis Table -->
-            <div class="card">
+    <div id="market-status" class="alert" role="alert"></div>
+    <div id="scanner-data">
+        <!-- Data will be populated here -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const eventSource = new EventSource("{% url 'sse_future_scanner' %}");
+    const scannerData = document.getElementById('scanner-data');
+    const marketStatus = document.getElementById('market-status');
+
+    function formatDateTime(dateStr) {
+        return new Date(dateStr).toLocaleString('en-IN');
+    }
+
+    function createStockCard(symbol, data) {
+        return `
+            <div class="card mb-3" id="stock-${symbol}">
+                <div class="card-header">
+                    <h5>${data.name} (${symbol})</h5>
+                    <div class="text-muted">Sector: ${data.sector}</div>
+                    <div class="text-muted">Current Price: ${data.current_price}</div>
+                    <div class="text-muted">Last Updated: ${formatDateTime(data.timestamp)}</div>
+                </div>
                 <div class="card-body">
-                    <div class="row align-items-center mb-3">
-                        <div class="col-md-4">
-                            <label for="stockSelect" class="form-label">Select Stock</label>
-                            <select class="form-select" id="stockSelect">
-                                <option value="NIFTY">NIFTY</option>
-                                <option value="BANKNIFTY">BANKNIFTY</option>
-                                <option value="FINNIFTY">FINNIFTY</option>
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="row mt-3">
-                                <div class="col-md-3">
-                                    <strong>Open:</strong> <span id="openPrice">-</span>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>High:</strong> <span id="highPrice">-</span>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Low:</strong> <span id="lowPrice">-</span>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Close:</strong> <span id="closePrice">-</span>
-                                </div>
+                    <!-- Hourly Bars -->
+                    <div class="section">
+                        <h6>Hourly High/Low Bars</h6>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(data.hourly_bars).map(([time, values]) => `
+                                    <tr>
+                                        <td>${time.replace('_', '-')}</td>
+                                        <td>${values.high}</td>
+                                        <td>${values.low}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Daily Stats -->
+                    <div class="section">
+                        <h6>Current 30 Minutes</h6>
+                        <p>Top: ${data.daily_stats.current_30min_top.value} (${formatDateTime(data.daily_stats.current_30min_top.timestamp)})</p>
+                        <p>Bottom: ${data.daily_stats.current_30min_bottom.value} (${formatDateTime(data.daily_stats.current_30min_bottom.timestamp)})</p>
+                        
+                        <h6>Last 5 Tops/Bottoms</h6>
+                        <div class="row">
+                            <div class="col">
+                                <h7>Tops</h7>
+                                <ul>
+                                    ${data.daily_stats.last_5_tops.map(top => `
+                                        <li>${top.high_price} (${formatDateTime(top.datetime)})</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                            <div class="col">
+                                <h7>Bottoms</h7>
+                                <ul>
+                                    ${data.daily_stats.last_5_bottoms.map(bottom => `
+                                        <li>${bottom.low_price} (${formatDateTime(bottom.datetime)})</li>
+                                    `).join('')}
+                                </ul>
                             </div>
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Stock Name</th>
-                                    <th>Value</th>
-                                    <th>Date/Time</th>
-                                    <th>HIGH & LOW of 60 MIN BAR- 9 am - 10 am</th>
-                                    <th>HIGH & LOW of 60 MIN BAR- 10 am - 11 am</th>
-                                    <th>HIGH & LOW of 60 MIN BAR- 11 am - 12 pm</th>
-                                    <th>HIGH & LOW of 60 MIN BAR- 12 pm - 1pm</th>
-                                    <th>HIGH & LOW of 60 MIN BAR- 1 Pm - 2 Pm</th>
-                                    <th>HIGH & LOW of 60 MIN BAR- 2pm - 3pm</th>
-                                    <th>HIGH & LOW of 60 MIN BAR- 3pm - 4pm</th>
-                                    <th>CURRENT DAY 30 MINS TOP WITH DATE AND TIME OF THE BAR</th>
-                                    <th>CURRENT DAY 30 MINS BOTTOM WITH DATE AND TIME OF THE BAR</th>
-                                    <th>LAST 5 TOPS IN 30 MINS WITH DATE AND TIME OF THE BAR</th>
-                                    <th>LAST 5 BOTTOMS IN 30 MINS WITH DATE AND TIME OF THE BAR</th>
-                                    <th>DAY TOP(Latest-1) WITH DATE</th>
-                                    <th>DAY TOP(Previous-1) WITH DATE</th>
-                                    <th>DAY TOP(Previous-2) WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 5 DAILY TOPS WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 10 DAILY TOPS WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 20 DAILY TOPS WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 40 DAILY TOPS WITH DATE</th>
-                                    <th>DAY BOTTOM(Latest-1) WITH DATE</th>
-                                    <th>DAY BOTTOM(Previous-1) WITH DATE</th>
-                                    <th>DAY BOTTOM(Previous-2) WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 5 DAILY BOTTOMS WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 10 DAILY BOTTOMS WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 20 DAILY BOTTOMS WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 40 DAILY BOTTOMS WITH DATE</th>
-                                    <th>DAY PREVIOUS SWING TOP 1 WITH DATE</th>
-                                    <th>DAY PREVIOUS SWING TOP 2 WITH DATE</th>
-                                    <th>DAY PREVIOUS SWING TOP 3 WITH DATE</th>
-                                    <th>DAY SWING BOTTOM 1 WITH DATE</th>
-                                    <th>DAY PREVIOUS SWING BOTTOM 2 WITH DATE</th>
-                                    <th>DAY PREVIOUS SWING BOTTOM 3 WITH DATE</th>
-                                    <th>PREVIOUS FRIDAY HIGH</th>
-                                    <th>PREVIOUS FRIDAY LOW</th>
-                                    <th>PREVIOUS FRIDAY CLOSE</th>
-                                    <th>EXPIRY WEEK OPEN</th>
-                                    <th>EXPIRY WEEK HIGH/LOW VOLUME BAR</th>
-                                    <th>EXPIRY WEEK HIGH</th>
-                                    <th>EXPIRY WEEK LOW</th>
-                                    <th>EXPIRY WEEK VWAP</th>
-                                    <th>EXPIRY WEEK CLOSE</th>
-                                    <th>ROLLOVER WEEK OPEN</th>
-                                    <th>ROLL OVER WEEK HIGH/LOW VOLUME BAR</th>
-                                    <th>ROLLOVER WEEK HIGH</th>
-                                    <th>ROLLOVER WEEK LOW</th>
-                                    <th>ROLL OVER WEEK VWAP</th>
-                                    <th>ROLL OVER WEEK CLOSE</th>
-                                    <th>WEEK TOP(Latest-1) WITH DATE</th>
-                                    <th>WEEK TOP(Previous-1) WITH DATE</th>
-                                    <th>WEEK TOP(Previous-2) WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 4 WEEKLY TOPS WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 8 WEEKLY TOPS WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 12 WEEKLY TOPS WITH DATE</th>
-                                    <th>HIGHEST TOP OUT OF LAST 16 WEEKLY TOPS WITH DATE</th>
-                                    <th>WEEK BOTTOM(Latest-1) WITH DATE</th>
-                                    <th>WEEK BOTTOM(Previous-1) WITH DATE</th>
-                                    <th>WEEK BOTTOM(Previous-2) WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 4 WEEKLY BOTTOMS WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 8 WEEKLY BOTTOMS WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 12 WEEKLY BOTTOMS WITH DATE</th>
-                                    <th>LOWEST BOTTOM OUT OF LAST 16 WEEKLY BOTTOMS WITH DATE</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                
-                                <!-- Data rows will be populated dynamically -->
-                            </tbody>
+                    <!-- Weekly Stats -->
+                    <div class="section">
+                        <h6>Expiry Week</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Open</td>
+                                <td>${data.weekly_stats.expiry_week.open}</td>
+                                <td>High</td>
+                                <td>${data.weekly_stats.expiry_week.high}</td>
+                            </tr>
+                            <tr>
+                                <td>Low</td>
+                                <td>${data.weekly_stats.expiry_week.low}</td>
+                                <td>Close</td>
+                                <td>${data.weekly_stats.expiry_week.close}</td>
+                            </tr>
+                            <tr>
+                                <td>VWAP</td>
+                                <td>${data.weekly_stats.expiry_week.vwap}</td>
+                                <td>Volume</td>
+                                <td>${data.weekly_stats.expiry_week.volume}</td>
+                            </tr>
                         </table>
+                    </div>
+
+                    <!-- Monthly Stats -->
+                    <div class="section">
+                        <h6>Monthly Tops/Bottoms</h6>
+                        <div class="row">
+                            <div class="col">
+                                <h7>Month Tops</h7>
+                                <ul>
+                                    ${data.monthly_stats.month_tops.map(top => `
+                                        <li>${top.high_price} (${formatDateTime(top.datetime)})</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                            <div class="col">
+                                <h7>Month Bottoms</h7>
+                                <ul>
+                                    ${data.monthly_stats.month_bottoms.map(bottom => `
+                                        <li>${bottom.low_price} (${formatDateTime(bottom.datetime)})</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        `;
+    }
 
-{% block extra_js %}
-<script>
-document.getElementById('stockSelect').addEventListener('change', function() {
-    const selectedStock = this.value;
-    
-    fetch(`/api/stock-data/${selectedStock}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('openPrice').textContent = data.open || '-';
-            document.getElementById('highPrice').textContent = data.high || '-';
-            document.getElementById('lowPrice').textContent = data.low || '-';
-            document.getElementById('closePrice').textContent = data.close || '-';
-        })
-        .catch(error => {
-            console.error('Error fetching stock data:', error);
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        
+        if (data.message) {
+            // Market status message
+            marketStatus.textContent = data.message;
+            marketStatus.className = 'alert alert-warning';
+            return;
+        }
+
+        if (data.error) {
+            // Error message
+            marketStatus.textContent = `Error: ${data.error}`;
+            marketStatus.className = 'alert alert-danger';
+            return;
+        }
+
+        // Clear existing content
+        scannerData.innerHTML = '';
+        
+        // Update market status
+        marketStatus.textContent = 'Market is Open - Live Updates';
+        marketStatus.className = 'alert alert-success';
+
+        // Create cards for each stock
+        Object.entries(data).forEach(([symbol, stockData]) => {
+            scannerData.innerHTML += createStockCard(symbol, stockData);
         });
+    };
+
+    eventSource.onerror = function(error) {
+        console.error('EventSource failed:', error);
+        marketStatus.textContent = 'Connection lost. Attempting to reconnect...';
+        marketStatus.className = 'alert alert-danger';
+    };
 });
 </script>
-{% endblock %}
 
+<style>
+.section {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.card {
+    margin-bottom: 20px;
+}
+
+.table-sm {
+    font-size: 0.875rem;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.alert {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+</style>
 {% endblock %}

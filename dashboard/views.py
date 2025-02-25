@@ -92,7 +92,10 @@ def futures(request):
     return render(request, 'dashboard/futures.html')
 
 def future_scanner(request):
-    return render(request, 'dashboard/future_scanner.html')
+    """View for the future scanner page with real-time updates"""
+    return render(request, 'dashboard/future_scanner.html', {
+        'update_interval': 1000  # 1 second interval for updates
+    })
 
 def options(request):
     """View for the options page"""
@@ -419,4 +422,203 @@ def clear_all_data(request):
         except Exception as e:
             messages.error(request, f'Error clearing data: {str(e)}')
     return redirect('data_management')
+
+async def generate_future_scanner_stream():
+    while True:
+        try:
+            # Check market hours
+            current_time = pd.Timestamp.now('Asia/Kolkata')
+            market_start = current_time.replace(hour=9, minute=0, second=0)
+            market_end = current_time.replace(hour=15, minute=45, second=0)
+            is_weekday = current_time.weekday() < 5
+            
+            # if not is_weekday or not (market_start <= current_time <= market_end):
+            #     yield f"data: {json.dumps({'message': 'Market is closed'}, cls=DjangoJSONEncoder)}\n\n"
+            #     await asyncio.sleep(60)
+            #     continue
+
+            # Get all tickers
+            tickers = await sync_to_async(list)(TickerBase.objects.all())
+            scanner_data = {}
+            
+            for ticker in tickers:
+                try:
+                    # Get historical data from database for calculations
+                    historical_data = await get_historical_data_async(ticker.ticker_symbol)
+                    print(historical_data)
+                    if not historical_data.empty:
+                        # Use the latest data point as current data
+                        latest_data = historical_data.iloc[0]
+                        
+                        scanner_data[ticker.ticker_symbol] = {
+                            'name': ticker.ticker_name,
+                            'sector': ticker.ticker_sector,
+                            'hourly_bars': await calculate_hourly_bars(latest_data, historical_data),
+                            'daily_stats': await calculate_daily_stats(latest_data, historical_data),
+                            'weekly_stats': await calculate_weekly_stats(latest_data, historical_data),
+                            'monthly_stats': await calculate_monthly_stats(latest_data, historical_data),
+                            'current_price': float(latest_data['close_price']),
+                            'timestamp': current_time.isoformat()
+                        }
+                except Exception as e:
+                    logger.error(f"Error processing ticker {ticker.ticker_symbol}: {str(e)}")
+                    continue
+            
+            if scanner_data:
+                yield f"data: {json.dumps(scanner_data, cls=DjangoJSONEncoder)}\n\n"
+            else:
+                yield f"data: {json.dumps({'message': 'No data available'}, cls=DjangoJSONEncoder)}\n\n"
+                
+            await asyncio.sleep(1)
+            
+        except Exception as e:
+            logger.error(f"Error in generate_future_scanner_stream: {str(e)}")
+            yield f"data: {json.dumps({'error': str(e)}, cls=DjangoJSONEncoder)}\n\n"
+            await asyncio.sleep(1)
+
+@sync_to_async
+def get_historical_data_async(ticker_symbol):
+    """Fetch historical data for calculations"""
+    try:
+        with connection.cursor() as cursor:
+            table_name = f"{ticker_symbol}_future_historical_data"
+            query = f"""
+                SELECT datetime, open_price, high_price, low_price, 
+                       close_price, volume 
+                FROM "{table_name}"
+                WHERE datetime >= NOW() - INTERVAL '30 days'
+                ORDER BY datetime DESC
+                LIMIT 10000
+            """
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            return pd.DataFrame(data)
+    except Exception as e:
+        logger.error(f"Error fetching historical data for {ticker_symbol}: {str(e)}")
+        return pd.DataFrame()
+
+async def calculate_hourly_bars(latest_data, historical_data):
+    """Calculate hourly high/low bars using historical data"""
+    current_date = pd.Timestamp.now('Asia/Kolkata').date()
+    today_data = historical_data[historical_data['datetime'].dt.date == current_date]
     
+    hourly_bars = {}
+    for hour in range(9, 16):
+        hour_data = today_data[
+            (today_data['datetime'].dt.hour == hour)
+        ]
+        if not hour_data.empty:
+            hourly_bars[f'{hour}_{hour+1}'] = {
+                'high': float(hour_data['high_price'].max()),
+                'low': float(hour_data['low_price'].min())
+            }
+        else:
+            hourly_bars[f'{hour}_{hour+1}'] = {'high': 0, 'low': 0}
+    
+    return hourly_bars
+
+async def calculate_daily_stats(latest_data, historical_data):
+    """Calculate daily statistics using historical data"""
+    try:
+        # Last 30 minutes data
+        last_30min = historical_data.head(6)  # Assuming 5-minute candles
+        current_30min_top = last_30min['high_price'].max()
+        current_30min_bottom = last_30min['low_price'].min()
+        
+        # Last 5 tops and bottoms in 30 mins
+        tops = historical_data.nlargest(5, 'high_price')[['datetime', 'high_price']]
+        bottoms = historical_data.nsmallest(5, 'low_price')[['datetime', 'low_price']]
+        
+        return {
+            'current_30min_top': {
+                'value': float(current_30min_top),
+                'timestamp': last_30min.iloc[0]['datetime'].isoformat()
+            },
+            'current_30min_bottom': {
+                'value': float(current_30min_bottom),
+                'timestamp': last_30min.iloc[0]['datetime'].isoformat()
+            },
+            'last_5_tops': tops.to_dict('records'),
+            'last_5_bottoms': bottoms.to_dict('records'),
+            'day_tops': historical_data.nlargest(40, 'high_price')[['datetime', 'high_price']].to_dict('records'),
+            'day_bottoms': historical_data.nsmallest(40, 'low_price')[['datetime', 'low_price']].to_dict('records')
+        }
+    except Exception as e:
+        logger.error(f"Error in calculate_daily_stats: {str(e)}")
+        return {}
+
+async def calculate_weekly_stats(latest_data, historical_data):
+    """Calculate weekly statistics"""
+    try:
+        # Current week data
+        current_week = historical_data[
+            historical_data['datetime'].dt.isocalendar().week == 
+            pd.Timestamp.now('Asia/Kolkata').isocalendar().week
+        ]
+        
+        return {
+            'expiry_week': {
+                'open': float(current_week.iloc[0]['open_price']) if not current_week.empty else 0,
+                'high': float(current_week['high_price'].max()) if not current_week.empty else 0,
+                'low': float(current_week['low_price'].min()) if not current_week.empty else 0,
+                'close': float(current_week.iloc[-1]['close_price']) if not current_week.empty else 0,
+                'vwap': calculate_vwap(current_week),
+                'volume': int(current_week['volume'].sum()) if not current_week.empty else 0
+            },
+            'weekly_tops': historical_data.nlargest(16, 'high_price')[['datetime', 'high_price']].to_dict('records'),
+            'weekly_bottoms': historical_data.nsmallest(16, 'low_price')[['datetime', 'low_price']].to_dict('records')
+        }
+    except Exception as e:
+        logger.error(f"Error in calculate_weekly_stats: {str(e)}")
+        return {}
+
+async def calculate_monthly_stats(latest_data, historical_data):
+    """Calculate monthly statistics"""
+    try:
+        monthly_tops = historical_data.nlargest(6, 'high_price')[['datetime', 'high_price']]
+        monthly_bottoms = historical_data.nsmallest(6, 'low_price')[['datetime', 'low_price']]
+        
+        return {
+            'month_tops': monthly_tops.head(3).to_dict('records'),
+            'month_bottoms': monthly_bottoms.head(3).to_dict('records'),
+            'highest_tops': monthly_tops.to_dict('records'),
+            'lowest_bottoms': monthly_bottoms.to_dict('records')
+        }
+    except Exception as e:
+        logger.error(f"Error in calculate_monthly_stats: {str(e)}")
+        return {}
+
+def calculate_vwap(data):
+    """Calculate Volume Weighted Average Price"""
+    try:
+        if data.empty:
+            return 0
+        typical_price = (data['high_price'] + data['low_price'] + data['close_price']) / 3
+        return float((typical_price * data['volume']).sum() / data['volume'].sum())
+    except Exception:
+        return 0
+
+def sse_future_scanner(request):
+    """SSE endpoint for real-time future scanner updates"""
+    response = StreamingHttpResponse(
+        generate_future_scanner_stream(),
+        content_type='text/event-stream'
+    )
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+    
+def future_technical_indicators(request):
+    return render(request, 'dashboard/future_technical_indicators.html')
+
+
+
+def future_dynamic_data(request):
+    tickers = TickerBase.objects.all().order_by('ticker_name')
+    return render(request, 'dashboard/future_dynamic_data.html', {'tickers': tickers})
+
+
+def future_alerts(request):
+    tickers = TickerBase.objects.all().order_by('ticker_name')
+    return render(request, 'dashboard/future_alerts.html', {'tickers': tickers})

@@ -39,9 +39,17 @@
                             <i class="fas fa-clock me-1"></i> Futures
                         </a>
                         <ul class="dropdown-menu">
-
                             <li><a class="dropdown-item" href="{% url 'future-scanner' %}">
                                 <i class="fas fa-chart-line me-2"></i> Future Analysis
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'future_technical_indicators' %}">
+                                <i class="fas fa-chart-bar me-2"></i> Technical Indicators
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'future_dynamic_data' %}">
+                                <i class="fas fa-database me-2"></i> Dynamic Data
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'future_alerts' %}">
+                                <i class="fas fa-bell me-2"></i> Strategy Alerts
                             </a></li>
                         </ul>
                     </li>

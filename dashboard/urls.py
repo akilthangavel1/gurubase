@@ -13,6 +13,7 @@ urlpatterns = [
     path('stocks/', views.stocks, name='stocks'),
     path('futures/', views.futures, name='futures'),
     path('futures/scanner/', views.future_scanner, name='future-scanner'),
+    path('futures/scanner/sse/', views.sse_future_scanner, name='sse_future_scanner'),
     # path('options/', views.options, name='options'),
     path('api/stocks/stream/', views.sse_stocks_data, name='sse_stocks_data'),
     path('api/stocks/sse-stocks-data/', views.sse_stocks_data, name='sse_stocks_data'),
@@ -28,4 +29,7 @@ urlpatterns = [
     path('clear-ticker-data/', views.clear_ticker_data, name='clear_ticker_data'),
     path('data-management/', views.data_management, name='data_management'),
     path('clear-all-data/', views.clear_all_data, name='clear_all_data'),
+    path('future-technical-indicators/', views.future_technical_indicators, name='future_technical_indicators'),
+    path('future-dynamic-data/', views.future_dynamic_data, name='future_dynamic_data'),
+    path('future-alerts/', views.future_alerts, name='future_alerts'),
 ] 
