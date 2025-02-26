@@ -55,16 +55,24 @@
                             <thead>
                                 <tr>
                                     <th>Ticker</th>
-                                    <th>Timestamp</th>
-                                    <th>Open</th>
-                                    <th>High</th>
-                                    <th>Low</th>
-                                    <th>Close</th>
-                                    <th>Volume</th>
-                                    <th>VWAP</th>
-                                    <th>OI</th>
-                                    <th>Change</th>
-                                    <th>% Change</th>
+                                    <th>CURRENT CANDLE OPEN</th>
+                                    <th>CURRENT CANDLE HIGH</th>
+                                    <th>CURRENT CANDLE LOW</th>
+                                    <th>CURRENT CANDLE CLOSE</th>
+                                    <th>PREVIOUS CANDLE OPEN</th>
+                                    <th>PREVIOUS CANDLE HIGH</th>
+                                    <th>PREVIOUS CANDLE LOW</th>
+                                    <th>PREVIOUS CANDLE CLOSE</th>
+                                    <th>CURRENT CANDLE ATP</th>
+                                    <th>PREVIOUS CANDLE ATP</th>
+                                    <th>LAST 3 CANDLES ATP</th>
+                                    <th>PREV SWING HIGH 1</th>
+                                    <th>PREV SWING HIGH 2</th>
+                                    <th>PREV SWING HIGH 3</th>
+                                    <th>PREV SWING LOW 1</th>
+                                    <th>PREV SWING LOW 2</th>
+                                    <th>PREV SWING LOW 3</th>
+                                    <th>BIAS</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -83,29 +91,48 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Set default timeframe to 5 minutes
+    document.getElementById('timeframeSelect').value = '5';
+
     // Form Submit Handler
     document.getElementById('timeframeForm').addEventListener('submit', function(e) {
         e.preventDefault();
         fetchData();
     });
 
+    // Initial data fetch with default timeframe
+    fetchData();
+
     function fetchData() {
-        const ticker = document.getElementById('tickerSelect').value;
         const timeframe = document.getElementById('timeframeSelect').value;
-
-        // Show loading state
         const tableBody = document.getElementById('dynamicDataTable').getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = '<tr><td colspan="10" class="text-center">Loading data...</td></tr>';
+        
+        // Show loading state
+        tableBody.innerHTML = '<tr><td colspan="19" class="text-center">Loading data...</td></tr>';
 
-        // Fetch data from your backend
-        fetch(`/api/future-data/?ticker=${ticker}&timeframe=${timeframe}`)
-            .then(response => response.json())
+        // Fetch data for all tickers
+        fetch(`/api/future-data/?timeframe=${timeframe}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data || !Array.isArray(data)) {
+                    throw new Error('Invalid data format received');
+                }
                 updateTable(data);
             })
             .catch(error => {
                 console.error('Error:', error);
-                tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>';
+                tableBody.innerHTML = `<tr><td colspan="19" class="text-center text-danger">Error loading data: ${error.message}</td></tr>`;
             });
     }
 
@@ -114,22 +141,70 @@ document.addEventListener('DOMContentLoaded', function() {
         tableBody.innerHTML = '';
 
         data.forEach(row => {
+            const currentATP = calculateATP(row.current_candle_high, row.current_candle_low, row.current_candle_close);
+            const previousATP = calculateATP(row.previous_candle_high, row.previous_candle_low, row.previous_candle_close);
+            const last3ATP = calculateLast3ATP(row.last_3_candles);
+            const bias = calculateBias(row);
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${row.ticker_symbol}</td>
-                <td>${new Date(row.timestamp).toLocaleString()}</td>
-                <td>${row.open}</td>
-                <td>${row.high}</td>
-                <td>${row.low}</td>
-                <td>${row.close}</td>
-                <td>${row.volume}</td>
-                <td>${row.vwap}</td>
-                <td>${row.oi}</td>
-                <td class="${row.change >= 0 ? 'text-success' : 'text-danger'}">${row.change}</td>
-                <td class="${row.change_percent >= 0 ? 'text-success' : 'text-danger'}">${row.change_percent}%</td>
+                <td>${formatPrice(row.current_candle_open)}</td>
+                <td>${formatPrice(row.current_candle_high)}</td>
+                <td>${formatPrice(row.current_candle_low)}</td>
+                <td>${formatPrice(row.current_candle_close)}</td>
+                <td>${formatPrice(row.previous_candle_open)}</td>
+                <td>${formatPrice(row.previous_candle_high)}</td>
+                <td>${formatPrice(row.previous_candle_low)}</td>
+                <td>${formatPrice(row.previous_candle_close)}</td>
+                <td>${formatPrice(currentATP)}</td>
+                <td>${formatPrice(previousATP)}</td>
+                <td>${formatPrice(last3ATP)}</td>
+                <td>${formatPrice(row.prev_swing_high_1)}</td>
+                <td>${formatPrice(row.prev_swing_high_2)}</td>
+                <td>${formatPrice(row.prev_swing_high_3)}</td>
+                <td>${formatPrice(row.prev_swing_low_1)}</td>
+                <td>${formatPrice(row.prev_swing_low_2)}</td>
+                <td>${formatPrice(row.prev_swing_low_3)}</td>
+                <td class="${bias === 'BULLISH' ? 'text-success' : bias === 'BEARISH' ? 'text-danger' : ''}">${bias}</td>
             `;
             tableBody.appendChild(tr);
         });
+    }
+
+    // Add auto-refresh functionality (every 5 seconds)
+    setInterval(fetchData, 5000);
+
+    // Helper functions
+    function calculateATP(high, low, close) {
+        return (high + low + close) / 3;
+    }
+
+    function calculateLast3ATP(last3Candles) {
+        if (!last3Candles || last3Candles.length === 0) return 0;
+        const sum = last3Candles.reduce((acc, candle) => {
+            return acc + calculateATP(candle.high, candle.low, candle.close);
+        }, 0);
+        return sum / last3Candles.length;
+    }
+
+    function calculateBias(row) {
+        const currentPrice = row.current_candle_close;
+        const previousClose = row.previous_candle_close;
+        const swingHigh1 = row.prev_swing_high_1;
+        const swingLow1 = row.prev_swing_low_1;
+
+        if (currentPrice > previousClose && currentPrice > swingHigh1) {
+            return 'BULLISH';
+        } else if (currentPrice < previousClose && currentPrice < swingLow1) {
+            return 'BEARISH';
+        } else {
+            return 'NEUTRAL';
+        }
+    }
+
+    function formatPrice(price) {
+        return typeof price === 'number' ? price.toFixed(2) : '-';
     }
 });
 </script>
@@ -157,6 +232,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .card {
     margin-bottom: 1.5rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table th {
+    white-space: nowrap;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+.table td {
+    font-size: 0.85rem;
+    vertical-align: middle;
 }
 </style>
 {% endblock %}
