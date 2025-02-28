@@ -83,7 +83,7 @@ class Command(BaseCommand):
         for ticker in ticker_details:
             try:
                 self.stdout.write(self.style.SUCCESS(f"Processing ticker: {ticker.ticker_symbol}"))
-                from_date = (datetime.now() - timedelta(days=4)).strftime("%d/%m/%Y")
+                from_date = (datetime.now() - timedelta(days=20)).strftime("%d/%m/%Y")
                 to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
                 print(ticker.ticker_symbol)
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())

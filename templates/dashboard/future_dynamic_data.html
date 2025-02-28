@@ -91,51 +91,54 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    let eventSource;
+    
     // Set default timeframe to 5 minutes
     document.getElementById('timeframeSelect').value = '5';
 
-    // Form Submit Handler
-    document.getElementById('timeframeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        fetchData();
-    });
+    function connectEventSource(timeframe) {
+        // Close existing connection if any
+        if (eventSource) {
+            eventSource.close();
+        }
 
-    // Initial data fetch with default timeframe
-    fetchData();
-
-    function fetchData() {
-        const timeframe = document.getElementById('timeframeSelect').value;
+        // Create new connection with selected timeframe
+        eventSource = new EventSource(`{% url 'sse_future_dynamic_data' %}?timeframe=${timeframe}`);
         const tableBody = document.getElementById('dynamicDataTable').getElementsByTagName('tbody')[0];
-        
-        // Show loading state
-        tableBody.innerHTML = '<tr><td colspan="19" class="text-center">Loading data...</td></tr>';
 
-        // Fetch data for all tickers
-        fetch(`/api/future-data/?timeframe=${timeframe}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (!data || !Array.isArray(data)) {
-                    throw new Error('Invalid data format received');
-                }
-                updateTable(data);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                tableBody.innerHTML = `<tr><td colspan="19" class="text-center text-danger">Error loading data: ${error.message}</td></tr>`;
-            });
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if (data.message) {
+                tableBody.innerHTML = `<tr><td colspan="19" class="text-center">${data.message}</td></tr>`;
+                return;
+            }
+
+            if (data.error) {
+                tableBody.innerHTML = `<tr><td colspan="19" class="text-center text-danger">Error: ${data.error}</td></tr>`;
+                return;
+            }
+
+            updateTable(data);
+        };
+
+        eventSource.onerror = function(error) {
+            console.error('EventSource failed:', error);
+            tableBody.innerHTML = '<tr><td colspan="19" class="text-center text-danger">Connection lost. Attempting to reconnect...</td></tr>';
+        };
     }
 
+    // Handle timeframe changes
+    document.getElementById('timeframeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const timeframe = document.getElementById('timeframeSelect').value;
+        connectEventSource(timeframe);
+    });
+
+    // Initial connection with default timeframe
+    connectEventSource('5');
+
+    // Keep your existing helper functions
     function updateTable(data) {
         const tableBody = document.getElementById('dynamicDataTable').getElementsByTagName('tbody')[0];
         tableBody.innerHTML = '';
@@ -172,10 +175,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Add auto-refresh functionality (every 5 seconds)
-    setInterval(fetchData, 5000);
-
-    // Helper functions
     function calculateATP(high, low, close) {
         return (high + low + close) / 3;
     }

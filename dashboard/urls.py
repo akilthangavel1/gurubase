@@ -33,4 +33,5 @@ urlpatterns = [
     path('future-dynamic-data/', views.future_dynamic_data, name='future_dynamic_data'),
     path('future-alerts/', views.future_alerts, name='future_alerts'),
     path('api/future-data/', views.future_data_api, name='future_data_api'),
+    path('api/future-dynamic-data/sse/', views.sse_future_dynamic_data, name='sse_future_dynamic_data'),
 ] 
