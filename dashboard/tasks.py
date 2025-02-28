@@ -42,7 +42,7 @@ def update_historical_data():
     # fyers = fyersModel.FyersModel(client_id="MMKQTWNJH3-100", is_async=False, token=access_token, log_path="")
     fyers = initialize_fyers()
     for ticker in tickers:
-        symbol = f"NSE:{ticker.ticker_symbol.upper()}25FEBFUT"
+        symbol = f"NSE:{ticker.ticker_symbol.upper()}25MARFUT"
         table_name = f"{ticker.ticker_symbol}_future_historical_data"
         time.sleep(1)
         try:

@@ -6,6 +6,8 @@ from dashboard.fyers_functions import get_access_token
 from fyers_apiv3 import fyersModel
 from django.db import connection
 import pandas as pd
+
+
 def insert_data_into_historical_db(table_name, datetime_value, open_price, high_price, low_price, close_price, volume):
     table_name = table_name.lower()
     print(table_name)
@@ -34,7 +36,7 @@ def data_exists(table_name, datetime_value):
         return False
 
 def future_format_symbol(symbol):
-    return "NSE:" + symbol + "25FEBFUT"
+    return "NSE:" + symbol + "25FUT"
 
 def date_to_timestamp(date_str, date_format="%d/%m/%Y"):
     dt = datetime.strptime(date_str, date_format)
