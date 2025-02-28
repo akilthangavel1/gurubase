@@ -36,7 +36,7 @@ def data_exists(table_name, datetime_value):
         return False
 
 def future_format_symbol(symbol):
-    return "NSE:" + symbol + "25FUT"
+    return "NSE:" + symbol + "25MARFUT"
 
 def date_to_timestamp(date_str, date_format="%d/%m/%Y"):
     dt = datetime.strptime(date_str, date_format)
