@@ -16,6 +16,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login, authenticate
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +93,11 @@ def futures(request):
     return render(request, 'dashboard/futures.html')
 
 def future_scanner(request):
-    """View for the future scanner page with real-time updates"""
-    return render(request, 'dashboard/future_scanner.html', {
-        'update_interval': 1000  # 1 second interval for updates
-    })
+    # """View for the future scanner page with real-time updates"""
+    # return render(request, 'dashboard/future_scanner.html', {
+    #     'update_interval': 1000  # 1 second interval for updates
+    # })
+    return HttpResponse("Validation Pending")
 
 def options(request):
     """View for the options page"""
@@ -610,7 +612,8 @@ def sse_future_scanner(request):
     return response
     
 def future_technical_indicators(request):
-    return render(request, 'dashboard/future_technical_indicators.html')
+    # return render(request, 'dashboard/future_technical_indicators.html')
+    return HttpResponse("Validation Pending")
 
 
 
@@ -645,7 +648,7 @@ def future_data_api(request):
                 
                 if not cursor.fetchone()[0]:
                     continue
-
+                
                 # Modified query to get current and previous candle data
                 query = f"""
                     WITH ranked_data AS (
@@ -752,7 +755,7 @@ async def generate_future_dynamic_data_stream(timeframe='5'):
                         
                         if not cursor.fetchone()[0]:
                             continue
-
+                        
                         # Modified query to get current and previous candle data
                         query = f"""
                             WITH ranked_data AS (
