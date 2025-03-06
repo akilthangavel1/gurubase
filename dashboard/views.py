@@ -479,23 +479,67 @@ async def generate_future_scanner_stream():
             await asyncio.sleep(1)
 
 @sync_to_async
-def get_historical_data_async(ticker_symbol):
+def get_historical_data_async(ticker_symbol, timeframe='1'):
     """Fetch historical data for calculations"""
     try:
         with connection.cursor() as cursor:
             table_name = f"{ticker_symbol}_future_historical_data"
-            query = f"""
-                SELECT datetime, open_price, high_price, low_price, 
-                       close_price, volume 
-                FROM "{table_name}"
-                WHERE datetime >= NOW() - INTERVAL '30 days'
-                ORDER BY datetime DESC
-                LIMIT 10000
-            """
+            
+            if timeframe == '5':
+                # For 5-minute timeframe, group the 1-minute data
+                query = f"""
+                    WITH five_min_groups AS (
+                        SELECT 
+                            date_trunc('hour', datetime) + 
+                            INTERVAL '5 min' * (date_part('minute', datetime)::integer / 5) AS interval_start,
+                            FIRST_VALUE(open_price) OVER w AS open_price,
+                            MAX(high_price) OVER w AS high_price,
+                            MIN(low_price) OVER w AS low_price,
+                            LAST_VALUE(close_price) OVER w AS close_price,
+                            SUM(volume) OVER w AS volume
+                        FROM "{table_name}"
+                        WHERE datetime >= NOW() - INTERVAL '24 hours'
+                        WINDOW w AS (
+                            PARTITION BY date_trunc('hour', datetime) + 
+                            INTERVAL '5 min' * (date_part('minute', datetime)::integer / 5)
+                            ORDER BY datetime
+                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                        )
+                    )
+                    SELECT DISTINCT *
+                    FROM five_min_groups
+                    ORDER BY interval_start DESC
+                """
+            else:
+                # For 1-minute timeframe, get raw data
+                query = f"""
+                    SELECT 
+                        datetime,
+                        open_price,
+                        high_price,
+                        low_price,
+                        close_price,
+                        volume
+                    FROM "{table_name}"
+                    WHERE datetime >= NOW() - INTERVAL '24 hours'
+                    ORDER BY datetime DESC
+                """
+            
             cursor.execute(query)
             columns = [col[0] for col in cursor.description]
             data = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            return pd.DataFrame(data)
+            
+            df = pd.DataFrame(data)
+            if not df.empty:
+                # Rename interval_start to datetime for 5-minute data to maintain consistency
+                if timeframe == '5':
+                    df = df.rename(columns={'interval_start': 'datetime'})
+                # Convert datetime to pandas datetime
+                df['datetime'] = pd.to_datetime(df['datetime'])
+                
+            logger.info(f"Retrieved {len(df)} records for {ticker_symbol} with {timeframe}min timeframe")
+            return df
+            
     except Exception as e:
         logger.error(f"Error fetching historical data for {ticker_symbol}: {str(e)}")
         return pd.DataFrame()
@@ -626,240 +670,83 @@ def future_alerts(request):
     tickers = TickerBase.objects.all().order_by('ticker_name')
     return render(request, 'dashboard/future_alerts.html', {'tickers': tickers})
 
-def future_data_api(request):
-    timeframe = request.GET.get('timeframe', '5')  # Default to 5 minutes
-    
-    try:
-        tickers = TickerBase.objects.all()
-        result = []
+# def future_data_api(request):
+#     """API endpoint for future data"""
+#     # Add your logic here
+#     return JsonResponse({'data': []})  # Return appropriate data
 
-        for ticker in tickers:
-            table_name = f"{ticker.ticker_symbol}_future_historical_data"
-            
-            with connection.cursor() as cursor:
-                # Check if table exists
-                cursor.execute("""
-                    SELECT EXISTS (
-                        SELECT 1 
-                        FROM information_schema.tables 
-                        WHERE table_name = %s
-                    )
-                """, [table_name.lower()])
-                
-                if not cursor.fetchone()[0]:
-                    continue
-                
-                # Modified query to get current and previous candle data
-                query = f"""
-                    WITH ranked_data AS (
-                        SELECT 
-                            datetime,
-                            open_price,
-                            high_price,
-                            low_price,
-                            close_price,
-                            volume,
-                            ROW_NUMBER() OVER (ORDER BY datetime DESC) as rn
-                        FROM "{table_name}"
-                        WHERE MOD(EXTRACT(MINUTE FROM datetime)::integer, %s) = 0
-                        ORDER BY datetime DESC
-                        LIMIT 10
-                    )
-                    SELECT 
-                        a.datetime,
-                        a.open_price as current_candle_open,
-                        a.high_price as current_candle_high,
-                        a.low_price as current_candle_low,
-                        a.close_price as current_candle_close,
-                        b.open_price as previous_candle_open,
-                        b.high_price as previous_candle_high,
-                        b.low_price as previous_candle_low,
-                        b.close_price as previous_candle_close,
-                        a.volume
-                    FROM ranked_data a
-                    LEFT JOIN ranked_data b ON b.rn = a.rn + 1
-                    WHERE a.rn = 1
-                """
-                
-                cursor.execute(query, [int(timeframe)])
-                columns = [col[0] for col in cursor.description]
-                rows = cursor.fetchall()
-                
-                if rows:
-                    data = dict(zip(columns, rows[0]))
-                    
-                    # Get additional data for swing highs/lows
-                    swing_query = f"""
-                        SELECT high_price, low_price, close_price
-                        FROM "{table_name}"
-                        WHERE MOD(EXTRACT(MINUTE FROM datetime)::integer, %s) = 0
-                        ORDER BY datetime DESC
-                        LIMIT 6
-                    """
-                    cursor.execute(swing_query, [int(timeframe)])
-                    swing_rows = cursor.fetchall()
-                    
-                    highs = [row[0] for row in swing_rows]
-                    lows = [row[1] for row in swing_rows]
-                    
-                    result.append({
-                        'ticker_symbol': ticker.ticker_symbol,
-                        'current_candle_open': float(data['current_candle_open']),
-                        'current_candle_high': float(data['current_candle_high']),
-                        'current_candle_low': float(data['current_candle_low']),
-                        'current_candle_close': float(data['current_candle_close']),
-                        'previous_candle_open': float(data['previous_candle_open']) if data['previous_candle_open'] else None,
-                        'previous_candle_high': float(data['previous_candle_high']) if data['previous_candle_high'] else None,
-                        'previous_candle_low': float(data['previous_candle_low']) if data['previous_candle_low'] else None,
-                        'previous_candle_close': float(data['previous_candle_close']) if data['previous_candle_close'] else None,
-                        'prev_swing_high_1': float(max(highs[1:4])) if len(highs) > 3 else None,
-                        'prev_swing_high_2': float(max(highs[2:5])) if len(highs) > 4 else None,
-                        'prev_swing_high_3': float(max(highs[3:6])) if len(highs) > 5 else None,
-                        'prev_swing_low_1': float(min(lows[1:4])) if len(lows) > 3 else None,
-                        'prev_swing_low_2': float(min(lows[2:5])) if len(lows) > 4 else None,
-                        'prev_swing_low_3': float(min(lows[3:6])) if len(lows) > 5 else None,
-                        'last_3_candles': [
-                            {
-                                'high': float(swing_rows[i][0]),
-                                'low': float(swing_rows[i][1]),
-                                'close': float(swing_rows[i][2])
-                            } for i in range(1, 4) if i < len(swing_rows)
-                        ]
-                    })
-
-        return JsonResponse(result, safe=False)
-
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-async def generate_future_dynamic_data_stream(timeframe='5'):
+async def generate_future_dynamic_stream(timeframe):
     while True:
         try:
-            @sync_to_async
-            def fetch_data(timeframe):
-                result = []
-                tickers = list(TickerBase.objects.all())
-                
-                with connection.cursor() as cursor:
-                    for ticker in tickers:
-                        table_name = f"{ticker.ticker_symbol}_future_historical_data"
-                        
-                        # Check if table exists
-                        cursor.execute("""
-                            SELECT EXISTS (
-                                SELECT 1 
-                                FROM information_schema.tables 
-                                WHERE table_name = %s
-                            )
-                        """, [table_name.lower()])
-                        
-                        if not cursor.fetchone()[0]:
-                            continue
-                        
-                        # Modified query to get current and previous candle data
-                        query = f"""
-                            WITH ranked_data AS (
-                                SELECT 
-                                    datetime,
-                                    open_price,
-                                    high_price,
-                                    low_price,
-                                    close_price,
-                                    volume,
-                                    ROW_NUMBER() OVER (ORDER BY datetime DESC) as rn
-                                FROM "{table_name}"
-                                WHERE MOD(EXTRACT(MINUTE FROM datetime)::integer, %s) = 0
-                                ORDER BY datetime DESC
-                                LIMIT 10
-                            )
-                            SELECT 
-                                a.datetime,
-                                a.open_price as current_candle_open,
-                                a.high_price as current_candle_high,
-                                a.low_price as current_candle_low,
-                                a.close_price as current_candle_close,
-                                b.open_price as previous_candle_open,
-                                b.high_price as previous_candle_high,
-                                b.low_price as previous_candle_low,
-                                b.close_price as previous_candle_close,
-                                a.volume
-                            FROM ranked_data a
-                            LEFT JOIN ranked_data b ON b.rn = a.rn + 1
-                            WHERE a.rn = 1
-                        """
-                        
-                        cursor.execute(query, [int(timeframe)])
-                        columns = [col[0] for col in cursor.description]
-                        rows = cursor.fetchall()
-                        
-                        if rows:
-                            data = dict(zip(columns, rows[0]))
-                            
-                            # Get additional data for swing highs/lows
-                            swing_query = f"""
-                                SELECT high_price, low_price, close_price
-                                FROM "{table_name}"
-                                WHERE MOD(EXTRACT(MINUTE FROM datetime)::integer, %s) = 0
-                                ORDER BY datetime DESC
-                                LIMIT 6
-                            """
-                            cursor.execute(swing_query, [int(timeframe)])
-                            swing_rows = cursor.fetchall()
-                            
-                            highs = [row[0] for row in swing_rows]
-                            lows = [row[1] for row in swing_rows]
-                            
-                            result.append({
-                                'ticker_symbol': ticker.ticker_symbol,
-                                'current_candle_open': float(data['current_candle_open']),
-                                'current_candle_high': float(data['current_candle_high']),
-                                'current_candle_low': float(data['current_candle_low']),
-                                'current_candle_close': float(data['current_candle_close']),
-                                'previous_candle_open': float(data['previous_candle_open']) if data['previous_candle_open'] else None,
-                                'previous_candle_high': float(data['previous_candle_high']) if data['previous_candle_high'] else None,
-                                'previous_candle_low': float(data['previous_candle_low']) if data['previous_candle_low'] else None,
-                                'previous_candle_close': float(data['previous_candle_close']) if data['previous_candle_close'] else None,
-                                'prev_swing_high_1': float(max(highs[1:4])) if len(highs) > 3 else None,
-                                'prev_swing_high_2': float(max(highs[2:5])) if len(highs) > 4 else None,
-                                'prev_swing_high_3': float(max(highs[3:6])) if len(highs) > 5 else None,
-                                'prev_swing_low_1': float(min(lows[1:4])) if len(lows) > 3 else None,
-                                'prev_swing_low_2': float(min(lows[2:5])) if len(lows) > 4 else None,
-                                'prev_swing_low_3': float(min(lows[3:6])) if len(lows) > 5 else None,
-                                'last_3_candles': [
-                                    {
-                                        'high': float(swing_rows[i][0]),
-                                        'low': float(swing_rows[i][1]),
-                                        'close': float(swing_rows[i][2])
-                                    } for i in range(1, 4) if i < len(swing_rows)
-                                ]
-                            })
-                return result
+            # Get all tickers
+            tickers = await sync_to_async(list)(TickerBase.objects.all())
+            formatted_data = []
 
-            # Fetch data using sync_to_async
-            result = await fetch_data(timeframe)
+            for ticker in tickers:
+                try:
+                    # Get latest data with specified timeframe
+                    historical_data = await get_historical_data_async(ticker.ticker_symbol, timeframe)
+                    
+                    if not historical_data.empty:
+                        # Get current and previous candle data
+                        current_candle = historical_data.iloc[0]
+                        previous_candle = historical_data.iloc[1] if len(historical_data) > 1 else None
+                        last_3_candles = historical_data.head(3).to_dict('records') if len(historical_data) >= 3 else []
 
-            if result:
-                yield f"data: {json.dumps(result, cls=DjangoJSONEncoder)}\n\n".encode('utf-8')
+                        # Calculate swing points (last 20 candles)
+                        last_20_candles = historical_data.head(20)
+                        swing_highs = last_20_candles.nlargest(3, 'high_price')['high_price'].tolist()
+                        swing_lows = last_20_candles.nsmallest(3, 'low_price')['low_price'].tolist()
+
+                        # Pad swing points if we don't have enough
+                        while len(swing_highs) < 3:
+                            swing_highs.append(None)
+                        while len(swing_lows) < 3:
+                            swing_lows.append(None)
+
+                        ticker_data = {
+                            'ticker_symbol': ticker.ticker_symbol,
+                            'current_candle_open': float(current_candle['open_price']),
+                            'current_candle_high': float(current_candle['high_price']),
+                            'current_candle_low': float(current_candle['low_price']),
+                            'current_candle_close': float(current_candle['close_price']),
+                            'previous_candle_open': float(previous_candle['open_price']) if previous_candle is not None else None,
+                            'previous_candle_high': float(previous_candle['high_price']) if previous_candle is not None else None,
+                            'previous_candle_low': float(previous_candle['low_price']) if previous_candle is not None else None,
+                            'previous_candle_close': float(previous_candle['close_price']) if previous_candle is not None else None,
+                            'prev_swing_high_1': swing_highs[0],
+                            'prev_swing_high_2': swing_highs[1],
+                            'prev_swing_high_3': swing_highs[2],
+                            'prev_swing_low_1': swing_lows[0],
+                            'prev_swing_low_2': swing_lows[1],
+                            'prev_swing_low_3': swing_lows[2],
+                            'last_3_candles': last_3_candles,
+                            'timestamp': current_candle['datetime'].isoformat()
+                        }
+                        formatted_data.append(ticker_data)
+
+                except Exception as e:
+                    logger.error(f"Error processing ticker {ticker.ticker_symbol}: {str(e)}")
+                    continue
+
+            if formatted_data:
+                yield f"data: {json.dumps(formatted_data, cls=DjangoJSONEncoder)}\n\n"
             else:
-                yield f"data: {json.dumps({'message': 'No data available'}, cls=DjangoJSONEncoder)}\n\n".encode('utf-8')
-                
+                yield f"data: {json.dumps({'message': 'No data available'}, cls=DjangoJSONEncoder)}\n\n"
+
+            # Update every second regardless of timeframe
             await asyncio.sleep(1)
-            
+
         except Exception as e:
-            logger.error(f"Error in generate_future_dynamic_data_stream: {str(e)}")
-            yield f"data: {json.dumps({'error': str(e)}, cls=DjangoJSONEncoder)}\n\n".encode('utf-8')
+            logger.error(f"Error in generate_future_dynamic_stream: {str(e)}")
+            yield f"data: {json.dumps({'error': str(e)}, cls=DjangoJSONEncoder)}\n\n"
             await asyncio.sleep(1)
 
-async def sse_future_dynamic_data(request):
-    """SSE endpoint for future dynamic data"""
-    timeframe = request.GET.get('timeframe', '5')
-
-    async def async_generator():
-        async for item in generate_future_dynamic_data_stream(timeframe):
-            yield item
-
+def sse_future_dynamic_data(request):
+    """SSE endpoint for real-time future dynamic data updates"""
+    timeframe = request.GET.get('timeframe', '1')  # Default to 1-minute timeframe
     response = StreamingHttpResponse(
-        async_generator(),
+        generate_future_dynamic_stream(timeframe),
         content_type='text/event-stream'
     )
     response['Cache-Control'] = 'no-cache'

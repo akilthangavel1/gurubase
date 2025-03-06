@@ -16,13 +16,8 @@
                         <div class="col-md-2">
                             <label for="timeframeSelect" class="form-label">Timeframe</label>
                             <select class="form-select" id="timeframeSelect" required>
-                                <option value="1">1 Minute</option>
-                                <option value="5" selected>5 Minutes</option>
-                                <option value="15">15 Minutes</option>
-                                <option value="30">30 Minutes</option>
-                                <option value="60">1 Hour</option>
-                                <option value="D">Daily</option>
-                                <option value="W">Weekly</option>
+                                <option value="1" selected>1 Minute</option>
+                                <option value="5">5 Minutes</option>
                             </select>
                         </div>
 
@@ -93,8 +88,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     let eventSource;
     
-    // Set default timeframe to 5 minutes
-    document.getElementById('timeframeSelect').value = '5';
+    // Set default timeframe to 1 minute
+    document.getElementById('timeframeSelect').value = '1';
 
     function connectEventSource(timeframe) {
         // Close existing connection if any
@@ -135,8 +130,8 @@ document.addEventListener('DOMContentLoaded', function() {
         connectEventSource(timeframe);
     });
 
-    // Initial connection with default timeframe
-    connectEventSource('5');
+    // Initial connection with 1-minute timeframe
+    connectEventSource('1');
 
     // Keep your existing helper functions
     function updateTable(data) {

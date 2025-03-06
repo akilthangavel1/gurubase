@@ -90,7 +90,7 @@ class Command(BaseCommand):
                 print(ticker.ticker_symbol)
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 print(symbol)
-                resolution = "5"
+                resolution = "1"
                 client_id = "MMKQTWNJH3-100"
                 access_token = get_access_token()
                 print(symbol)
