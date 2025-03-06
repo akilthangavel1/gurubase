@@ -510,6 +510,144 @@ def get_historical_data_async(ticker_symbol, timeframe='1'):
                     FROM five_min_groups
                     ORDER BY interval_start DESC
                 """
+            elif timeframe == '10':
+                # For 10-minute timeframe, group the 1-minute data starting from 9:15 AM
+                query = f"""
+                    WITH market_time AS (
+                        SELECT 
+                            datetime,
+                            open_price,
+                            high_price,
+                            low_price,
+                            close_price,
+                            volume,
+                            CASE 
+                                WHEN EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15 THEN 
+                                    '09:15:00'::time
+                                ELSE 
+                                    datetime::time
+                            END AS adjusted_time
+                        FROM "{table_name}"
+                        WHERE datetime >= NOW() - INTERVAL '24 hours'
+                    ),
+                    ten_min_groups AS (
+                        SELECT 
+                            date_trunc('day', datetime) + 
+                            ((EXTRACT(HOUR FROM adjusted_time) * 60 + 
+                              EXTRACT(MINUTE FROM adjusted_time) - 15)::integer / 10 * 10 + 15
+                            )::integer * INTERVAL '1 minute' AS interval_start,
+                            FIRST_VALUE(open_price) OVER w AS open_price,
+                            MAX(high_price) OVER w AS high_price,
+                            MIN(low_price) OVER w AS low_price,
+                            LAST_VALUE(close_price) OVER w AS close_price,
+                            SUM(volume) OVER w AS volume
+                        FROM market_time
+                        WINDOW w AS (
+                            PARTITION BY date_trunc('day', datetime) + 
+                            ((EXTRACT(HOUR FROM adjusted_time) * 60 + 
+                              EXTRACT(MINUTE FROM adjusted_time) - 15)::integer / 10 * 10 + 15
+                            )::integer * INTERVAL '1 minute'
+                            ORDER BY datetime
+                            RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                        )
+                    )
+                    SELECT DISTINCT *
+                    FROM ten_min_groups
+                    WHERE interval_start::time BETWEEN '09:15:00' AND '15:30:00'
+                    ORDER BY interval_start DESC
+                """
+            elif timeframe == '15':
+                # For 15-minute timeframe, group the 1-minute data starting from 9:15 AM
+                query = f"""
+                    WITH market_time AS (
+                        SELECT 
+                            datetime,
+                            open_price,
+                            high_price,
+                            low_price,
+                            close_price,
+                            volume,
+                            CASE 
+                                WHEN EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15 THEN 
+                                    '09:15:00'::time
+                                ELSE 
+                                    datetime::time
+                            END AS adjusted_time
+                        FROM "{table_name}"
+                        WHERE datetime >= NOW() - INTERVAL '24 hours'
+                    ),
+                    fifteen_min_groups AS (
+                        SELECT 
+                            date_trunc('day', datetime) + 
+                            ((EXTRACT(HOUR FROM adjusted_time) * 60 + 
+                              EXTRACT(MINUTE FROM adjusted_time) - 15)::integer / 15 * 15 + 15
+                            )::integer * INTERVAL '1 minute' AS interval_start,
+                            FIRST_VALUE(open_price) OVER w AS open_price,
+                            MAX(high_price) OVER w AS high_price,
+                            MIN(low_price) OVER w AS low_price,
+                            LAST_VALUE(close_price) OVER w AS close_price,
+                            SUM(volume) OVER w AS volume
+                        FROM market_time
+                        WINDOW w AS (
+                            PARTITION BY date_trunc('day', datetime) + 
+                            ((EXTRACT(HOUR FROM adjusted_time) * 60 + 
+                              EXTRACT(MINUTE FROM adjusted_time) - 15)::integer / 15 * 15 + 15
+                            )::integer * INTERVAL '1 minute'
+                            ORDER BY datetime
+                            RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                        )
+                    )
+                    SELECT DISTINCT *
+                    FROM fifteen_min_groups
+                    WHERE interval_start::time BETWEEN '09:15:00' AND '15:30:00'
+                    ORDER BY interval_start DESC
+                """
+            elif timeframe == '30':
+                # For 30-minute timeframe, group the 1-minute data starting from 9:15 AM
+                query = f"""
+                    WITH market_time AS (
+                        SELECT 
+                            datetime,
+                            open_price,
+                            high_price,
+                            low_price,
+                            close_price,
+                            volume,
+                            CASE 
+                                WHEN EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15 THEN 
+                                    '09:15:00'::time
+                                ELSE 
+                                    datetime::time
+                            END AS adjusted_time
+                        FROM "{table_name}"
+                        WHERE datetime >= NOW() - INTERVAL '24 hours'
+                    ),
+                    thirty_min_groups AS (
+                        SELECT 
+                            date_trunc('day', datetime) + 
+                            ((EXTRACT(HOUR FROM adjusted_time) * 60 + 
+                              EXTRACT(MINUTE FROM adjusted_time) - 15)::integer / 30 * 30 + 15
+                            )::integer * INTERVAL '1 minute' AS interval_start,
+                            FIRST_VALUE(open_price) OVER w AS open_price,
+                            MAX(high_price) OVER w AS high_price,
+                            MIN(low_price) OVER w AS low_price,
+                            LAST_VALUE(close_price) OVER w AS close_price,
+                            SUM(volume) OVER w AS volume
+                        FROM market_time
+                        WINDOW w AS (
+                            PARTITION BY date_trunc('day', datetime) + 
+                            ((EXTRACT(HOUR FROM adjusted_time) * 60 + 
+                              EXTRACT(MINUTE FROM adjusted_time) - 15)::integer / 30 * 30 + 15
+                            )::integer * INTERVAL '1 minute'
+                            ORDER BY datetime
+                            RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                        )
+                    )
+                    SELECT DISTINCT *
+                    FROM thirty_min_groups
+                    WHERE interval_start::time BETWEEN '09:15:00' AND '15:30:00'
+                    ORDER BY interval_start DESC
+                """
             else:
                 # For 1-minute timeframe, get raw data
                 query = f"""
@@ -531,8 +669,8 @@ def get_historical_data_async(ticker_symbol, timeframe='1'):
             
             df = pd.DataFrame(data)
             if not df.empty:
-                # Rename interval_start to datetime for 5-minute data to maintain consistency
-                if timeframe == '5':
+                # Rename interval_start to datetime for grouped data to maintain consistency
+                if timeframe in ['5', '10', '15', '30']:
                     df = df.rename(columns={'interval_start': 'datetime'})
                 # Convert datetime to pandas datetime
                 df['datetime'] = pd.to_datetime(df['datetime'])
