@@ -9,5 +9,7 @@ urlpatterns = [
     path('social-auth/', include('social_django.urls', namespace='social')),
     path('blog/', include('blog.urls')),
     path('options/', include('dasoptions.urls')),
+    path('future/', include('ddfuture.urls')),
+    path('indfuture/', include('indfuture.urls')),
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

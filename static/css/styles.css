@@ -1,6 +1,246 @@
+/* Dark Theme Styles */
 body {
-    background-color: #f4f6f8;
-    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.timeframe-selector {
+    margin-bottom: 20px;
+    background-color: #2d2d2d;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.timeframe-selector label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #ffffff;
+}
+
+.timeframe-selector select {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #404040;
+    background-color: #333333;
+    color: #ffffff;
+}
+
+.timeframe-selector select:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+#updateTimeframe {
+    margin-left: 10px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    background-color: #0066cc;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#updateTimeframe:hover {
+    background-color: #0052a3;
+}
+
+h1 {
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.table {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    table-layout: fixed;
+    border: 1px solid #333;
+}
+
+.table th {
+    background-color: #2d2d2d;
+    color: #ffffff;
+    border-bottom: 2px solid #404040;
+    padding: 12px 8px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
+}
+
+.table td {
+    border-bottom: 1px solid #404040;
+    padding: 10px 8px;
+    font-size: 0.9rem;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Column widths */
+.table th:first-child,
+.table td:first-child {
+    width: 8%; /* Ticker column */
+}
+
+.table th:last-child,
+.table td:last-child {
+    width: 7%; /* Bias column */
+}
+
+.table th:not(:first-child):not(:last-child),
+.table td:not(:first-child):not(:last-child) {
+    width: 5%; /* All other columns */
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+    scrollbar-width: thin;
+}
+
+#data-container {
+    width: 100%;
+    padding: 0 20px;
+}
+
+.card-body {
+    background-color: #2d2d2d;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+/* Table row styles */
+.table tbody tr {
+    background-color: #1a1a1a;
+    transition: background-color 0.2s;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #262626;
+}
+
+.table tbody tr:hover {
+    background-color: #333333;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #262626;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+/* Ensure all text is white for contrast */
+.table th, .table td {
+    color: #ffffff;
+}
+
+/* Adjust hover states for better visibility */
+.table tbody tr:hover {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+/* Status colors */
+.text-success {
+    color: #00cc66 !important;
+}
+
+.text-danger {
+    color: #ff4d4d !important;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #404040;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4d4d4d;
+}
+
+/* Container styles */
+.container-fluid {
+    padding: 20px;
+    max-width: 100%;
+}
+
+.card {
+    background-color: #2d2d2d;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin: 0;
+    width: 100%;
+}
+
+.card-header {
+    background-color: #333333;
+    border-bottom: 1px solid #404040;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+}
+
+.card-title {
+    color: #ffffff;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Form styles */
+.form-label {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.form-select {
+    background-color: #333333;
+    border: 1px solid #404040;
+    color: #ffffff;
+    border-radius: 5px;
+    padding: 8px 12px;
+}
+
+.form-select:focus {
+    background-color: #333333;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    color: #ffffff;
+}
+
+/* Alert styles */
+.alert {
+    background-color: #333333;
+    border: 1px solid #404040;
+    color: #ffffff;
 }
 
 .container-95 {
@@ -9,11 +249,11 @@ body {
 }
 
 .nifty-header {
-    background-color: #ffffff;
-    color: #0d6efd;
+    background-color: #2d2d2d;
+    color: #2196F3;
     border-radius: 15px;
     padding: 20px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
@@ -28,13 +268,13 @@ body {
     font-size: 1.5rem;
     font-weight: bold;
     margin: 0;
-    color: #084298;
+    color: #2196F3;
 }
 
 .nifty-left .nifty-value {
     font-size: 2rem;
     font-weight: bold;
-    color: #0d6efd;
+    color: #64b5f6;
     margin-top: 10px;
 }
 
@@ -53,7 +293,9 @@ body {
     width: 200px;
     padding: 8px;
     border-radius: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid #404040;
+    background-color: #333333;
+    color: #ffffff;
 }
 
 .nifty-right .btn-filter {
@@ -72,9 +314,9 @@ body {
 }
 
 .table-container {
-    background-color: #ffffff;
+    background-color: #1a1a1a;
     border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     padding: 20px;
     overflow-x: auto;
 }
@@ -88,8 +330,8 @@ table {
 thead th {
     position: sticky;
     top: 0;
-    background: #f8f9fa;
-    color: #0d6efd;
+    background: #2d2d2d;
+    color: #ffffff;
     text-align: center;
     font-size: 0.95rem;
 }
@@ -99,40 +341,41 @@ tbody td {
     vertical-align: middle;
     font-size: 0.9rem;
     padding: 10px;
+    color: #ffffff;
 }
 
 tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #262626;
 }
 
 tbody tr:hover {
-    background-color: #e8f4fd;
+    background-color: #333333;
 }
 
 /* Navbar Styles */
 .navbar {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #ddd;
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #333;
 }
 
 .navbar-light .navbar-nav .nav-link {
-    color: #007bff;
+    color: #2196F3;
 }
 
 .navbar-light .navbar-nav .nav-link:hover {
-    color: #0056b3;
+    color: #64b5f6;
 }
 
 .navbar-light .navbar-toggler-icon {
-    background-color: #007bff;
+    background-color: #2196F3;
 }
 
 .navbar-brand {
-    color: #007bff;
+    color: #2196F3;
 }
 
 .navbar-brand:hover {
-    color: #0056b3;
+    color: #64b5f6;
 }
 
 /* Responsive Design */
@@ -209,6 +452,7 @@ tbody tr:hover {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    background-color: #1a1a1a;
 }
 
 .blog-header {
@@ -218,13 +462,13 @@ tbody tr:hover {
 
 .blog-header h1 {
     font-size: 2.5rem;
-    color: #333;
+    color: #ffffff;
     margin-bottom: 1rem;
 }
 
 .blog-header p {
     font-size: 1.2rem;
-    color: #666;
+    color: #cccccc;
 }
 
 .blog-grid {
@@ -234,10 +478,10 @@ tbody tr:hover {
 }
 
 .blog-card {
-    background: #fff;
+    background: #2d2d2d;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s ease;
 }
 
@@ -258,6 +502,7 @@ tbody tr:hover {
 
 .blog-card-content {
     padding: 1.5rem;
+    background-color: #2d2d2d;
 }
 
 .blog-card-category {
@@ -269,11 +514,11 @@ tbody tr:hover {
 .blog-card-title {
     font-size: 1.5rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: #ffffff;
 }
 
 .blog-card-excerpt {
-    color: #666;
+    color: #cccccc;
     margin-bottom: 1rem;
     line-height: 1.6;
 }
@@ -281,19 +526,19 @@ tbody tr:hover {
 .blog-card-meta {
     display: flex;
     justify-content: space-between;
-    color: #888;
+    color: #999999;
     font-size: 0.9rem;
     margin-bottom: 1rem;
 }
 
 .blog-card-link {
-    display: inline-block;
     color: #2196F3;
     text-decoration: none;
     font-weight: 500;
 }
 
 .blog-card-link:hover {
+    color: #64b5f6;
     text-decoration: underline;
 }
 .note-editor {

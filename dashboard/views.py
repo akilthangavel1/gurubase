@@ -382,8 +382,10 @@ def data_management(request):
                 
             # Get future historical data count
             try:
+                print(ticker.ticker_symbol + "_future_historical_data")
                 cursor.execute(f"SELECT COUNT(*) FROM {ticker.ticker_symbol}_future_historical_data")
                 future_count = cursor.fetchone()[0]
+                print(future_count)
             except:
                 future_count = 0
                 
@@ -525,11 +527,15 @@ def get_historical_data_async(ticker_symbol, timeframe='1'):
                     ORDER BY datetime DESC
                 """
             
+            logger.debug(f"Executing query on table: {table_name}")
+            logger.debug(f"SQL Query: {query}")
+            
             cursor.execute(query)
             columns = [col[0] for col in cursor.description]
             data = [dict(zip(columns, row)) for row in cursor.fetchall()]
             
             df = pd.DataFrame(data)
+            print(df)
             if not df.empty:
                 # Rename interval_start to datetime for 5-minute data to maintain consistency
                 if timeframe == '5':

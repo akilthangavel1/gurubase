@@ -27,7 +27,9 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'social_django',
     'blog',
-    'dasoptions'
+    'dasoptions',
+    'ddfuture',
+    'indfuture',
 ]
 
 MIDDLEWARE = [
@@ -189,3 +191,4 @@ LOGOUT_REDIRECT_URL = 'login'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+SECURE_CROSS_ORIGIN_OPENER_POLICY=None
