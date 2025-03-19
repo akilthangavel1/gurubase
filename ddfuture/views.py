@@ -500,12 +500,11 @@ def get_historical_data(ticker_symbol, timeframe='1'):
             
             # Calculate swing points from last 20 candles
             last_20_candles = data[:20]
-            highs = sorted([(d[2], i) for i, d in enumerate(last_20_candles)], reverse=True)
-            lows = sorted([(d[3], i) for i, d in enumerate(last_20_candles)])
+            highs, lows = find_swing_highs_lows([d[4] for d in last_20_candles])
             
             swings = {
-                'highs': [h[0] for h in highs[:3]] + [None] * (3 - len(highs[:3])),
-                'lows': [l[0] for l in lows[:3]] + [None] * (3 - len(lows[:3]))
+                'highs': [h[1] for h in highs[:3]] + [None] * (3 - len(highs[:3])),
+                'lows': [l[1] for l in lows[:3]] + [None] * (3 - len(lows[:3]))
             }
             
             return {
@@ -533,5 +532,83 @@ def get_historical_data(ticker_symbol, timeframe='1'):
     except Exception as e:
         logger.error(f"Error fetching historical data for {ticker_symbol}: {str(e)}")
         return None
+
+def find_swing_highs_lows(prices, percentage_threshold=1.0):
+    """
+    Calculate swing highs and lows based on a percentage threshold.
+    
+    Args:
+        prices (list): List of price data (e.g., closing prices)
+        percentage_threshold (float): Minimum percentage change to qualify as swing (default: 1.0%)
+    
+    Returns:
+        tuple: (swing_highs, swing_lows) - Lists of tuples with (index, price)
+    """
+    if len(prices) < 3:
+        return [], []  # Need at least 3 points to determine swings
+    
+    swing_highs = []
+    swing_lows = []
+    threshold = percentage_threshold / 100.0
+    
+    for i in range(1, len(prices) - 1):
+        prev_price = prices[i - 1]
+        curr_price = prices[i]
+        next_price = prices[i + 1]
+        
+        # Check for swing high
+        if (curr_price > prev_price and curr_price > next_price):
+            # Verify if the change exceeds the percentage threshold
+            if (prev_price != 0 and next_price != 0):  # Avoid division by zero
+                change_from_prev = (curr_price - prev_price) / prev_price
+                change_to_next = (curr_price - next_price) / curr_price
+                if change_from_prev >= threshold and change_to_next >= threshold:
+                    swing_highs.append((i, curr_price))
+        
+        # Check for swing low
+        if (curr_price < prev_price and curr_price < next_price):
+            # Verify if the change exceeds the percentage threshold
+            if (prev_price != 0 and curr_price != 0):  # Avoid division by zero
+                change_from_prev = (prev_price - curr_price) / prev_price
+                change_to_next = (next_price - curr_price) / curr_price
+                if change_from_prev >= threshold and change_to_next >= threshold:
+                    swing_lows.append((i, curr_price))
+    
+    return swing_highs, swing_lows
+
+# Example usage with sample data
+if __name__ == "__main__":
+    # Sample price data (e.g., daily closing prices)
+    price_data = [100, 102, 105, 103, 101, 99, 97, 100, 102, 101, 98]
+    
+    # Set percentage threshold (e.g., 1% change)
+    threshold = 2.0  # 2% change required
+    
+    # Calculate swings
+    highs, lows = find_swing_highs_lows(price_data, threshold)
+    
+    # Print results
+    print("Swing Highs (index, price):")
+    for high in highs:
+        print(f"Index: {high[0]}, Price: {high[1]}")
+    
+    print("\nSwing Lows (index, price):")
+    for low in lows:
+        print(f"Index: {low[0]}, Price: {low[1]}")
+    
+    # Optional: Visualize the data
+    import matplotlib.pyplot as plt
+    
+    plt.plot(price_data, label='Price', marker='o')
+    for high in highs:
+        plt.plot(high[0], high[1], 'ro', label='Swing High' if high == highs[0] else "")
+    for low in lows:
+        plt.plot(low[0], low[1], 'go', label='Swing Low' if low == lows[0] else "")
+    plt.legend()
+    plt.title(f"Swing Highs and Lows ({threshold}% threshold)")
+    plt.xlabel("Time")
+    plt.ylabel("Price")
+    plt.grid(True)
+    plt.show()
 
     

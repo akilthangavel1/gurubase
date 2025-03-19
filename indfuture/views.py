@@ -26,27 +26,44 @@ def indicator_future(request):
 def future_dynamic_data(request):
     return render(request, 'ddfuture/dynamic_data_future.html')
 
-def calculate_indicators(data):
-    """Calculate all indicators using pandas-ta"""
+def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10):
+    macd_fast=12
+    macd_slow=26
+    macd_signal=9
+    """Calculate all indicators using pandas-ta with customizable parameters"""
+    print(f"Calculating indicators with parameters - EMA: {ema_length}, SMA: {sma_length}, HMA: {hma_length}, MACD: {macd_fast},{macd_slow},{macd_signal}")
     df = pd.DataFrame(data, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
+    # Convert 'datetime' column to datetime type if it's not already
+    df['datetime'] = pd.to_datetime(df['datetime'])
 
+    # Sort the DataFrame by 'datetime' in ascending order
+    df = df.sort_values(by='datetime', ascending=True)
+
+# If you want to sort in descending order, use ascending=False
+# df = df.sort_values(by='datetime', ascending=False)
+    # print(df)
     # Calculate EMA
     df['ema'] = ta.ema(df['close'], length=10)
+    # print(df)
 
     # Calculate SMA
-    df['sma'] = ta.sma(df['close'], length=10)
+    df['sma'] = ta.sma(df['close'], length=sma_length)
 
     # Calculate HMA
-    df['hma'] = ta.hma(df['close'], length=10)
+    df['hma'] = ta.hma(df['close'], length=hma_length)
 
-    # Calculate MACD
-    macd = ta.macd(df['close'], fast=12, slow=26, signal=9)
+    # # Calculate MACD
+    # print(50 * "#")
+    # print(macd_fast, macd_signal, macd_slow)
+    # print(type(macd_fast), type(macd_signal), type(macd_slow), "##############")
+
+    macd = ta.macd(df['close'], fast=macd_fast, slow=macd_slow, signal=macd_signal)
     df['macd'] = macd['MACD_12_26_9']
     df['signal_line'] = macd['MACDs_12_26_9']
 
     # Calculate Supertrend
-    supertrend = ta.supertrend(df['high'], df['low'], df['close'], length=10, multiplier=3)
-    df['supertrend'] = supertrend['SUPERT_10_3.0']
+    supertrend = ta.supertrend(df['high'], df['low'], df['close'], length=14, multiplier=3)
+    df['supertrend'] = supertrend['SUPERT_14_3.0']
 
     # Calculate Awesome Oscillator
     df['ao'] = ta.ao(df['high'], df['low'])
@@ -56,9 +73,9 @@ def calculate_indicators(data):
     df['keltner_upper'] = keltner['KCUe_20_2.0']
     df['keltner_middle'] = keltner['KCBe_20_2.0']
     df['keltner_lower'] = keltner['KCLe_20_2.0']
-
     # Calculate Classic Pivot Points manually
     df['pivot'] = (df['high'] + df['low'] + df['close']) / 3
+
     df['r1'] = 2 * df['pivot'] - df['low']
     df['s1'] = 2 * df['pivot'] - df['high']
     df['r2'] = df['pivot'] + (df['high'] - df['low'])
@@ -75,6 +92,12 @@ def calculate_indicators(data):
     df['camarilla_s2'] = df['close'] - (df['high'] - df['low']) * 1.1 / 6
     df['camarilla_s3'] = df['close'] - (df['high'] - df['low']) * 1.1 / 4
     df['camarilla_s4'] = df['close'] - (df['high'] - df['low']) * 1.1 / 2
+
+    # Convert 'datetime' column to datetime type if it's not already
+    # df['datetime'] = pd.to_datetime(df['datetime'])
+
+    # # Sort the DataFrame by 'datetime' in ascending order
+    # df = df.sort_values(by='datetime', ascending=True)
 
     # Return the latest values
     latest_data = df.iloc[-1]
@@ -106,16 +129,38 @@ def calculate_indicators(data):
         'camarilla_s4': latest_data['camarilla_s4']
     }
 
-async def fetch_latest_data(ticker_symbol, timeframe='1'):
+def stream_indicator_data(request):
+    """SSE endpoint for real-time dynamic data updates with timeframe and indicator support"""
+    # Get the timeframe and indicator parameters from the query parameters
+    timeframe = request.GET.get('timeframe', '1')
+    ema = request.GET.get('ema', '10')
+    ema = '10' if ema == '0' else ema  # Default EMA to 10 if 0
+    sma = request.GET.get('sma', '10')
+    sma = '10' if sma == '0' else sma 
+    hma = request.GET.get('hma', '10')
+    hma = '10' if hma == '0' else hma 
+    macd = request.GET.get('macd', '12,26,9')
+    macd = '12,6,26'if macd == '0' else macd
+    print(macd, "!!!!!!!!!!!")
+    logger.info(f"Received request with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
+
+    # Pass the parameters to the stream generator
+    response = StreamingHttpResponse(
+        generate_dynamic_stream(timeframe, ema, sma, hma, macd),
+        content_type='text/event-stream'
+    )
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+
+async def fetch_latest_data(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9'):
     """Fetch the latest data for a given ticker symbol."""
     try:
+        logger.info(f"Fetching data for {ticker_symbol} with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
         # Use sync_to_async to wrap the database operation
-        data = await sync_to_async(_fetch_data_from_db)(ticker_symbol, timeframe)
+        data = await sync_to_async(_fetch_data_from_db)(ticker_symbol, timeframe, ema, sma, hma, macd)
         if data:
-            # print(ticker_symbol)
             logger.info(f"Fetched data for {ticker_symbol}: {data}")
-            # Check if there are enough data points for EMA calculation
-           
         else:
             logger.warning(f"No data fetched for {ticker_symbol}")
         return data
@@ -123,7 +168,7 @@ async def fetch_latest_data(ticker_symbol, timeframe='1'):
         logger.error(f"Error fetching data for {ticker_symbol}: {str(e)}")
         return None
 
-def _fetch_data_from_db(ticker_symbol, timeframe='1'):
+def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9'):
     """Helper function to fetch data from the database."""
     with connection.cursor() as cursor:
         table_name = f"{ticker_symbol}_future_historical_data"
@@ -281,7 +326,20 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
         data = cursor.fetchall()
         if data:
             # Convert data to DataFrame and calculate indicators
-            indicators = calculate_indicators(data)
+            macd_fast = int(macd.split(',')[0])
+            m =0
+
+            print(macd_fast, "##########")
+            print(type(macd_fast))
+            indicators = calculate_indicators(data, ema_length=int(ema), sma_length=int(sma), hma_length=int(hma))
+            
+            
+            # indicators = calculate_indicators(
+            #     data,
+            #     ema_length=int(ema),
+            #     sma_length=int(sma),
+            #     hma_length=int(hma),
+            # )
 
             return {
                 'ticker_symbol': ticker_symbol,
@@ -313,16 +371,17 @@ def calculate_bias(latest_data, previous_data, swings):
         logger.error("Invalid data format for bias calculation")
         return 'NEUTRAL'
 
-async def generate_dynamic_stream(timeframe='1'):
+async def generate_dynamic_stream(timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9'):
     while True:
         try:
+            logger.info(f"Generating stream with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
             # Get all tickers
             tickers = await sync_to_async(list)(TickerBase.objects.all())
             formatted_data = []
 
             for ticker in tickers:
-                # Fetch data based on the timeframe
-                data = await fetch_latest_data(ticker.ticker_symbol, timeframe)
+                # Fetch data based on the timeframe and indicators
+                data = await fetch_latest_data(ticker.ticker_symbol, timeframe, ema, sma, hma, macd)
                 if data:
                     formatted_data.append(data)
 
@@ -331,30 +390,14 @@ async def generate_dynamic_stream(timeframe='1'):
             else:
                 yield f"data: {json.dumps({'message': 'No data available'}, cls=DjangoJSONEncoder)}\n\n"
 
-            # Log the timeframe being used
-            logger.debug(f"Streaming data with timeframe: {timeframe}")
+            # Log the timeframe and indicators being used
+            logger.debug(f"Streaming data with timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
             await asyncio.sleep(1)  # Update every second
 
         except Exception as e:
             logger.error(f"Error in generate_dynamic_stream: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)}, cls=DjangoJSONEncoder)}\n\n"
             await asyncio.sleep(1)
-
-
-
-def stream_indicator_data(request):
-    """SSE endpoint for real-time dynamic data updates with timeframe support"""
-    # Get the timeframe from the query parameters, default to '1' if not provided
-    timeframe = request.GET.get('timeframe', '1')
-
-    # Pass the timeframe to the stream generator
-    response = StreamingHttpResponse(
-        generate_dynamic_stream(timeframe),
-        content_type='text/event-stream'
-    )
-    response['Cache-Control'] = 'no-cache'
-    response['X-Accel-Buffering'] = 'no'
-    return response
 
 def calculate_supertrend(data, period=10, multiplier=3):
     """Calculate Supertrend"""

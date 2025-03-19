@@ -1,531 +1,470 @@
-{% extends 'dashboard/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Abundus Wealth</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .feature-box {
+            padding: 20px;
+            text-align: center;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+        }
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Abundus Wealth<br/>Fintech Solutions<br/>Providers</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Futures</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-cogs"></i> Options</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-file-alt"></i> Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-lightbulb"></i> Strategies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-blog"></i> Blogs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-industry"></i> Sector</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-th"></i> Subsector</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-sitemap"></i> Classification</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+   <!-- Stock Market Quote Section -->
+<div class="container my-4">
+    <div class="bg-light border-start border-4 border-primary shadow-lg rounded p-4 text-center mx-auto" style="max-width: 800px;">
+        <i class="fas fa-quote-left fa-2x text-primary"></i>
+        <p class="fw-bold fst-italic text-dark mt-2">"The stock market is filled with individuals who know the price of everything, but the value of nothing." – Philip Fisher</p>
+        <i class="fas fa-quote-right fa-2x text-primary"></i>
+    </div>
+</div>
+    <!-- Features Section -->
+    <div class="container my-5" id="features">
+        <div class="row">
+            <div class="col-md-4 feature-box">
+                <h3>NIFTY</h3>
+                <canvas id="chart1"></canvas>
+            </div>
+            <div class="col-md-4 feature-box">
+                <h3>NIFTY BANK</h3>
+                <canvas id="chart2"></canvas>
+            </div>
+            <div class="col-md-4 feature-box">
+                <h3>SENSEX</h3>
+                <canvas id="chart3"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container my-5">
+        <div class="row">
+            <!-- Top Gainers -->
+            <div class="col-md-6">
+                <div class="card border-success shadow">
+                    <div class="card-header bg-success text-white text-center">
+                        <h5>📈 Top Gainers</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Stock</th>
+                                    <th>Price</th>
+                                    <th>Change (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Apple</td>
+                                    <td>$180</td>
+                                    <td class="text-success">+5.2%</td>
+                                </tr>
+                                <tr>
+                                    <td>Amazon</td>
+                                    <td>$120</td>
+                                    <td class="text-success">+3.8%</td>
+                                </tr>
+                                <tr>
+                                    <td>Google</td>
+                                    <td>$2300</td>
+                                    <td class="text-success">+2.9%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Top Losers -->
+            <div class="col-md-6">
+                <div class="card border-danger shadow">
+                    <div class="card-header bg-danger text-white text-center">
+                        <h5>📉 Top Losers</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Stock</th>
+                                    <th>Price</th>
+                                    <th>Change (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Meta</td>
+                                    <td>$290</td>
+                                    <td class="text-danger">-4.1%</td>
+                                </tr>
+                                <tr>
+                                    <td>Tesla</td>
+                                    <td>$750</td>
+                                    <td class="text-danger">-3.5%</td>
+                                </tr>
+                                <tr>
+                                    <td>NVIDIA</td>
+                                    <td>$520</td>
+                                    <td class="text-danger">-2.7%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Market Data -->
+        <!-- <div class="card mt-4 shadow">
+            <div class="card-header bg-dark text-white text-center">
+                <h5>📊 Market Summary</h5>
+            </div>
+            <div class="card-body text-center">
+                <p><strong>S&P 500:</strong> 4,200 (+1.2%) | <strong>NASDAQ:</strong> 13,900 (+0.8%)</p>
+                <p><strong>Crude Oil:</strong> $85.50 | <strong>Gold:</strong> $1,950</p>
+            </div>
+        </div>
+    </div> -->
+    <!-- Our Picks for the day/week -->
+    <div class="container my-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h5>📊 Our Picks for the Day/Week</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-center">These are the top Futures & Options (F&O) stocks for the day/week based on Open Interest (OI) data and technical analysis.</p>
+    
+                <!-- Table Preview -->
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Stock</th>
+                                <th>Current Price</th>
+                                <th>Change (%)</th>
+                                <th>OI Change (%)</th>
+                                <th>Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Reliance</td>
+                                <td>₹2,500</td>
+                                <td class="text-success">+2.1%</td>
+                                <td class="text-success">+5.8%</td>
+                                <td>15M</td>
+                            </tr>
+                            <tr>
+                                <td>TCS</td>
+                                <td>₹3,600</td>
+                                <td class="text-danger">-1.3%</td>
+                                <td class="text-danger">-4.2%</td>
+                                <td>10M</td>
+                            </tr>
+                            <tr>
+                                <td>Infosys</td>
+                                <td>₹1,750</td>
+                                <td class="text-success">+1.7%</td>
+                                <td class="text-success">+3.5%</td>
+                                <td>12M</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+    
+                <!-- Download Buttons -->
+                <div class="text-center mt-3">
+                    <a href="reports/fno_daily_report.xlsx" class="btn btn-success me-2">
+                        <i class="fas fa-file-excel"></i> Download Excel
+                    </a>
+                    <a href="reports/fno_daily_report.pdf" class="btn btn-danger">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-{% block title %}GuruBase - Home{% endblock %}
+    <div class="container my-5">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white text-center">
+                <h5>💻 Software Services Provided</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Service 1 -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-chart-line fa-3x text-primary"></i>
+                        <h5 class="mt-3">Market Analysis Tools</h5>
+                        <p>Get real-time stock data, technical analysis, and AI-powered market insights.</p>
+                    </div>
+                    <!-- Service 2 -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-robot fa-3x text-success"></i>
+                        <h5 class="mt-3">Algorithmic Trading</h5>
+                        <p>Automate trading strategies with our AI-driven algorithmic trading solutions.</p>
+                    </div>
+                    <!-- Service 3 -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-database fa-3x text-danger"></i>
+                        <h5 class="mt-3">Data & API Solutions</h5>
+                        <p>Access high-frequency market data and integrate APIs for real-time insights.</p>
+                    </div>
+                </div>
+    
+                <div class="row mt-4">
+                    <!-- Service 4 -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-cloud fa-3x text-warning"></i>
+                        <h5 class="mt-3">Cloud-Based Trading Platforms</h5>
+                        <p>Access trading platforms from anywhere with our secure cloud-based solutions.</p>
+                    </div>
+                    <!-- Service 5 -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-mobile-alt fa-3x text-secondary"></i>
+                        <h5 class="mt-3">Mobile Trading Apps</h5>
+                        <p>Trade on the go with our fully customized mobile trading applications.</p>
+                    </div>
+                    <!-- Service 6 -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-cogs fa-3x text-dark"></i>
+                        <h5 class="mt-3">Custom Software Development</h5>
+                        <p>Get tailored software solutions to meet your specific trading and investment needs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container my-5">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h5>📈 Trading Strategies & Custom Development</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-center">We develop automated and semi-automated trading strategies based on your specific requirements in various programming languages.</p>
+                <div class="row">
+                    <!-- Python Strategies -->
+                    <div class="col-md-4 text-center">
+                        <i class="fab fa-python fa-3x text-warning"></i>
+                        <h5 class="mt-3">Python Strategies</h5>
+                        <p>Data-driven trading strategies using AI, ML, and broker APIs.</p>
+                    </div>
+                    <!-- Pine Script -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-chart-bar fa-3x text-primary"></i>
+                        <h5 class="mt-3">Pine Script (TradingView)</h5>
+                        <p>Custom indicators and strategies for TradingView charts.</p>
+                    </div>
+                    <!-- MQL4 / MQL5 -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-robot fa-3x text-info"></i>
+                        <h5 class="mt-3">MQL4 / MQL5</h5>
+                        <p>Automated trading bots and indicators for MetaTrader platforms.</p>
+                    </div>
+                </div>
+    
+                <div class="row mt-4">
+                    <!-- VBA Scripting -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-file-excel fa-3x text-success"></i>
+                        <h5 class="mt-3">VBA Scripting</h5>
+                        <p>Excel-based trading automation and backtesting solutions.</p>
+                    </div>
+                    <!-- User Custom Requests -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-user-cog fa-3x text-dark"></i>
+                        <h5 class="mt-3">Custom Strategies</h5>
+                        <p>We develop strategies based on your specific requirements.</p>
+                    </div>
+                    <!-- Contact Us -->
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-envelope fa-3x text-danger"></i>
+                        <h5 class="mt-3">Contact Us</h5>
+                        <p>Request a strategy or consultation for your trading needs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-{% block extra_css %}
-<style>
-    .feature-icon {
-        font-size: 2.5rem;
-        color: #0d6efd;
-        margin-bottom: 1rem;
-    }
-    
-    .stats-card {
-        background: linear-gradient(135deg, #0d6efd, #0099ff);
-        color: white;
-        border: none;
-        transition: transform 0.3s ease;
-    }
-    
-    .stats-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .testimonial-card {
-        background-color: #f8f9fa;
-        border-left: 4px solid #0d6efd;
-    }
-    
-    .service-card {
-        transition: transform 0.3s ease;
-        border: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .service-card:hover {
-        transform: translateY(-5px);
-    }
+    <div class="container my-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white text-center">
+            <h5>📊 Market & Sector Reports</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-center">Stay informed with our real-time analysis and reports on market conditions and sector trends.</p>
+            
+            <div class="row">
+                <!-- Market Conditions -->
+                <div class="col-md-6">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white text-center">
+                            <h6>📉 Market Condition Reports</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>Daily & Weekly Market Summary</li>
+                                <li>Volatility & Liquidity Analysis</li>
+                                <li>Economic & Interest Rate Impact</li>
+                                <li>Global Market Influence</li>
+                            </ul>
+                            <a href="#" class="btn btn-info btn-sm w-100"><i class="fas fa-download"></i> Download Reports</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sector Reports -->
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white text-center">
+                            <h6>🏭 Sector-Specific Reports</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>Technology & IT Sector Analysis</li>
+                                <li>Banking & Finance Reports</li>
+                                <li>Pharma & Healthcare Insights</li>
+                                <li>Auto, FMCG, and Energy Trends</li>
+                            </ul>
+                            <a href="#" class="btn btn-success btn-sm w-100"><i class="fas fa-download"></i> Download Reports</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    .hero-section {
-        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-                    url('/static/images/trading-bg.jpg');
-        background-size: cover;
-        background-position: center;
-        color: white;
-        padding: 5rem 0;
-        margin-bottom: 2rem;
-    }
+            <div class="text-center mt-4">
+                <a href="#" class="btn btn-dark"><i class="fas fa-envelope"></i> Request a Custom Report</a>
+            </div>
+        </div>
+    </div>
+</div>
 
-    .pricing-card {
-        border: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
     
-    .pricing-card:hover {
-        transform: translateY(-10px);
-    }
-    
-    .pricing-popular {
-        border: 2px solid #0d6efd;
-    }
-    
-    .feature-grid-item {
-        padding: 2rem;
-        border-radius: 10px;
-        background: #f8f9fa;
-        transition: all 0.3s ease;
-    }
-    
-    .feature-grid-item:hover {
-        background: #e9ecef;
-        transform: scale(1.02);
-    }
-    
-    .news-card {
-        border: none;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: transform 0.3s ease;
-    }
-    
-    .news-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .tech-stack-icon {
-        font-size: 2rem;
-        color: #6c757d;
-        margin: 1rem;
-        transition: color 0.3s ease;
-    }
-    
-    .tech-stack-icon:hover {
-        color: #0d6efd;
-    }
-
-    .animated-number {
-        font-size: 3rem;
-        font-weight: bold;
-        background: linear-gradient(45deg, #0d6efd, #00ff88);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .market-update {
-        background: #f8f9fa;
-        border-left: 4px solid #0d6efd;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .scroll-animation {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.6s ease;
-    }
-
-    .scroll-animation.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Intersection Observer for scroll animations
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.scroll-animation').forEach((el) => observer.observe(el));
-    });
-</script>
-{% endblock %}
-
-{% block content %}
-<!-- Hero Section -->
-<div class="hero-section">
+    <!-- Footer -->
+<footer class="footer">
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 text-center">
-                <h1 class="display-4 mb-4">Welcome to GuruBase</h1>
-                <p class="lead mb-4">Your comprehensive platform for advanced stock market trading and analysis</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started</a>
-                    <a href="{% url 'home' %}" class="btn btn-outline-light btn-lg">Watch Demo</a>
+        <div class="row">
+            <!-- About Section -->
+            <div class="col-md-4">
+                <h5>About Abundus Wealth</h5>
+                <p>Abundus Wealth is a leading fintech solutions provider offering insights, strategies, and tools for stock market investors and traders.</p>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="col-md-4">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">Market Overview</a></li>
+                    <li><a href="#">Trading Strategies</a></li>
+                    <li><a href="#">Investment Reports</a></li>
+                    <li><a href="#">Stock Screener</a></li>
+                    <li><a href="#">Financial News</a></li>
+                </ul>
+            </div>
+            
+            <!-- Contact Info -->
+            <div class="col-md-4">
+                <h5>Contact Us</h5>
+                <p><i class="fas fa-envelope"></i> support@abunduswealth.com</p>
+                <p><i class="fas fa-phone"></i> +1 234 567 890</p>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Wall Street, New York, USA</p>
+                <div>
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-linkedin"></i></a>
                 </div>
             </div>
         </div>
+        
+        <hr class="my-4 border-light">
+        
+        <div class="text-center">
+            <p>&copy; 2025 Abundus Wealth. All Rights Reserved.</p>
+        </div>
     </div>
-</div>
+</footer>
 
-<!-- Stats Section -->
-<div class="container mb-5">
-    <div class="row g-4">
-        <div class="col-md-3">
-            <div class="card stats-card text-center p-3">
-                <h3 class="mb-0">50K+</h3>
-                <p class="mb-0">Active Users</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card text-center p-3">
-                <h3 class="mb-0">₹100M+</h3>
-                <p class="mb-0">Daily Volume</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card text-center p-3">
-                <h3 class="mb-0">99.9%</h3>
-                <p class="mb-0">Uptime</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card text-center p-3">
-                <h3 class="mb-0">24/7</h3>
-                <p class="mb-0">Support</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 py-3">
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Advanced Stock Screener</h5>
-                <p class="card-text">Discover trading opportunities with our powerful screening tools featuring:</p>
-                <ul class="list-unstyled">
-                    <li>✓ Real-time market data</li>
-                    <li>✓ Technical indicators</li>
-                    <li>✓ Custom screening criteria</li>
-                </ul>
-                <a href="{% url 'live-stocks' %}" class="btn btn-primary">Open Screener</a>
-            </div>
-        </div>
-    </div>
     
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Automated Trading</h5>
-                <p class="card-text">Execute trades automatically with precision:</p>
-                <ul class="list-unstyled">
-                    <li>✓ Set custom trading rules</li>
-                    <li>✓ Real-time order execution</li>
-                    <li>✓ Risk management tools</li>
-                </ul>
-                <a href="" class="btn btn-primary">Setup Auto Trading</a>
-            </div>
-        </div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function createChart(canvasId) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Stock Price',
+                data: [100, 120, 90, 130, 150, 140],
+                borderColor: 'rgba(255, 99, 132, 1)', // Bright Red
+                backgroundColor: 'rgba(255, 99, 132, 0.5)', // Light Red Fill
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false // Hide legend for simplicity
+                }
+            },
+            scales: {
+                x: { 
+                    grid: { display: false } 
+                },
+                y: { 
+                    grid: { display: true, color: 'rgba(200, 200, 200, 0.5)' } 
+                }
+            }
+        }
+    });
+}
 
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Portfolio Management</h5>
-                <p class="card-text">Track and optimize your investments:</p>
-                <ul class="list-unstyled">
-                    <li>✓ Performance analytics</li>
-                    <li>✓ Risk assessment</li>
-                    <li>✓ Portfolio rebalancing</li>
-                </ul>
-                <a href="{% url 'portfolio' %}" class="btn btn-primary">View Portfolio</a>
-            </div>
-        </div>
-    </div>
-</div>
+// Creating charts for different sections
+createChart('chart1');
+createChart('chart2');
+createChart('chart3');
 
-<div class="row g-4 py-3">
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Algorithm Development Services</h5>
-                <p class="card-text">Custom trading strategy development:</p>
-                <ul class="list-unstyled">
-                    <li>✓ Professional algo development</li>
-                    <li>✓ Strategy backtesting</li>
-                    <li>✓ Performance optimization</li>
-                </ul>
-                <a href="" class="btn btn-primary">Learn More</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Market Research & Analysis</h5>
-                <p class="card-text">Deep market insights and research:</p>
-                <ul class="list-unstyled">
-                    <li>✓ Market trend analysis</li>
-                    <li>✓ Expert recommendations</li>
-                    <li>✓ Real-time market news</li>
-                </ul>
-                <a href="" class="btn btn-primary">View Research</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Why Choose GuruBase?</h5>
-                <p class="card-text">
-                    Experience the power of professional-grade trading tools and services:
-                </p>
-                <ul class="mb-0">
-                    <li>Advanced technical analysis and screening capabilities</li>
-                    <li>Automated trading systems with proven strategies</li>
-                    <li>Professional algorithm development services</li>
-                    <li>Comprehensive portfolio management tools</li>
-                    <li>Expert market research and analysis</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Features Section -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Platform Features</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="text-center">
-                <i class="bi bi-graph-up feature-icon"></i>
-                <h4>Real-time Analytics</h4>
-                <p>Advanced charting tools and technical indicators for informed decision-making</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="text-center">
-                <i class="bi bi-shield-check feature-icon"></i>
-                <h4>Secure Trading</h4>
-                <p>Bank-grade security with 2FA and encrypted transactions</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="text-center">
-                <i class="bi bi-lightning feature-icon"></i>
-                <h4>Lightning Fast</h4>
-                <p>Ultra-low latency execution with dedicated servers</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Testimonials Section -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">What Our Users Say</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card testimonial-card">
-                <div class="card-body">
-                    <p class="card-text">"GuruBase's automated trading system has transformed my trading strategy. The results speak for themselves."</p>
-                    <footer class="blockquote-footer mt-2">Rajesh Kumar, Professional Trader</footer>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card testimonial-card">
-                <div class="card-body">
-                    <p class="card-text">"The stock screener is incredibly powerful. I've discovered numerous opportunities I would have missed otherwise."</p>
-                    <footer class="blockquote-footer mt-2">Priya Sharma, Investment Analyst</footer>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card testimonial-card">
-                <div class="card-body">
-                    <p class="card-text">"Their algo development service helped me implement my trading strategy with precision. Excellent support team!"</p>
-                    <footer class="blockquote-footer mt-2">Amit Patel, Fund Manager</footer>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- CTA Section -->
-<div class="container mb-5">
-    <div class="card bg-primary text-white">
-        <div class="card-body text-center py-5">
-            <h2 class="card-title">Ready to Start Trading?</h2>
-            <p class="card-text">Join thousands of successful traders using GuruBase's advanced trading platform.</p>
-            <a href="{% url 'register' %}" class="btn btn-light btn-lg">Create Free Account</a>
-        </div>
-    </div>
-</div>
-
-<!-- Partners Section -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Trusted By</h2>
-    <div class="row align-items-center justify-content-center g-4">
-        <div class="col-md-2 col-6 text-center">
-            <img src="/static/images/partner1.png" alt="Partner 1" class="img-fluid" style="max-height: 60px;">
-        </div>
-        <div class="col-md-2 col-6 text-center">
-            <img src="/static/images/partner2.png" alt="Partner 2" class="img-fluid" style="max-height: 60px;">
-        </div>
-        <div class="col-md-2 col-6 text-center">
-            <img src="/static/images/partner3.png" alt="Partner 3" class="img-fluid" style="max-height: 60px;">
-        </div>
-        <div class="col-md-2 col-6 text-center">
-            <img src="/static/images/partner4.png" alt="Partner 4" class="img-fluid" style="max-height: 60px;">
-        </div>
-    </div>
-</div>
-
-<!-- Market Updates Section -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Live Market Updates</h2>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="market-update">
-                <h5>NIFTY 50</h5>
-                <div class="d-flex justify-content-between">
-                    <span>19,425.35</span>
-                    <span class="text-success">+1.2%</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="market-update">
-                <h5>SENSEX</h5>
-                <div class="d-flex justify-content-between">
-                    <span>64,718.56</span>
-                    <span class="text-success">+0.9%</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="market-update">
-                <h5>BANK NIFTY</h5>
-                <div class="d-flex justify-content-between">
-                    <span>43,915.20</span>
-                    <span class="text-danger">-0.3%</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Advanced Features Grid -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Advanced Trading Features</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="feature-grid-item scroll-animation">
-                <i class="bi bi-cpu feature-icon"></i>
-                <h4>AI-Powered Analysis</h4>
-                <p>Machine learning algorithms analyze market patterns and predict potential movements</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-grid-item scroll-animation">
-                <i class="bi bi-clock-history feature-icon"></i>
-                <h4>Backtesting Engine</h4>
-                <p>Test your strategies against historical data with our advanced backtesting tools</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-grid-item scroll-animation">
-                <i class="bi bi-bell feature-icon"></i>
-                <h4>Smart Alerts</h4>
-                <p>Customizable alerts for price movements, technical indicators, and news events</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Pricing Section -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Choose Your Plan</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card pricing-card">
-                <div class="card-body text-center">
-                    <h3>Basic</h3>
-                    <div class="py-4">
-                        <h4 class="mb-0">₹999</h4>
-                        <p class="text-muted">per month</p>
-                    </div>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">✓ Basic Stock Screener</li>
-                        <li class="mb-2">✓ Market Data</li>
-                        <li class="mb-2">✓ 5 Custom Alerts</li>
-                        <li class="mb-2">✓ Email Support</li>
-                    </ul>
-                    <a href="{% url 'home' %}?plan=basic" class="btn btn-outline-primary">Get Started</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card pricing-card pricing-popular">
-                <div class="card-body text-center">
-                    <h3>Pro</h3>
-                    <div class="py-4">
-                        <h4 class="mb-0">₹2,499</h4>
-                        <p class="text-muted">per month</p>
-                    </div>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">✓ Advanced Screener</li>
-                        <li class="mb-2">✓ Real-time Data</li>
-                        <li class="mb-2">✓ Unlimited Alerts</li>
-                        <li class="mb-2">✓ Priority Support</li>
-                        <li class="mb-2">✓ Automated Trading</li>
-                    </ul>
-                    <a href="{% url 'home' %}?plan=pro" class="btn btn-primary">Get Started</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card pricing-card">
-                <div class="card-body text-center">
-                    <h3>Enterprise</h3>
-                    <div class="py-4">
-                        <h4 class="mb-0">Custom</h4>
-                        <p class="text-muted">contact us</p>
-                    </div>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">✓ All Pro Features</li>
-                        <li class="mb-2">✓ Custom Solutions</li>
-                        <li class="mb-2">✓ API Access</li>
-                        <li class="mb-2">✓ Dedicated Support</li>
-                        <li class="mb-2">✓ Custom Algorithms</li>
-                    </ul>
-                    <a href="{% url 'home' %}" class="btn btn-outline-primary">Contact Us</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Latest News Section -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Latest Market News</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card news-card">
-                <img src="/static/images/news1.jpg" class="card-img-top" alt="Market News">
-                <div class="card-body">
-                    <h5 class="card-title">RBI Policy Update</h5>
-                    <p class="card-text">Latest monetary policy decisions and their impact on markets...</p>
-                    <a href="#" class="btn btn-link">Read More →</a>
-                </div>
-            </div>
-        </div>
-        <!-- Add more news cards as needed -->
-    </div>
-</div>
-
-<!-- Technology Stack -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Powered By Latest Technology</h2>
-    <div class="text-center">
-        <i class="bi bi-cpu-fill tech-stack-icon"></i>
-        <i class="bi bi-cloud-fill tech-stack-icon"></i>
-        <i class="bi bi-shield-fill-check tech-stack-icon"></i>
-        <i class="bi bi-graph-up tech-stack-icon"></i>
-        <i class="bi bi-database-fill tech-stack-icon"></i>
-    </div>
-</div>
-{% endblock %}
+    </script>
+</body>
+</html>

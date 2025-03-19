@@ -4,91 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Future Dynamic Data</title>
-    <style>
-        body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-        }
-        .timeframe-selector {
-            background-color: #2d2d2d;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .timeframe-selector label {
-            font-weight: bold;
-            margin-right: 10px;
-            color: #ffffff;
-        }
-        .timeframe-selector select {
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #404040;
-            background-color: #333333;
-            color: #ffffff;
-        }
-        .timeframe-selector select:focus {
-            outline: none;
-            border-color: #0066cc;
-        }
-        #updateTimeframe {
-            margin-left: 10px;
-            padding: 8px 15px;
-            border-radius: 5px;
-            border: none;
-            background-color: #0066cc;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #updateTimeframe:hover {
-            background-color: #0052a3;
-        }
-        h1 {
-            color: #ffffff;
-            margin: 0;
-        }
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            margin: 20px;
-        }
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            border: 1px solid #333;
-        }
-        .table th, .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #404040;
-        }
-        .table th {
-            background-color: #2d2d2d;
-            font-weight: bold;
-        }
-        .table tbody tr:nth-child(odd) {
-            background-color: #262626;
-        }
-        .table tbody tr:hover {
-            background-color: #333333;
-        }
-        .text-success {
-            color: #ffffff !important;
-        }
-        .text-danger {
-            color: #ff4d4d !important;
-        }
-    </style>
 </head>
 <body>
     <div class="header">
@@ -108,61 +23,70 @@
         </div>
     </div>
 
+    <div class="indicator-inputs">
+        <label for="emaValue">EMA:</label>
+        <input type="number" id="emaValue" step="0.01" placeholder="Enter EMA value">
+        <label for="smaValue">SMA:</label>
+        <input type="number" id="smaValue" step="0.01" placeholder="Enter SMA value">
+        <label for="hmaValue">HMA:</label>
+        <input type="number" id="hmaValue" step="0.01" placeholder="Enter HMA value">
+        <label for="macdValue">MACD:</label>
+        <input type="number" id="macdValue" step="0.01" placeholder="Enter HMA value">
+        <button id="updateIndicators">Update Indicators</button>
+    </div>
+
     <div id="data-container">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover" id="dynamicDataTable">
-                <thead>
-                    <tr>
-                        <th>Ticker</th>
-                        <th>EMA</th>
-                        <th>SMA</th>
-                        <th>HMA</th>
-                        <th>MACD</th>
-                        <th>Signal Line</th>
-                        <th>SUPERTREND</th>
-                        <th>AO</th>
-                        <th>Keltner Upper</th>
-                        <th>Keltner Middle</th>
-                        <th>Keltner Lower</th>
-                        <th>Pivot</th>
-                        <th>R1</th>
-                        <th>S1</th>
-                        <th>R2</th>
-                        <th>S2</th>
-                        <th>R3</th>
-                        <th>S3</th>
-                        <th>Camarilla R1</th>
-                        <th>Camarilla R2</th>
-                        <th>Camarilla R3</th>
-                        <th>Camarilla R4</th>
-                        <th>Camarilla S1</th>
-                        <th>Camarilla S2</th>
-                        <th>Camarilla S3</th>
-                        <th>Camarilla S4</th>
-                        <th>BIAS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Data will be populated via JavaScript -->
-                </tbody>
-            </table>
-        </div>
+        <table id="dynamicDataTable">
+            <thead> 
+                <tr>
+                    <th>Ticker</th>
+                    <th>EMA</th>
+                    <th>SMA</th>
+                    <th>HMA</th>
+                    <th>MACD</th>
+                    <th>Signal Line</th>
+                    <th>SUPERTREND</th>
+                    <th>AO</th>
+                    <th>Keltner Upper</th>
+                    <th>Keltner Middle</th>
+                    <th>Keltner Lower</th>
+                    <th>Pivot</th>
+                    <th>R1</th>
+                    <th>S1</th>
+                    <th>R2</th>
+                    <th>S2</th>
+                    <th>R3</th>
+                    <th>S3</th>
+                    <th>Camarilla R1</th>
+                    <th>Camarilla R2</th>
+                    <th>Camarilla R3</th>
+                    <th>Camarilla R4</th>
+                    <th>Camarilla S1</th>
+                    <th>Camarilla S2</th>
+                    <th>Camarilla S3</th>
+                    <th>Camarilla S4</th>
+                    <th>BIAS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be populated via JavaScript -->
+            </tbody>
+        </table>
     </div>
 
     <script>
         const dataContainer = document.getElementById('data-container');
         const timeframeSelect = document.getElementById('timeframe');
         const updateButton = document.getElementById('updateTimeframe');
+        const updateIndicatorsButton = document.getElementById('updateIndicators');
 
         let eventSource;
 
-        function createEventSource(timeframe) {
+        function createEventSource(timeframe, ema, sma, hma, macd) {
             if (eventSource) {
-                console.log('Closing existing EventSource');
                 eventSource.close();
             }
-            console.log('Creating new EventSource with timeframe:', timeframe);
-            const newEventSource = new EventSource(`{% url "stream_indicator_data" %}?timeframe=${timeframe}`);
+            const newEventSource = new EventSource(`{% url "stream_indicator_data" %}?timeframe=${timeframe}&ema=${ema}&sma=${sma}&hma=${hma}&macd=${macd}`);
             
             newEventSource.onopen = () => console.log('EventSource connection opened with timeframe:', timeframe);
             
@@ -191,20 +115,9 @@
                             const cell = document.createElement('td');
                             if (typeof value === 'number') {
                                 const formattedValue = value.toFixed(2);
-                                if (value > 0) {
-                                    cell.innerHTML = `<span class="text-success">${formattedValue}</span>`;
-                                } else if (value < 0) {
-                                    cell.innerHTML = `<span class="text-danger">${formattedValue}</span>`;
-                                } else {
-                                    cell.textContent = formattedValue;
-                                }
+                                cell.textContent = formattedValue;
                             } else if (index === values.length - 1) { // Bias column
                                 cell.textContent = value;
-                                if (value === 'BULLISH') {
-                                    cell.className = 'text-success';
-                                } else if (value === 'BEARISH') {
-                                    cell.className = 'text-danger';
-                                }
                             } else {
                                 cell.textContent = value || '-';
                             }
@@ -217,12 +130,36 @@
             return newEventSource;
         }
 
-        // Initialize EventSource
-        eventSource = createEventSource(timeframeSelect.value);
+        // Initialize EventSource with default indicator values
+        const defaultEMA = document.getElementById('emaValue').value || 0;
+        const defaultSMA = document.getElementById('smaValue').value || 0;
+        const defaultHMA = document.getElementById('hmaValue').value || 0;
+        const defaultMACD = document.getElementById('macdValue').value || 0;
+        eventSource = createEventSource(timeframeSelect.value, defaultEMA, defaultSMA, defaultHMA, defaultMACD);
 
-        // Update EventSource when timeframe changes
+        // Update EventSource when timeframe or indicators change
         updateButton.addEventListener('click', function() {
-            eventSource = createEventSource(timeframeSelect.value);
+            const ema = document.getElementById('emaValue').value || 0;
+            const sma = document.getElementById('smaValue').value || 0;
+            const hma = document.getElementById('hmaValue').value || 0;
+            const macd = document.getElementById('macdValue').value || 0;
+            eventSource = createEventSource(timeframeSelect.value, ema, sma, hma, macd);
+        });
+
+        updateIndicatorsButton.addEventListener('click', function() {
+            const ema = document.getElementById('emaValue').value || 0;
+            const sma = document.getElementById('smaValue').value || 0;
+            const hma = document.getElementById('hmaValue').value || 0;
+            const macd = document.getElementById('macdValue').value || 0;
+            const emaValue = ema === 0 ? 10 : ema;  // Default EMA to 10 if 0
+            console.log('Update Indicators button clicked');
+            console.log(`EventSource connection opened with timeframe: ${timeframeSelect.value}, EMA: ${emaValue}, SMA: ${sma}, HMA: ${hma}, MACD: ${macd}`);
+            if (eventSource) {
+                eventSource.close();
+                console.log('Closed existing EventSource');
+            }
+            eventSource = createEventSource(timeframeSelect.value, emaValue, sma, hma, macd);
+            console.log(`EventSource created with URL: {% url "stream_indicator_data" %}?timeframe=${timeframeSelect.value}&ema=${emaValue}&sma=${sma}&hma=${hma}&macd=${macd}`);
         });
     </script>
 </body>

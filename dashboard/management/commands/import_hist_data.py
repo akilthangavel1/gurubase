@@ -86,7 +86,7 @@ class Command(BaseCommand):
             try:
                 self.stdout.write(self.style.SUCCESS(f"Processing ticker: {ticker.ticker_symbol}"))
                 from_date = (datetime.now() - timedelta(days=20)).strftime("%d/%m/%Y")
-                to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+                to_date = (datetime.now() - timedelta(days=0)).strftime("%d/%m/%Y")
                 print(ticker.ticker_symbol)
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 print(symbol)
@@ -110,7 +110,7 @@ class Command(BaseCommand):
                             close_price=row.close,
                             volume=row.volume
                         )
-                        # self.stdout.write(self.style.SUCCESS(f"Inserted data for {ticker.ticker_symbol} on {row.datetime}."))
+                        self.stdout.write(self.style.SUCCESS(f"Inserted data for {ticker.ticker_symbol} on {row.datetime}."))
                     else:
                         self.stdout.write(self.style.WARNING(f"Data for {ticker.ticker_symbol} on {row.datetime} already exists. Skipping."))
             
