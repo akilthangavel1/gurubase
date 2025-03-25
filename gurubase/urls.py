@@ -12,5 +12,6 @@ urlpatterns = [
     path('future/', include('ddfuture.urls')),
     path('indfuture/', include('indfuture.urls')),
     path('staticfuture/', include('staticfuture.urls')),
+    path('designapps/', include('designapps.urls')),
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
