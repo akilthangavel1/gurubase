@@ -4,68 +4,297 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Future Dynamic Data</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --border-color: #333;
+            --positive: #4caf50;
+            --negative: #f44336;
+            --neutral: #aaaaaa;
+            --highlight: #3b82f6;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .card-body {
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.75rem;
+            color: white;
+        }
+        
+        .timeframe-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        select {
+            background-color: #2a2a2a;
+            color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 6px 12px;
+        }
+        
+        button {
+            background-color: var(--highlight);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2563eb;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 6px;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table-dark {
+            background-color: transparent;
+            color: white;
+        }
+        
+        .table-dark thead {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        
+        .table-dark th {
+            font-weight: 600;
+            padding: 14px 10px;
+            border-color: var(--border-color);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            background-color: #161616;
+            z-index: 10;
+        }
+        
+        .table-dark td {
+            padding: 12px 10px;
+            border-color: var(--border-color);
+            white-space: nowrap;
+        }
+        
+        .table-dark tbody tr {
+            transition: background-color 0.15s;
+        }
+        
+        .table-dark tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .text-success {
+            color: var(--positive) !important;
+        }
+        
+        .text-danger {
+            color: var(--negative) !important;
+        }
+        
+        .ticker-cell {
+            font-weight: 600;
+            color: white;
+        }
+        
+        .table-header-group {
+            border-bottom: 2px solid var(--highlight);
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            h1 {
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Column groups */
+        .column-group-current, .column-group-previous, .column-group-atp, .column-group-swing {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+        
+        /* Badge styles */
+        .bias-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .bias-bullish {
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+        
+        .bias-bearish {
+            background-color: rgba(244, 67, 54, 0.2);
+        }
+        
+        .bias-neutral {
+            background-color: rgba(170, 170, 170, 0.2);
+        }
+        
+        /* Loading indicator */
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--neutral);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--highlight);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Future Dynamic Data</h1>
-        <div class="timeframe-selector">
-            <label for="timeframe">Select Timeframe:</label>
-            <select id="timeframe">
-                <option value="1">1 Minute</option>
-                <option value="5">5 Minutes</option>
-                <option value="15">15 Minutes</option>
-                <option value="30">30 Minutes</option>
-                <option value="60">1 Hour</option>
-                <option value="240">4 Hours</option>
-                <option value="1440">1 Day</option>
-            </select>
-            <button id="updateTimeframe">Update</button>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="bi bi-graph-up"></i> Future Dynamic Data</h1>
+                <div class="timeframe-selector">
+                    <label for="timeframe">Timeframe:</label>
+                    <select id="timeframe" class="form-select form-select-sm">
+                        <option value="1">1 Minute</option>
+                        <option value="5">5 Minutes</option>
+                        <option value="15">15 Minutes</option>
+                        <option value="30">30 Minutes</option>
+                        <option value="60">1 Hour</option>
+                        <option value="240">4 Hours</option>
+                        <option value="1440">1 Day</option>
+                    </select>
+                    <button id="updateTimeframe" class="btn"><i class="bi bi-arrow-repeat"></i> Update</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="data-container">
+                    <div class="table-container">
+                        <table class="table table-dark table-bordered table-hover" id="dynamicDataTable">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Ticker</th>
+                                    <th colspan="4" class="table-header-group">Current Candle</th>
+                                    <th colspan="4" class="table-header-group">Previous Candle</th>
+                                    <th colspan="3" class="table-header-group">ATP Values</th>
+                                    <th colspan="3" class="table-header-group">Swing Highs</th>
+                                    <th colspan="3" class="table-header-group">Swing Lows</th>
+                                    <th rowspan="2">Bias</th>
+                                </tr>
+                                <tr>
+                                    <th class="column-group-current">Open</th>
+                                    <th class="column-group-current">High</th>
+                                    <th class="column-group-current">Low</th>
+                                    <th class="column-group-current">Close</th>
+                                    <th class="column-group-previous">Open</th>
+                                    <th class="column-group-previous">High</th>
+                                    <th class="column-group-previous">Low</th>
+                                    <th class="column-group-previous">Close</th>
+                                    <th class="column-group-atp">Current</th>
+                                    <th class="column-group-atp">Previous</th>
+                                    <th class="column-group-atp">Last 3</th>
+                                    <th class="column-group-swing">1</th>
+                                    <th class="column-group-swing">2</th>
+                                    <th class="column-group-swing">3</th>
+                                    <th class="column-group-swing">1</th>
+                                    <th class="column-group-swing">2</th>
+                                    <th class="column-group-swing">3</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="loading-indicator" id="loading-indicator">
+                        <div class="loading-spinner"></div>
+                        <span>Loading data...</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <div id="data-container">
-        <table id="dynamicDataTable">
-            <thead>
-                <tr>
-                    <th>Ticker</th>
-                    <th>CURRENT CANDLE OPEN</th>
-                    <th>CURRENT CANDLE HIGH</th>
-                    <th>CURRENT CANDLE LOW</th>
-                    <th>CURRENT CANDLE CLOSE</th>
-                    <th>PREVIOUS CANDLE OPEN</th>
-                    <th>PREVIOUS CANDLE HIGH</th>
-                    <th>PREVIOUS CANDLE LOW</th>
-                    <th>PREVIOUS CANDLE CLOSE</th>
-                    <th>CURRENT CANDLE ATP</th>
-                    <th>PREVIOUS CANDLE ATP</th>
-                    <th>LAST 3 CANDLES ATP</th>
-                    <th>PREV SWING HIGH 1</th>
-                    <th>PREV SWING HIGH 2</th>
-                    <th>PREV SWING HIGH 3</th>
-                    <th>PREV SWING LOW 1</th>
-                    <th>PREV SWING LOW 2</th>
-                    <th>PREV SWING LOW 3</th>
-                    <th>BIAS</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Data will be populated via JavaScript -->
-            </tbody>
-        </table>
     </div>
 
     <script>
         const dataContainer = document.getElementById('data-container');
         const timeframeSelect = document.getElementById('timeframe');
         const updateButton = document.getElementById('updateTimeframe');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const tableContainer = document.querySelector('.table-container');
 
         let eventSource;
+
+        // Initially hide the table until data loads
+        tableContainer.style.display = 'none';
 
         function createEventSource(timeframe) {
             if (eventSource) {
                 console.log('Closing existing EventSource');
                 eventSource.close();
             }
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'flex';
+            tableContainer.style.display = 'none';
+            
             console.log('Creating new EventSource with timeframe:', timeframe);
             const newEventSource = new EventSource(`{% url "sse_dynamic_data" %}?timeframe=${timeframe}`);
             
@@ -73,10 +302,14 @@
             
             newEventSource.onerror = (error) => {
                 console.error('EventSource error:', error);
-                dataContainer.innerHTML = '<p>Error connecting to the server. Please try again later.</p>';
+                loadingIndicator.innerHTML = '<p>Error connecting to the server. Please try again later.</p>';
             };
             
             newEventSource.onmessage = function(event) {
+                // Hide loading indicator and show table
+                loadingIndicator.style.display = 'none';
+                tableContainer.style.display = 'block';
+                
                 const data = JSON.parse(event.data);
                 const tableBody = document.querySelector('#dynamicDataTable tbody');
 
@@ -85,40 +318,79 @@
                 }
 
                 if (data.message) {
-                    dataContainer.innerHTML = `<p>${data.message}</p>`;
+                    loadingIndicator.innerHTML = `<p>${data.message}</p>`;
+                    loadingIndicator.style.display = 'flex';
+                    tableContainer.style.display = 'none';
                 } else {
                     data.forEach(ticker => {
                         const row = document.createElement('tr');
+                        
+                        // Ticker cell with special styling
+                        const tickerCell = document.createElement('td');
+                        tickerCell.textContent = ticker.ticker_symbol;
+                        tickerCell.className = 'ticker-cell';
+                        row.appendChild(tickerCell);
+                        
+                        // Create cell groups with appropriate styling
                         const values = [
-                            ticker.ticker_symbol, ticker.current_candle_open, ticker.current_candle_high, ticker.current_candle_low, ticker.current_candle_close,
-                            ticker.previous_candle_open, ticker.previous_candle_high, ticker.previous_candle_low, ticker.previous_candle_close,
-                            ticker.current_candle_atp, ticker.previous_candle_atp, ticker.last_3_candles_atp,
-                            ticker.prev_swing_high_1, ticker.prev_swing_high_2, ticker.prev_swing_high_3,
-                            ticker.prev_swing_low_1, ticker.prev_swing_low_2, ticker.prev_swing_low_3, ticker.bias
+                            // Current candle group
+                            {value: ticker.current_candle_open, group: 'column-group-current'},
+                            {value: ticker.current_candle_high, group: 'column-group-current'},
+                            {value: ticker.current_candle_low, group: 'column-group-current'},
+                            {value: ticker.current_candle_close, group: 'column-group-current'},
+                            
+                            // Previous candle group
+                            {value: ticker.previous_candle_open, group: 'column-group-previous'},
+                            {value: ticker.previous_candle_high, group: 'column-group-previous'},
+                            {value: ticker.previous_candle_low, group: 'column-group-previous'},
+                            {value: ticker.previous_candle_close, group: 'column-group-previous'},
+                            
+                            // ATP values group
+                            {value: ticker.current_candle_atp, group: 'column-group-atp'},
+                            {value: ticker.previous_candle_atp, group: 'column-group-atp'},
+                            {value: ticker.last_3_candles_atp, group: 'column-group-atp'},
+                            
+                            // Swing highs group
+                            {value: ticker.prev_swing_high_1, group: 'column-group-swing'},
+                            {value: ticker.prev_swing_high_2, group: 'column-group-swing'},
+                            {value: ticker.prev_swing_high_3, group: 'column-group-swing'},
+                            
+                            // Swing lows group
+                            {value: ticker.prev_swing_low_1, group: 'column-group-swing'},
+                            {value: ticker.prev_swing_low_2, group: 'column-group-swing'},
+                            {value: ticker.prev_swing_low_3, group: 'column-group-swing'},
                         ];
-                        values.forEach((value, index) => {
+                        
+                        values.forEach(item => {
                             const cell = document.createElement('td');
-                            if (typeof value === 'number') {
-                                const formattedValue = value.toFixed(2);
-                                if (value > 0) {
+                            cell.className = item.group;
+                            
+                            if (typeof item.value === 'number') {
+                                const formattedValue = item.value.toFixed(2);
+                                if (item.value > 0) {
                                     cell.innerHTML = `<span class="text-success">${formattedValue}</span>`;
-                                } else if (value < 0) {
+                                } else if (item.value < 0) {
                                     cell.innerHTML = `<span class="text-danger">${formattedValue}</span>`;
                                 } else {
                                     cell.textContent = formattedValue;
                                 }
-                            } else if (index === values.length - 1) { // Bias column
-                                cell.textContent = value;
-                                if (value === 'BULLISH') {
-                                    cell.className = 'text-success';
-                                } else if (value === 'BEARISH') {
-                                    cell.className = 'text-danger';
-                                }
                             } else {
-                                cell.textContent = value || '-';
+                                cell.textContent = item.value || '-';
                             }
                             row.appendChild(cell);
                         });
+                        
+                        // Add bias cell with badge styling
+                        const biasCell = document.createElement('td');
+                        if (ticker.bias === 'BULLISH') {
+                            biasCell.innerHTML = `<span class="bias-badge bias-bullish">BULLISH</span>`;
+                        } else if (ticker.bias === 'BEARISH') {
+                            biasCell.innerHTML = `<span class="bias-badge bias-bearish">BEARISH</span>`;
+                        } else {
+                            biasCell.innerHTML = `<span class="bias-badge bias-neutral">${ticker.bias || 'NEUTRAL'}</span>`;
+                        }
+                        row.appendChild(biasCell);
+                        
                         tableBody.appendChild(row);
                     });
                 }

@@ -1,470 +1,693 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Abundus Wealth</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/js/all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Financial Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .feature-box {
-            padding: 20px;
-            text-align: center;
+        body {
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .footer {
-            background-color: #343a40;
-            color: white;
-            text-align: center;
-            padding: 50px 20px;
+        
+        .navbar {
+            background: rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        canvas {
-            width: 100% !important;
-            height: auto !important;
+        
+        h2 {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        h2:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 50px;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .table thead th {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .service-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+        
+        .service-card:hover i {
+            animation: pulse 1.5s infinite;
+        }
+        
+        .service-card i {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        
+        .service-card h4 {
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .service-card p {
+            color: rgba(255, 255, 255, 0.7) !important;
+            font-style: italic;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .text-success {
+            color: #4ade80 !important;
+            font-weight: bold;
+        }
+        
+        .text-danger {
+            color: #f87171 !important;
+            font-weight: bold;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #00c6ff, #0072ff);
+            border-radius: 10px;
         }
     </style>
 </head>
+
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">Abundus Wealth<br/>Fintech Solutions<br/>Providers</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-chart-line me-2"></i>FinanceGuru</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Futures</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-cogs"></i> Options</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-file-alt"></i> Reports</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-lightbulb"></i> Strategies</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-project-diagram"></i> Projects</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-blog"></i> Blogs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-industry"></i> Sector</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-th"></i> Subsector</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-sitemap"></i> Classification</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-star me-1"></i> Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-tag me-1"></i> Pricing</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-envelope me-1"></i> Contact</a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
-   <!-- Stock Market Quote Section -->
-<div class="container my-4">
-    <div class="bg-light border-start border-4 border-primary shadow-lg rounded p-4 text-center mx-auto" style="max-width: 800px;">
-        <i class="fas fa-quote-left fa-2x text-primary"></i>
-        <p class="fw-bold fst-italic text-dark mt-2">"The stock market is filled with individuals who know the price of everything, but the value of nothing." – Philip Fisher</p>
-        <i class="fas fa-quote-right fa-2x text-primary"></i>
-    </div>
-</div>
-    <!-- Features Section -->
-    <div class="container my-5" id="features">
-        <div class="row">
-            <div class="col-md-4 feature-box">
-                <h3>NIFTY</h3>
-                <canvas id="chart1"></canvas>
-            </div>
-            <div class="col-md-4 feature-box">
-                <h3>NIFTY BANK</h3>
-                <canvas id="chart2"></canvas>
-            </div>
-            <div class="col-md-4 feature-box">
-                <h3>SENSEX</h3>
-                <canvas id="chart3"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <div class="container my-5">
-        <div class="row">
-            <!-- Top Gainers -->
+
+    <div class="container mt-5">
+        <div class="row mb-5"> 
             <div class="col-md-6">
-                <div class="card border-success shadow">
-                    <div class="card-header bg-success text-white text-center">
-                        <h5>📈 Top Gainers</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Stock</th>
-                                    <th>Price</th>
-                                    <th>Change (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Apple</td>
-                                    <td>$180</td>
-                                    <td class="text-success">+5.2%</td>
-                                </tr>
-                                <tr>
-                                    <td>Amazon</td>
-                                    <td>$120</td>
-                                    <td class="text-success">+3.8%</td>
-                                </tr>
-                                <tr>
-                                    <td>Google</td>
-                                    <td>$2300</td>
-                                    <td class="text-success">+2.9%</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <h2><i class="fas fa-arrow-trend-up me-2"></i>Top Gainers</h2>
+                <table class="table table-dark table-striped">
+                    <thead class="text-center">
+                        <tr>
+                            <th scope="col">Stock</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Change</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        <tr>
+                            <td>Gainer 1</td>
+                            <td>$100</td>
+                            <td class="text-success">+5%</td>
+                        </tr>
+                        <tr>
+                            <td>Gainer 2</td>
+                            <td>$200</td>
+                            <td class="text-success">+3%</td>
+                        </tr>
+                        <tr>
+                            <td>Gainer 3</td>
+                            <td>$300</td>
+                            <td class="text-success">+2%</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-    
-            <!-- Top Losers -->
             <div class="col-md-6">
-                <div class="card border-danger shadow">
-                    <div class="card-header bg-danger text-white text-center">
-                        <h5>📉 Top Losers</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Stock</th>
-                                    <th>Price</th>
-                                    <th>Change (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Meta</td>
-                                    <td>$290</td>
-                                    <td class="text-danger">-4.1%</td>
-                                </tr>
-                                <tr>
-                                    <td>Tesla</td>
-                                    <td>$750</td>
-                                    <td class="text-danger">-3.5%</td>
-                                </tr>
-                                <tr>
-                                    <td>NVIDIA</td>
-                                    <td>$520</td>
-                                    <td class="text-danger">-2.7%</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <h2>Top Losers</h2>
+                <table class="table table-dark table-striped">
+                    <thead class="text-center">
+                        <tr>
+                            <th scope="col">Stock</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Change</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        <tr>
+                            <td>Loser 1</td>
+                            <td>$50</td>
+                            <td class="text-danger">-4%</td>
+                        </tr>
+                        <tr>
+                            <td>Loser 2</td>
+                            <td>$40</td>
+                            <td class="text-danger">-3%</td>
+                        </tr>
+                        <tr>
+                            <td>Loser 3</td>
+                            <td>$30</td>
+                            <td class="text-danger">-2%</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-    
-        <!-- Market Data -->
-        <!-- <div class="card mt-4 shadow">
-            <div class="card-header bg-dark text-white text-center">
-                <h5>📊 Market Summary</h5>
-            </div>
-            <div class="card-body text-center">
-                <p><strong>S&P 500:</strong> 4,200 (+1.2%) | <strong>NASDAQ:</strong> 13,900 (+0.8%)</p>
-                <p><strong>Crude Oil:</strong> $85.50 | <strong>Gold:</strong> $1,950</p>
-            </div>
-        </div>
-    </div> -->
-    <!-- Our Picks for the day/week -->
-    <div class="container my-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center">
-                <h5>📊 Our Picks for the Day/Week</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-center">These are the top Futures & Options (F&O) stocks for the day/week based on Open Interest (OI) data and technical analysis.</p>
-    
-                <!-- Table Preview -->
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Stock</th>
-                                <th>Current Price</th>
-                                <th>Change (%)</th>
-                                <th>OI Change (%)</th>
-                                <th>Volume</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Reliance</td>
-                                <td>₹2,500</td>
-                                <td class="text-success">+2.1%</td>
-                                <td class="text-success">+5.8%</td>
-                                <td>15M</td>
-                            </tr>
-                            <tr>
-                                <td>TCS</td>
-                                <td>₹3,600</td>
-                                <td class="text-danger">-1.3%</td>
-                                <td class="text-danger">-4.2%</td>
-                                <td>10M</td>
-                            </tr>
-                            <tr>
-                                <td>Infosys</td>
-                                <td>₹1,750</td>
-                                <td class="text-success">+1.7%</td>
-                                <td class="text-success">+3.5%</td>
-                                <td>12M</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-    
-                <!-- Download Buttons -->
-                <div class="text-center mt-3">
-                    <a href="reports/fno_daily_report.xlsx" class="btn btn-success me-2">
-                        <i class="fas fa-file-excel"></i> Download Excel
-                    </a>
-                    <a href="reports/fno_daily_report.pdf" class="btn btn-danger">
-                        <i class="fas fa-file-pdf"></i> Download PDF
-                    </a>
-                </div>
-            </div>
-        </div>
+        <h2>📊 Our Picks for the Day/Week</h2>
+        <table class="table table-dark table-striped">
+            <thead class="text-center">
+                <tr>
+                    <th scope="col">Stock</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Change</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                <tr>
+                    <td>Pick 1</td>
+                    <td>$150</td>
+                    <td class="text-success">+4%</td>
+                </tr>
+                <tr>
+                    <td>Pick 2</td>
+                    <td>$250</td>
+                    <td class="text-danger">-1%</td>
+                </tr>
+                <tr>
+                    <td>Pick 3</td>
+                    <td>$350</td>
+                    <td class="text-success">+6%</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <div class="container my-5">
-        <div class="card shadow">
-            <div class="card-header bg-info text-white text-center">
-                <h5>💻 Software Services Provided</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <!-- Service 1 -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-chart-line fa-3x text-primary"></i>
-                        <h5 class="mt-3">Market Analysis Tools</h5>
-                        <p>Get real-time stock data, technical analysis, and AI-powered market insights.</p>
-                    </div>
-                    <!-- Service 2 -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-robot fa-3x text-success"></i>
-                        <h5 class="mt-3">Algorithmic Trading</h5>
-                        <p>Automate trading strategies with our AI-driven algorithmic trading solutions.</p>
-                    </div>
-                    <!-- Service 3 -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-database fa-3x text-danger"></i>
-                        <h5 class="mt-3">Data & API Solutions</h5>
-                        <p>Access high-frequency market data and integrate APIs for real-time insights.</p>
-                    </div>
-                </div>
-    
-                <div class="row mt-4">
-                    <!-- Service 4 -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-cloud fa-3x text-warning"></i>
-                        <h5 class="mt-3">Cloud-Based Trading Platforms</h5>
-                        <p>Access trading platforms from anywhere with our secure cloud-based solutions.</p>
-                    </div>
-                    <!-- Service 5 -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-mobile-alt fa-3x text-secondary"></i>
-                        <h5 class="mt-3">Mobile Trading Apps</h5>
-                        <p>Trade on the go with our fully customized mobile trading applications.</p>
-                    </div>
-                    <!-- Service 6 -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-cogs fa-3x text-dark"></i>
-                        <h5 class="mt-3">Custom Software Development</h5>
-                        <p>Get tailored software solutions to meet your specific trading and investment needs.</p>
+    <div class="container mt-5">
+        <h2><i class="fas fa-cogs me-2"></i>Software Services Provided</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card service-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <h4>Market Analysis Tools</h4>
+                        <p class="mb-0">"Gain powerful insights with our advanced market analysis tools"</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <div class="container my-5">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white text-center">
-                <h5>📈 Trading Strategies & Custom Development</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-center">We develop automated and semi-automated trading strategies based on your specific requirements in various programming languages.</p>
-                <div class="row">
-                    <!-- Python Strategies -->
-                    <div class="col-md-4 text-center">
-                        <i class="fab fa-python fa-3x text-warning"></i>
-                        <h5 class="mt-3">Python Strategies</h5>
-                        <p>Data-driven trading strategies using AI, ML, and broker APIs.</p>
-                    </div>
-                    <!-- Pine Script -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-chart-bar fa-3x text-primary"></i>
-                        <h5 class="mt-3">Pine Script (TradingView)</h5>
-                        <p>Custom indicators and strategies for TradingView charts.</p>
-                    </div>
-                    <!-- MQL4 / MQL5 -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-robot fa-3x text-info"></i>
-                        <h5 class="mt-3">MQL4 / MQL5</h5>
-                        <p>Automated trading bots and indicators for MetaTrader platforms.</p>
+            <div class="col-md-4 mb-4">
+                <div class="card service-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-robot fa-3x mb-3"></i>
+                        <h4>Algorithmic Trading</h4>
+                        <p class="mb-0">"Automate your trading with our cutting-edge algorithms"</p>
                     </div>
                 </div>
-    
-                <div class="row mt-4">
-                    <!-- VBA Scripting -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-file-excel fa-3x text-success"></i>
-                        <h5 class="mt-3">VBA Scripting</h5>
-                        <p>Excel-based trading automation and backtesting solutions.</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card service-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-database fa-3x mb-3"></i>
+                        <h4>Data & API Solutions</h4>
+                        <p class="mb-0">"Access reliable data through our comprehensive APIs"</p>
                     </div>
-                    <!-- User Custom Requests -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-user-cog fa-3x text-dark"></i>
-                        <h5 class="mt-3">Custom Strategies</h5>
-                        <p>We develop strategies based on your specific requirements.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card service-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-cloud fa-3x mb-3"></i>
+                        <h4>Cloud-Based Trading</h4>
+                        <p class="mb-0">"Trade anywhere, anytime with our cloud solutions"</p>
                     </div>
-                    <!-- Contact Us -->
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-envelope fa-3x text-danger"></i>
-                        <h5 class="mt-3">Contact Us</h5>
-                        <p>Request a strategy or consultation for your trading needs.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card service-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-mobile-alt fa-3x mb-3"></i>
+                        <h4>Mobile Trading Apps</h4>
+                        <p class="mb-0">"Trade on the go with our intuitive mobile apps"</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card service-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-code fa-3x mb-3"></i>
+                        <h4>Custom Development</h4>
+                        <p class="mb-0">"Tailored solutions to meet your specific needs"</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="container my-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white text-center">
-            <h5>📊 Market & Sector Reports</h5>
+    <div class="container mt-5 mb-5">
+        <h2><i class="fas fa-file-chart-line me-2"></i>Market & Sector Reports</h2>
+        
+        <!-- Market trends header card -->
+        <div class="card mb-4" style="background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3 class="text-white">Latest Market Insights</h3>
+                        <p class="text-light mb-0">Stay informed with our comprehensive sector analysis and market reports.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-outline-light">View All Reports</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <p class="text-center">Stay informed with our real-time analysis and reports on market conditions and sector trends.</p>
-            
-            <div class="row">
-                <!-- Market Conditions -->
-                <div class="col-md-6">
-                    <div class="card border-info">
-                        <div class="card-header bg-info text-white text-center">
-                            <h6>📉 Market Condition Reports</h6>
+        
+        <!-- Report cards in news style format -->
+        <div class="row">
+            <!-- Industrial Sector -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100" style="background: linear-gradient(45deg, rgba(0,0,0,0.7), rgba(50,50,50,0.7)); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex align-items-center justify-content-center p-3" style="background: rgba(0,0,0,0.2);">
+                            <i class="fas fa-industry fa-4x" style="color: #00c6ff;"></i>
                         </div>
-                        <div class="card-body">
-                            <ul>
-                                <li>Daily & Weekly Market Summary</li>
-                                <li>Volatility & Liquidity Analysis</li>
-                                <li>Economic & Interest Rate Impact</li>
-                                <li>Global Market Influence</li>
-                            </ul>
-                            <a href="#" class="btn btn-info btn-sm w-100"><i class="fas fa-download"></i> Download Reports</a>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0 text-white">Industrial Sector</h5>
+                                    <span class="badge bg-secondary rounded-pill">Weekly</span>
+                                </div>
+                                <p class="card-text text-white">Manufacturing index up 2.4% since last quarter with significant gains in construction materials.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-white opacity-75">Updated 3 days ago</small>
+                                    <a href="#" class="btn btn-sm btn-primary">Read Analysis</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Technology Sector -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100" style="background: linear-gradient(45deg, rgba(0,0,0,0.7), rgba(50,50,50,0.7)); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex align-items-center justify-content-center p-3" style="background: rgba(0,0,0,0.2);">
+                            <i class="fas fa-microchip fa-4x" style="color: #00c6ff;"></i>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0 text-white">Technology Sector</h5>
+                                    <span class="badge bg-primary rounded-pill">Daily</span>
+                                </div>
+                                <p class="card-text text-white">Tech stocks rallying with AI companies leading the charge. Semiconductor shortage easing.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-white opacity-75">Updated today</small>
+                                    <a href="#" class="btn btn-sm btn-primary">Read Analysis</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Healthcare Sector -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100" style="background: linear-gradient(45deg, rgba(0,0,0,0.7), rgba(50,50,50,0.7)); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex align-items-center justify-content-center p-3" style="background: rgba(0,0,0,0.2);">
+                            <i class="fas fa-pills fa-4x" style="color: #00c6ff;"></i>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0 text-white">Healthcare Sector</h5>
+                                    <span class="badge bg-secondary rounded-pill">Weekly</span>
+                                </div>
+                                <p class="card-text text-white">Biotech firms showing strong Q2 results. Medical device companies expanding market reach.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-white opacity-75">Updated 2 days ago</small>
+                                    <a href="#" class="btn btn-sm btn-primary">Read Analysis</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Sector -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100" style="background: linear-gradient(45deg, rgba(0,0,0,0.7), rgba(50,50,50,0.7)); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex align-items-center justify-content-center p-3" style="background: rgba(0,0,0,0.2);">
+                            <i class="fas fa-money-bill-wave fa-4x" style="color: #00c6ff;"></i>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0 text-white">Financial Sector</h5>
+                                    <span class="badge bg-primary rounded-pill">Daily</span>
+                                </div>
+                                <p class="card-text text-white">Banking stocks stable despite rate changes. Fintech startups gaining significant market share.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-white opacity-75">Updated today</small>
+                                    <a href="#" class="btn btn-sm btn-primary">Read Analysis</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Energy Sector -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100" style="background: linear-gradient(45deg, rgba(0,0,0,0.7), rgba(50,50,50,0.7)); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex align-items-center justify-content-center p-3" style="background: rgba(0,0,0,0.2);">
+                            <i class="fas fa-bolt fa-4x" style="color: #00c6ff;"></i>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0 text-white">Energy Sector</h5>
+                                    <span class="badge bg-secondary rounded-pill">Weekly</span>
+                                </div>
+                                <p class="card-text text-white">Renewable energy gaining momentum. Traditional oil companies investing in green technologies.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-white opacity-75">Updated 5 days ago</small>
+                                    <a href="#" class="btn btn-sm btn-primary">Read Analysis</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Consumer Sector -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100" style="background: linear-gradient(45deg, rgba(0,0,0,0.7), rgba(50,50,50,0.7)); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex align-items-center justify-content-center p-3" style="background: rgba(0,0,0,0.2);">
+                            <i class="fas fa-shopping-cart fa-4x" style="color: #00c6ff;"></i>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0 text-white">Consumer Sector</h5>
+                                    <span class="badge bg-secondary rounded-pill">Weekly</span>
+                                </div>
+                                <p class="card-text text-white">Retail sales up 3.2% this quarter. E-commerce platforms showing strong holiday season prep.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-white opacity-75">Updated 4 days ago</small>
+                                    <a href="#" class="btn btn-sm btn-primary">Read Analysis</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Section -->
+    <div class="container mt-5 mb-5">
+        <h2><i class="fas fa-newspaper me-2"></i>Financial Insights Blog</h2>
+        
+        <!-- Blog post filters -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <button class="btn btn-sm btn-outline-light active me-2">All</button>
+                <button class="btn btn-sm btn-outline-light me-2">Investing</button>
+                <button class="btn btn-sm btn-outline-light me-2">Market Analysis</button>
+                <button class="btn btn-sm btn-outline-light">Trading Tips</button>
+            </div>
+            <div>
+                <a href="#" class="btn btn-primary btn-sm">View All Articles</a>
+            </div>
+        </div>
+        
+        <!-- Blog posts -->
+        <div class="row">
+            <!-- Featured post -->
+            <div class="col-lg-8 mb-4">
+                <div class="card" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center; background-size: cover; height: 350px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="card-body d-flex flex-column justify-content-end p-4">
+                        <span class="badge bg-primary mb-2">FEATURED</span>
+                        <h3 class="text-white mb-2">Understanding Market Volatility in the Current Economy</h3>
+                        <p class="text-white opacity-75 mb-3">A deep dive into what causes market volatility and strategies to protect your investments during turbulent times.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-2" width="30" height="30" alt="Author">
+                                <small class="text-white">John Walker • May 15, 2023</small>
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-light">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar posts -->
+            <div class="col-lg-4">
+                <div class="card mb-3" style="background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 80px; height: 80px; overflow: hidden; border-radius: 10px; flex-shrink: 0; margin-right: 15px;">
+                                <img src="https://images.unsplash.com/photo-1590283603385-c1e84b5df18b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" class="w-100 h-100 object-fit-cover" alt="Blog image">
+                            </div>
+                            <div>
+                                <small class="text-primary d-block mb-1">INVESTING</small>
+                                <h6 class="card-title mb-1 text-white">Top 5 Dividend Stocks to Watch in 2023</h6>
+                                <small class="text-white opacity-75">April 28, 2023</small>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Sector Reports -->
-                <div class="col-md-6">
-                    <div class="card border-success">
-                        <div class="card-header bg-success text-white text-center">
-                            <h6>🏭 Sector-Specific Reports</h6>
+                <div class="card mb-3" style="background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 80px; height: 80px; overflow: hidden; border-radius: 10px; flex-shrink: 0; margin-right: 15px;">
+                                <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" class="w-100 h-100 object-fit-cover" alt="Blog image">
+                            </div>
+                            <div>
+                                <small class="text-primary d-block mb-1">ECONOMY</small>
+                                <h6 class="card-title mb-1 text-white">Interest Rates and Their Impact on Markets</h6>
+                                <small class="text-white opacity-75">April 22, 2023</small>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <ul>
-                                <li>Technology & IT Sector Analysis</li>
-                                <li>Banking & Finance Reports</li>
-                                <li>Pharma & Healthcare Insights</li>
-                                <li>Auto, FMCG, and Energy Trends</li>
-                            </ul>
-                            <a href="#" class="btn btn-success btn-sm w-100"><i class="fas fa-download"></i> Download Reports</a>
+                    </div>
+                </div>
+                
+                <div class="card" style="background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 80px; height: 80px; overflow: hidden; border-radius: 10px; flex-shrink: 0; margin-right: 15px;">
+                                <img src="https://images.unsplash.com/photo-1551135049-8a33b5883817?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" class="w-100 h-100 object-fit-cover" alt="Blog image">
+                            </div>
+                            <div>
+                                <small class="text-primary d-block mb-1">TRADING</small>
+                                <h6 class="card-title mb-1 text-white">Building a Resilient Trading Strategy</h6>
+                                <small class="text-white opacity-75">April 15, 2023</small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="text-center mt-4">
-                <a href="#" class="btn btn-dark"><i class="fas fa-envelope"></i> Request a Custom Report</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-    
-    <!-- Footer -->
-<footer class="footer">
-    <div class="container">
-        <div class="row">
-            <!-- About Section -->
-            <div class="col-md-4">
-                <h5>About Abundus Wealth</h5>
-                <p>Abundus Wealth is a leading fintech solutions provider offering insights, strategies, and tools for stock market investors and traders.</p>
+            
+            <!-- Additional posts row -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100" style="background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <img src="https://images.unsplash.com/photo-1569025743873-ea3a9ade89f9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Blog post image">
+                    <div class="card-body">
+                        <small class="text-primary d-block mb-1">TECHNOLOGY</small>
+                        <h5 class="card-title text-white">How Blockchain is Transforming Finance</h5>
+                        <p class="card-text text-white opacity-75">Explore the ways blockchain technology is revolutionizing financial services and investment opportunities.</p>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center" style="background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1);">
+                        <small class="text-white opacity-75">April 10, 2023</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Read</a>
+                    </div>
+                </div>
             </div>
             
-            <!-- Quick Links -->
-            <div class="col-md-4">
-                <h5>Quick Links</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#">Market Overview</a></li>
-                    <li><a href="#">Trading Strategies</a></li>
-                    <li><a href="#">Investment Reports</a></li>
-                    <li><a href="#">Stock Screener</a></li>
-                    <li><a href="#">Financial News</a></li>
-                </ul>
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100" style="background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Blog post image">
+                    <div class="card-body">
+                        <small class="text-primary d-block mb-1">PERSONAL FINANCE</small>
+                        <h5 class="card-title text-white">Retirement Planning in Your 30s</h5>
+                        <p class="card-text text-white opacity-75">Start planning early for a comfortable retirement. Learn strategies for long-term wealth building.</p>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center" style="background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1);">
+                        <small class="text-white opacity-75">April 5, 2023</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Read</a>
+                    </div>
+                </div>
             </div>
             
-            <!-- Contact Info -->
-            <div class="col-md-4">
-                <h5>Contact Us</h5>
-                <p><i class="fas fa-envelope"></i> support@abunduswealth.com</p>
-                <p><i class="fas fa-phone"></i> +1 234 567 890</p>
-                <p><i class="fas fa-map-marker-alt"></i> 123 Wall Street, New York, USA</p>
-                <div>
-                    <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
-                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="text-white me-3"><i class="fab fa-linkedin"></i></a>
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100" style="background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <img src="https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Blog post image">
+                    <div class="card-body">
+                        <small class="text-primary d-block mb-1">MARKET ANALYSIS</small>
+                        <h5 class="card-title text-white">Global Markets: Q2 2023 Outlook</h5>
+                        <p class="card-text text-white opacity-75">A comprehensive analysis of emerging trends and forecasts for global markets in Q2 2023.</p>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center" style="background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1);">
+                        <small class="text-white opacity-75">April 1, 2023</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Read</a>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <hr class="my-4 border-light">
-        
-        <div class="text-center">
-            <p>&copy; 2025 Abundus Wealth. All Rights Reserved.</p>
-        </div>
     </div>
-</footer>
-
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function createChart(canvasId) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{
-                label: 'Stock Price',
-                data: [100, 120, 90, 130, 150, 140],
-                borderColor: 'rgba(255, 99, 132, 1)', // Bright Red
-                backgroundColor: 'rgba(255, 99, 132, 0.5)', // Light Red Fill
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false // Hide legend for simplicity
-                }
-            },
-            scales: {
-                x: { 
-                    grid: { display: false } 
-                },
-                y: { 
-                    grid: { display: true, color: 'rgba(200, 200, 200, 0.5)' } 
-                }
-            }
-        }
-    });
-}
+    <!-- Footer -->
+    <footer class="mt-5 pt-5 pb-4" style="background: rgba(0, 0, 0, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <div class="container">
+            <div class="row">
+                <!-- Logo and company info -->
+                <div class="col-lg-4 col-md-6 mb-4 mb-md-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-chart-line fa-2x me-2" style="color: #00c6ff;"></i>
+                        <h5 class="text-white mb-0 fw-bold">FinanceGuru</h5>
+                    </div>
+                    <p class="text-white opacity-75 mb-3">The most comprehensive financial analytics platform for traders and investors. Access real-time market data and insights.</p>
+                    <div class="d-flex mb-4">
+                        <a href="#" class="me-3 text-white"><i class="fab fa-facebook-f fa-lg"></i></a>
+                        <a href="#" class="me-3 text-white"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="me-3 text-white"><i class="fab fa-linkedin-in fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Quick links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-white mb-4">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Home</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Market Data</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Analysis Tools</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Pricing</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-white mb-4">Resources</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Help Center</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">API Documentation</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Trading Tutorials</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">Market Glossary</a></li>
+                        <li class="mb-2"><a href="#" class="text-white opacity-75 text-decoration-none">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Newsletter signup -->
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="text-white mb-4">Stay Updated</h5>
+                    <p class="text-white opacity-75 mb-3">Subscribe to our newsletter for the latest market insights and analysis.</p>
+                    <div class="input-group mb-3">
+                        <input type="email" class="form-control" placeholder="Your email" aria-label="Your email" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white;">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                    <p class="text-white opacity-75 small mb-0">By subscribing, you agree to our Privacy Policy and Terms of Service.</p>
+                </div>
+            </div>
+            
+            <!-- Divider -->
+            <hr class="my-4" style="border-color: rgba(255, 255, 255, 0.1);">
+            
+            <!-- Bottom footer -->
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="text-white opacity-75 small mb-0">© 2023 FinanceGuru. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="#" class="text-white opacity-75 small text-decoration-none">Privacy Policy</a></li>
+                        <li class="list-inline-item"><span class="text-white opacity-50 mx-2">|</span></li>
+                        <li class="list-inline-item"><a href="#" class="text-white opacity-75 small text-decoration-none">Terms of Service</a></li>
+                        <li class="list-inline-item"><span class="text-white opacity-50 mx-2">|</span></li>
+                        <li class="list-inline-item"><a href="#" class="text-white opacity-75 small text-decoration-none">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-// Creating charts for different sections
-createChart('chart1');
-createChart('chart2');
-createChart('chart3');
-
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
 </body>
+
 </html>

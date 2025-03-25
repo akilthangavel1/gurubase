@@ -10,41 +10,31 @@ from dashboard.models import TickerBase
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.http import urlencode
 import pandas_ta as ta
-# logger = logging.getLogger(__nam
-# Set up logging
+
+
 logger = logging.getLogger(__name__)
 
-# Create your views here.
+
 def indicator_future(request):
     logger.info("Rendering indicator_future template")
     return render(request, 'indfuture/indicator_future.html')
 
 
-
-
-# Create your views here.
 def future_dynamic_data(request):
     return render(request, 'ddfuture/dynamic_data_future.html')
 
-def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10):
-    macd_fast=12
-    macd_slow=26
-    macd_signal=9
-    """Calculate all indicators using pandas-ta with customizable parameters"""
+
+def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10, macd_fast=12, macd_slow=26, macd_signal=9, supertrend_length=14, supertrend_multiplier=3):
+   
     print(f"Calculating indicators with parameters - EMA: {ema_length}, SMA: {sma_length}, HMA: {hma_length}, MACD: {macd_fast},{macd_slow},{macd_signal}")
     df = pd.DataFrame(data, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
-    # Convert 'datetime' column to datetime type if it's not already
     df['datetime'] = pd.to_datetime(df['datetime'])
 
     # Sort the DataFrame by 'datetime' in ascending order
     df = df.sort_values(by='datetime', ascending=True)
 
-# If you want to sort in descending order, use ascending=False
-# df = df.sort_values(by='datetime', ascending=False)
-    # print(df)
-    # Calculate EMA
+
     df['ema'] = ta.ema(df['close'], length=10)
-    # print(df)
 
     # Calculate SMA
     df['sma'] = ta.sma(df['close'], length=sma_length)
@@ -52,18 +42,15 @@ def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10):
     # Calculate HMA
     df['hma'] = ta.hma(df['close'], length=hma_length)
 
-    # # Calculate MACD
-    # print(50 * "#")
-    # print(macd_fast, macd_signal, macd_slow)
-    # print(type(macd_fast), type(macd_signal), type(macd_slow), "##############")
-
     macd = ta.macd(df['close'], fast=macd_fast, slow=macd_slow, signal=macd_signal)
-    df['macd'] = macd['MACD_12_26_9']
-    df['signal_line'] = macd['MACDs_12_26_9']
+    macd_inside_parm = "MACD_"+str(macd_slow)+"_"+ str(macd_fast) +"_"+ str(macd_signal)
+    df['macd'] = macd[macd_inside_parm]
+    macd_signal_inside_parm = "MACDs_"+str(macd_slow)+"_"+ str(macd_fast) +"_"+ str(macd_signal)
+    df['signal_line'] = macd[macd_signal_inside_parm]
 
     # Calculate Supertrend
-    supertrend = ta.supertrend(df['high'], df['low'], df['close'], length=14, multiplier=3)
-    df['supertrend'] = supertrend['SUPERT_14_3.0']
+    supertrend = ta.supertrend(df['high'], df['low'], df['close'], length=supertrend_length, multiplier=supertrend_multiplier)
+    df['supertrend'] = supertrend['SUPERT_'+str(supertrend_length)+"_"+str(supertrend_multiplier)]
 
     # Calculate Awesome Oscillator
     df['ao'] = ta.ao(df['high'], df['low'])
@@ -140,25 +127,26 @@ def stream_indicator_data(request):
     hma = request.GET.get('hma', '10')
     hma = '10' if hma == '0' else hma 
     macd = request.GET.get('macd', '12,26,9')
-    macd = '12,6,26'if macd == '0' else macd
-    print(macd, "!!!!!!!!!!!")
-    logger.info(f"Received request with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
+    macd = '12,6,26' if macd == '0' else macd
+    supertrend_length = request.GET.get('supertrendLength', '14')
+    supertrend_multiplier = request.GET.get('supertrendMultiplier', '3')
+    logger.info(f"Received request with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
 
     # Pass the parameters to the stream generator
     response = StreamingHttpResponse(
-        generate_dynamic_stream(timeframe, ema, sma, hma, macd),
+        generate_dynamic_stream(timeframe, ema, sma, hma, macd, supertrend_length, supertrend_multiplier),
         content_type='text/event-stream'
     )
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
 
-async def fetch_latest_data(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9'):
+async def fetch_latest_data(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3'):
     """Fetch the latest data for a given ticker symbol."""
     try:
-        logger.info(f"Fetching data for {ticker_symbol} with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
+        logger.info(f"Fetching data for {ticker_symbol} with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
         # Use sync_to_async to wrap the database operation
-        data = await sync_to_async(_fetch_data_from_db)(ticker_symbol, timeframe, ema, sma, hma, macd)
+        data = await sync_to_async(_fetch_data_from_db)(ticker_symbol, timeframe, ema, sma, hma, macd, supertrend_length, supertrend_multiplier)
         if data:
             logger.info(f"Fetched data for {ticker_symbol}: {data}")
         else:
@@ -168,8 +156,7 @@ async def fetch_latest_data(ticker_symbol, timeframe='1', ema='10', sma='10', hm
         logger.error(f"Error fetching data for {ticker_symbol}: {str(e)}")
         return None
 
-def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9'):
-    """Helper function to fetch data from the database."""
+def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3'):
     with connection.cursor() as cursor:
         table_name = f"{ticker_symbol}_future_historical_data"
         
@@ -327,11 +314,9 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
         if data:
             # Convert data to DataFrame and calculate indicators
             macd_fast = int(macd.split(',')[0])
-            m =0
-
-            print(macd_fast, "##########")
-            print(type(macd_fast))
-            indicators = calculate_indicators(data, ema_length=int(ema), sma_length=int(sma), hma_length=int(hma))
+            macd_slow = int(macd.split(',')[1])
+            macd_signal = int(macd.split(',')[2])
+            indicators = calculate_indicators(data, ema_length=int(ema), sma_length=int(sma), hma_length=int(hma), macd_fast=macd_fast, macd_slow=macd_slow, macd_signal=macd_signal, supertrend_length=int(supertrend_length), supertrend_multiplier=float(supertrend_multiplier))
             
             
             # indicators = calculate_indicators(
@@ -371,17 +356,17 @@ def calculate_bias(latest_data, previous_data, swings):
         logger.error("Invalid data format for bias calculation")
         return 'NEUTRAL'
 
-async def generate_dynamic_stream(timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9'):
+async def generate_dynamic_stream(timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3'):
     while True:
         try:
-            logger.info(f"Generating stream with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
+            logger.info(f"Generating stream with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
             # Get all tickers
             tickers = await sync_to_async(list)(TickerBase.objects.all())
             formatted_data = []
 
             for ticker in tickers:
                 # Fetch data based on the timeframe and indicators
-                data = await fetch_latest_data(ticker.ticker_symbol, timeframe, ema, sma, hma, macd)
+                data = await fetch_latest_data(ticker.ticker_symbol, timeframe, ema, sma, hma, macd, supertrend_length, supertrend_multiplier)
                 if data:
                     formatted_data.append(data)
 
@@ -391,7 +376,7 @@ async def generate_dynamic_stream(timeframe='1', ema='10', sma='10', hma='10', m
                 yield f"data: {json.dumps({'message': 'No data available'}, cls=DjangoJSONEncoder)}\n\n"
 
             # Log the timeframe and indicators being used
-            logger.debug(f"Streaming data with timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}")
+            logger.debug(f"Streaming data with timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
             await asyncio.sleep(1)  # Update every second
 
         except Exception as e:
@@ -422,30 +407,3 @@ def calculate_supertrend(data, period=10, multiplier=3):
 
     return "Bullish" if data[-1][4] > supertrend[-1] else "Bearish"
 
-def calculate_atr(data, period):
-    """Calculate Average True Range (ATR)"""
-    if len(data) < period:
-        return []
-    tr = [max(data[i][2] - data[i][3], abs(data[i][2] - data[i-1][4]), abs(data[i][3] - data[i-1][4])) for i in range(1, len(data))]
-    atr = [sum(tr[:period]) / period]
-    for i in range(period, len(tr)):
-        atr.append((atr[-1] * (period - 1) + tr[i]) / period)
-    return atr
-
-def calculate_macd(data, short_period=12, long_period=26, signal_period=9):
-    """Calculate MACD and Signal Line"""
-    if len(data) < long_period:
-        return None, None
-
-    # Calculate short-term and long-term EMAs
-    short_ema = calculate_ema(data, periods=short_period)
-    long_ema = calculate_ema(data, periods=long_period)
-
-    # Calculate MACD
-    macd = short_ema - long_ema
-
-    # Calculate Signal Line (EMA of MACD)
-    macd_values = [calculate_ema(data[i-long_period:i], periods=short_period) - calculate_ema(data[i-long_period:i], periods=long_period) for i in range(long_period, len(data) + 1)]
-    signal_line = calculate_ema(macd_values, periods=signal_period)
-
-    return round(macd, 2), round(signal_line, 2)

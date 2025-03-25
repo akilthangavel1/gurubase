@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'dasoptions',
     'ddfuture',
     'indfuture',
+    'staticfuture',
 ]
 
 MIDDLEWARE = [

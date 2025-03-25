@@ -11,5 +11,6 @@ urlpatterns = [
     path('options/', include('dasoptions.urls')),
     path('future/', include('ddfuture.urls')),
     path('indfuture/', include('indfuture.urls')),
+    path('staticfuture/', include('staticfuture.urls')),
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
