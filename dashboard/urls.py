@@ -30,7 +30,7 @@ urlpatterns = [
     path('data-management/', views.data_management, name='data_management'),
     path('clear-all-data/', views.clear_all_data, name='clear_all_data'),
     path('future-technical-indicators/', views.future_technical_indicators, name='future_technical_indicators'),
-    path('future-dynamic-data/', views.future_dynamic_data, name='future_dynamic_data1'),
+    # path('future-dynamic-data/', views.future_dynamic_data, name='future_dynamic_data1'),
     path('future-alerts/', views.future_alerts, name='future_alerts'),
     path('api/future-dynamic-data/', views.sse_future_dynamic_data, name='sse_future_dynamic_data'),
 ] 
