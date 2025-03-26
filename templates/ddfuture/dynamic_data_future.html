@@ -49,6 +49,16 @@
     .table-striped>tbody>tr:nth-of-type(odd)>* {
         color: #e9ecef;
     }
+    
+    /* Fix for navbar dropdowns appearing behind other elements */
+    .navbar-nav .dropdown-menu {
+        z-index: 1030 !important; /* Higher than default Bootstrap z-index */
+    }
+    
+    /* Ensure the navbar itself has proper z-index */
+    .navbar {
+        z-index: 1020 !important;
+    }
 </style>{% endblock %}
 {% block content %}
 
