@@ -1,7 +1,125 @@
 {% extends 'dashboard/base.html' %}
 
 {% block title %}Live Data - GuruBase{% endblock %}
-
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .navbar {
+        background: rgba(0, 0, 0, 0.7) !important;
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    h2 {
+        color: #fff;
+        text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
+        margin-bottom: 20px;
+        font-weight: 600;
+        position: relative;
+        padding-bottom: 10px;
+    }
+    
+    h2:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 3px;
+        width: 50px;
+        background: linear-gradient(to right, #00c6ff, #0072ff);
+    }
+    
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .table thead th {
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .service-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 150, 255, 0.3);
+    }
+    
+    .service-card:hover i {
+        animation: pulse 1.5s infinite;
+    }
+    
+    .service-card i {
+        background: linear-gradient(45deg, #00c6ff, #0072ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 15px;
+    }
+    
+    .service-card h4 {
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .service-card p {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-style: italic;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    .text-success {
+        color: #4ade80 !important;
+        font-weight: bold;
+    }
+    
+    .text-danger {
+        color: #f87171 !important;
+        font-weight: bold;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(to bottom, #00c6ff, #0072ff);
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">

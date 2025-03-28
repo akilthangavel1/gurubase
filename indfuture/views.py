@@ -26,7 +26,7 @@ def future_dynamic_data(request):
 
 def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10, macd_fast=12, macd_slow=26, macd_signal=9, supertrend_length=14, supertrend_multiplier=3):
    
-    print(f"Calculating indicators with parameters - EMA: {ema_length}, SMA: {sma_length}, HMA: {hma_length}, MACD: {macd_fast},{macd_slow},{macd_signal}")
+    # print(f"Calculating indicators with parameters - EMA: {ema_length}, SMA: {sma_length}, HMA: {hma_length}, MACD: {macd_fast},{macd_slow},{macd_signal}")
     df = pd.DataFrame(data, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
     df['datetime'] = pd.to_datetime(df['datetime'])
 

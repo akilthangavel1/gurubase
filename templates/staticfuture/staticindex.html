@@ -2,45 +2,139 @@
 
 {% block title %}Future Static Data{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
-    <div class="header d-flex justify-content-between align-items-center">
-        <h1><i class="bi bi-graph-up"></i> Future Static Data</h1>
-        <div class="controls">
-            <button class="btn btn-outline-light btn-sm" id="toggleColumns">
-                <i class="bi bi-layout-three-columns"></i> Toggle Columns
-            </button>
-            <button class="btn btn-outline-light btn-sm ms-2" id="refreshData">
-                <i class="bi bi-arrow-clockwise"></i> Refresh
-            </button>
-        </div>
-    </div>
+{% block extra_css %}<style>
+    body {
+        background-color: #212529;
+        color: #e9ecef;
+    }
 
-    <div class="filters">
-        <div class="row w-100">
-            <div class="col-12 text-end">
-                <span class="me-3 text-white">Last updated: <span id="lastUpdated">-</span></span>
+    .table {
+        color: #e9ecef;
+    }
+
+    .modal-content {
+        background-color: #343a40;
+        color: #e9ecef;
+    }
+
+    .form-control,
+    .form-select,
+    .input-group-text {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #e9ecef;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #3b4148;
+        color: #e9ecef;
+    }
+
+    .badge.bg-light {
+        background-color: #343a40 !important;
+        color: #e9ecef !important;
+    }
+
+    .btn-light {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #e9ecef;
+    }
+
+    .btn-outline-primary {
+        color: #8bb9fe;
+        border-color: #0d6efd;
+    }
+
+    .table-striped>tbody>tr:nth-of-type(odd)>* {
+        color: #e9ecef;
+    }
+    
+    /* Fix for navbar dropdowns appearing behind other elements */
+    .navbar-nav .dropdown-menu {
+        z-index: 1030 !important; /* Higher than default Bootstrap z-index */
+    }
+    
+    /* Ensure the navbar itself has proper z-index */
+    .navbar {
+        z-index: 1020 !important;
+    }
+</style>{% endblock %}
+{% block content %}
+<div class="container mt-5">
+
+
+    <!-- Timeframe Selection -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="btn-group float-end" role="group" aria-label="Table actions">
+                <button type="button" class="btn btn-success">Export CSV</button>
+                <button type="button" class="btn btn-info">Export Excel</button>
+                <button type="button" class="btn btn-warning">Print</button>
+                <button type="button" class="btn btn-dark">Refresh</button>
             </div>
         </div>
     </div>
 
-    <div id="data-container" class="table-container">
-        <table class="table table-dark table-bordered" id="dynamicDataTable">
-            <thead>
+    <!-- Additional Filter Options -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="btn-group" role="group" aria-label="Filter options">
+                <button type="button" class="btn btn-outline-primary">Filter</button>
+                <button type="button" class="btn btn-outline-primary">Group By</button>
+                <button type="button" class="btn btn-outline-primary">Sort</button>
+                <button type="button" class="btn btn-outline-primary">Columns</button>
+                <button type="button" class="btn btn-outline-primary">Save View</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Last Updated Information -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="text-muted small">
+                    <span class="badge bg-dark text-light p-2">
+                        <i class="bi bi-clock"></i> Last Updated: <span id="lastUpdatedTime">April 12, 2023
+                            14:35:22</span>
+                    </span>
+                    <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2 text-info" id="refreshTimestamp">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+                <div>
+                    <span class="badge bg-primary">15 records</span>
+                    <span class="badge bg-secondary ms-1">Filtered: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="data-container" class="table-responsive">
+        <table class="table table-bordered table-striped table-dark" id="dynamicDataTable">
+            <thead class="table-dark">
                 <tr>
-                    <th rowspan="2" class="ticker-column">Ticker</th>
-                    <th colspan="7" class="colgroup-header">Hourly Data (60 Min Bars)</th>
-                    <th colspan="4" class="colgroup-header">Current Day 30 Min Data</th>
-                    <th colspan="7" class="colgroup-header">Daily Tops</th>
-                    <th colspan="7" class="colgroup-header">Daily Bottoms</th>
-                    <th colspan="6" class="colgroup-header">Daily Swing Points</th>
-                    <th colspan="3" class="colgroup-header">Previous Friday</th>
-                    <th colspan="6" class="colgroup-header">Expiry Week</th>
-                    <th colspan="6" class="colgroup-header">Rollover Week</th>
-                    <th colspan="7" class="colgroup-header">Weekly Tops</th>
-                    <th colspan="7" class="colgroup-header">Weekly Bottoms</th>
-                    <th colspan="6" class="colgroup-header">Monthly Tops</th>
-                    <th colspan="6" class="colgroup-header">Monthly Bottoms</th>
+                    <th rowspan="2">Ticker</th>
+                    <th colspan="7">Hourly Data (60 Min Bars)</th>
+                    <th colspan="4">Current Day 30 Min Data</th>
+                    <th colspan="7">Daily Tops</th>
+                    <th colspan="7">Daily Bottoms</th>
+                    <th colspan="6">Daily Swing Points</th>
+                    <th colspan="3">Previous Friday</th>
+                    <th colspan="6">Expiry Week</th>
+                    <th colspan="6">Rollover Week</th>
+                    <th colspan="7">Weekly Tops</th>
+                    <th colspan="7">Weekly Bottoms</th>
+                    <th colspan="6">Monthly Tops</th>
+                    <th colspan="6">Monthly Bottoms</th>
                 </tr>
                 <tr>
                     <!-- Hourly Data -->
@@ -51,13 +145,13 @@
                     <th>1pm-2pm</th>
                     <th>2pm-3pm</th>
                     <th>3pm-4pm</th>
-                    
+
                     <!-- Current Day 30 Min Data -->
                     <th>Top</th>
                     <th>Bottom</th>
                     <th>Last 5 Tops</th>
                     <th>Last 5 Bottoms</th>
-                    
+
                     <!-- Daily Tops -->
                     <th>Latest-1</th>
                     <th>Previous-1</th>
@@ -66,7 +160,7 @@
                     <th>Highest (10)</th>
                     <th>Highest (20)</th>
                     <th>Highest (40)</th>
-                    
+
                     <!-- Daily Bottoms -->
                     <th>Latest-1</th>
                     <th>Previous-1</th>
@@ -75,7 +169,7 @@
                     <th>Lowest (10)</th>
                     <th>Lowest (20)</th>
                     <th>Lowest (40)</th>
-                    
+
                     <!-- Daily Swing Points -->
                     <th>Swing Top 1</th>
                     <th>Swing Top 2</th>
@@ -83,12 +177,12 @@
                     <th>Swing Bottom 1</th>
                     <th>Swing Bottom 2</th>
                     <th>Swing Bottom 3</th>
-                    
+
                     <!-- Previous Friday -->
                     <th>High</th>
                     <th>Low</th>
                     <th>Close</th>
-                    
+
                     <!-- Expiry Week -->
                     <th>Open</th>
                     <th>H/L Vol Bar</th>
@@ -96,7 +190,7 @@
                     <th>Low</th>
                     <th>VWAP</th>
                     <th>Close</th>
-                    
+
                     <!-- Rollover Week -->
                     <th>Open</th>
                     <th>H/L Vol Bar</th>
@@ -104,7 +198,7 @@
                     <th>Low</th>
                     <th>VWAP</th>
                     <th>Close</th>
-                    
+
                     <!-- Weekly Tops -->
                     <th>Latest-1</th>
                     <th>Previous-1</th>
@@ -113,7 +207,7 @@
                     <th>Highest (8)</th>
                     <th>Highest (12)</th>
                     <th>Highest (16)</th>
-                    
+
                     <!-- Weekly Bottoms -->
                     <th>Latest-1</th>
                     <th>Previous-1</th>
@@ -122,7 +216,7 @@
                     <th>Lowest (8)</th>
                     <th>Lowest (12)</th>
                     <th>Lowest (16)</th>
-                    
+
                     <!-- Monthly Tops -->
                     <th>Top 1</th>
                     <th>Top 2</th>
@@ -130,7 +224,7 @@
                     <th>Highest (2)</th>
                     <th>Highest (4)</th>
                     <th>Highest (6)</th>
-                    
+
                     <!-- Monthly Bottoms -->
                     <th>Bottom 1</th>
                     <th>Bottom 2</th>
@@ -141,19 +235,17 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Data will be populated via JavaScript -->
+
             </tbody>
         </table>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
     const dataContainer = document.getElementById('data-container');
-    const lastUpdatedElement = document.getElementById('lastUpdated');
-    const toggleColumnsBtn = document.getElementById('toggleColumns');
-    const refreshDataBtn = document.getElementById('refreshData');
 
     let eventSource;
 
@@ -171,20 +263,17 @@
         }
         console.log('Creating new EventSource');
         const newEventSource = new EventSource(`{% url "sse_static_future_data" %}`);
-        
+
         newEventSource.onopen = () => console.log('EventSource connection opened');
-        
+
         newEventSource.onerror = (error) => {
             console.error('EventSource error:', error);
-            dataContainer.innerHTML = '<div class="alert alert-danger">Error connecting to the server. Please try again later.</div>';
+            dataContainer.innerHTML = '<div>Error connecting to the server. Please try again later.</div>';
         };
-        
-        newEventSource.onmessage = function(event) {
+
+        newEventSource.onmessage = function (event) {
             const data = JSON.parse(event.data);
             const tableBody = document.querySelector('#dynamicDataTable tbody');
-            
-            // Update last updated time
-            lastUpdatedElement.textContent = new Date().toLocaleString();
 
             // Clear existing data
             while (tableBody.firstChild) {
@@ -192,7 +281,7 @@
             }
 
             if (data.message) {
-                dataContainer.innerHTML = `<div class="alert alert-info">${data.message}</div>`;
+                dataContainer.innerHTML = `<div>${data.message}</div>`;
             } else {
                 data.forEach(ticker => {
                     const row = document.createElement('tr');
@@ -271,19 +360,14 @@
                         ticker.lowest_bottom_out_of_last_4_monthly_bottoms_with_date,
                         ticker.lowest_bottom_out_of_last_6_monthly_bottoms_with_date
                     ];
-                    
-                    // Create and append cells with formatted values
+
+                    // Create and append cells with values
                     values.forEach((value, index) => {
                         const cell = document.createElement('td');
-                        if (index === 0) {
-                            cell.classList.add('ticker-column');
-                            cell.textContent = value || '-';
-                        } else {
-                            cell.textContent = value !== null && value !== undefined ? value : '-';
-                        }
+                        cell.textContent = value !== null && value !== undefined ? value : '-';
                         row.appendChild(cell);
                     });
-                    
+
                     tableBody.appendChild(row);
                 });
             }
@@ -293,54 +377,5 @@
 
     // Initialize EventSource
     eventSource = createEventSource();
-    
-    // Setup event listeners
-    refreshDataBtn.addEventListener('click', function() {
-        eventSource = createEventSource();
-    });
-    
-    // Column toggle functionality
-    toggleColumnsBtn.addEventListener('click', function() {
-        const columnGroups = document.querySelectorAll('#dynamicDataTable thead tr:first-child th[colspan]');
-        const toggleModal = document.createElement('div');
-        toggleModal.classList.add('modal', 'fade');
-        toggleModal.setAttribute('id', 'columnToggleModal');
-        toggleModal.innerHTML = `
-            <div class="modal-dialog">
-                <div class="modal-content bg-dark text-light">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Toggle Column Groups</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="list-group bg-dark">
-                            ${Array.from(columnGroups).map((th, index) => `
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="columnGroup${index}" checked>
-                                    <label class="form-check-label" for="columnGroup${index}">${th.textContent}</label>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="applyColumnToggle">Apply</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(toggleModal);
-        
-        // Initialize Bootstrap modal
-        const modal = new bootstrap.Modal(document.getElementById('columnToggleModal'));
-        modal.show();
-        
-        // Apply button handler
-        document.getElementById('applyColumnToggle').addEventListener('click', function() {
-            // Toggle column visibility based on checkboxes
-            // Implementation depends on Bootstrap JS being available
-        });
-    });
 </script>
 {% endblock %}
