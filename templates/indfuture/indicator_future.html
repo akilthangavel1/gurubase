@@ -4,64 +4,55 @@
 
 {% block extra_css %}<style>
     body {
-        background-color: #212529;
-        color: #e9ecef;
+      background-color: #212529;
+      color: #e9ecef;
     }
-
     .table {
-        color: #e9ecef;
+      color: #e9ecef;
     }
-
     .modal-content {
-        background-color: #343a40;
-        color: #e9ecef;
+      background-color: #343a40;
+      color: #e9ecef;
     }
-
-    .form-control,
-    .form-select,
-    .input-group-text {
-        background-color: #343a40;
-        border-color: #495057;
-        color: #e9ecef;
+    .form-control, .form-select, .input-group-text {
+      background-color: #343a40;
+      border-color: #495057;
+      color: #e9ecef;
     }
-
-    .form-control:focus,
-    .form-select:focus {
-        background-color: #3b4148;
-        color: #e9ecef;
+    .form-control:focus, .form-select:focus {
+      background-color: #3b4148;
+      color: #e9ecef;
     }
-
     .badge.bg-light {
-        background-color: #343a40 !important;
-        color: #e9ecef !important;
+      background-color: #343a40 !important;
+      color: #e9ecef !important;
     }
-
     .btn-light {
-        background-color: #343a40;
-        border-color: #495057;
-        color: #e9ecef;
+      background-color: #343a40;
+      border-color: #495057;
+      color: #e9ecef;
     }
-
     .btn-outline-primary {
-        color: #8bb9fe;
-        border-color: #0d6efd;
+      color: #8bb9fe;
+      border-color: #0d6efd;
     }
-
-    .table-striped>tbody>tr:nth-of-type(odd)>* {
-        color: #e9ecef;
+    .table-striped > tbody > tr:nth-of-type(odd) > * {
+      color: #e9ecef;
     }
-
     /* Fix for navbar dropdowns appearing behind other elements */
     .navbar-nav .dropdown-menu {
-        z-index: 1030 !important;
-        /* Higher than default Bootstrap z-index */
+        z-index: 1030 !important; /* Higher than default Bootstrap z-index */
     }
-
+    
     /* Ensure the navbar itself has proper z-index */
     .navbar {
         z-index: 1020 !important;
     }
-</style>{% endblock %}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<!-- Add jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -130,90 +121,169 @@
     </div>
     <div id="data-container" class="table-responsive">
         <table id="dynamicDataTable" class="table table-bordered table-striped table-dark">
-          <thead class="table-dark">
-            <tr>
-                <th>Ticker</th>
-                <th>EMA</th>
-                <th>SMA</th>
-                <th>HMA</th>
-                <th>MACD</th>
-                <th>Signal Line</th>
-                <th>SUPERTREND</th>
-                <th>AO</th>
-                <th>Keltner Upper</th>
-                <th>Keltner Middle</th>
-                <th>Keltner Lower</th>
-                <th>Pivot</th>
-                <th>R1</th>
-                <th>S1</th>
-                <th>R2</th>
-                <th>S2</th>
-                <th>R3</th>
-                <th>S3</th>
-                <th>Camarilla R1</th>
-                <th>Camarilla R2</th>
-                <th>Camarilla R3</th>
-                <th>Camarilla R4</th>
-                <th>Camarilla S1</th>
-                <th>Camarilla S2</th>
-                <th>Camarilla S3</th>
-                <th>Camarilla S4</th>
-                <th>BIAS</th>
-            </tr>
-          </thead>
-          <tbody>
+            <thead class="table-dark">
+                <tr>
+                    <th>Ticker</th>
+                    <th>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>EMA</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="EMA" data-input-id="emaValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>SMA</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="SMA" data-input-id="smaValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>HMA</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="HMA" data-input-id="hmaValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>MACD</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="MACD" data-input-id="macdValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th>Signal Line</th>
+                    <th>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>SUPERTREND</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#supertrendModal">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th>AO</th>
+                    <th>Keltner Upper</th>
+                    <th>Keltner Middle</th>
+                    <th>Keltner Lower</th>
+                    <th>Pivot</th>
+                    <th>R1</th>
+                    <th>S1</th>
+                    <th>R2</th>
+                    <th>S2</th>
+                    <th>R3</th>
+                    <th>S3</th>
+                    <th>Camarilla R1</th>
+                    <th>Camarilla R2</th>
+                    <th>Camarilla R3</th>
+                    <th>Camarilla R4</th>
+                    <th>Camarilla S1</th>
+                    <th>Camarilla S2</th>
+                    <th>Camarilla S3</th>
+                    <th>Camarilla S4</th>
+                    <th>BIAS</th>
+                </tr>
+            </thead>
+            <tbody>
 
-          </tbody>
+            </tbody>
         </table>
-      </div>
-
-    <div>
-        <h1>Indicator Dynamic Data</h1>
     </div>
 
-    <div>
 
-        <div>
-            <label for="emaValue">EMA</label>
-            <input type="number" id="emaValue" step="0.01" placeholder="EMA value">
-        </div>
+    <!-- Hidden fields to store indicator values -->
+    <div style="display: none;">
+        <input type="number" id="emaValue" value="10">
+        <input type="number" id="smaValue" value="0">
+        <input type="number" id="hmaValue" value="0">
+        <input type="text" id="macdValue" value="0">
+        <input type="number" id="supertrendLength" value="14">
+        <input type="number" id="supertrendMultiplier" value="3">
+    </div>
 
-        <div>
-            <label for="smaValue">SMA</label>
-            <input type="number" id="smaValue" step="0.01" placeholder="SMA value">
-        </div>
-
-        <div>
-            <label for="hmaValue">HMA</label>
-            <input type="number" id="hmaValue" step="0.01" placeholder="HMA value">
-        </div>
-
-        <div>
-            <label for="macdValue">MACD</label>
-            <input type="text" id="macdValue" step="0.01" placeholder="MACD value">
-        </div>
-
-        <div>
-            <label for="supertrendLength">Supertrend Length</label>
-            <input type="number" id="supertrendLength" placeholder="Length" value="14">
-        </div>
-
-        <div>
-            <label for="supertrendMultiplier">Supertrend Multiplier</label>
-            <input type="number" id="supertrendMultiplier" placeholder="Multiplier" value="3">
-        </div>
-
-        <div>
-            <button id="updateIndicators">Update</button>
+    <!-- Input Modal -->
+    <div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="inputModalLabel">Indicator Value</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="headerInput" class="form-label text-light" id="modalFieldLabel">Indicator Value</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="headerInput"
+                            placeholder="Enter your value here">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveInput">Update</button>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Supertrend Modal -->
+    <div class="modal fade" id="supertrendModal" tabindex="-1" aria-labelledby="supertrendModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="supertrendModalLabel">Supertrend Settings</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="supertrendLengthInput" class="form-label text-light">Length</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendLengthInput"
+                            placeholder="Enter length value" value="14">
+                    </div>
+                    <div class="mb-3">
+                        <label for="supertrendMultiplierInput" class="form-label text-light">Multiplier</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendMultiplierInput"
+                            placeholder="Enter multiplier value" value="3">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveSupertrendInput">Update Supertrend</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
         const dataContainer = document.getElementById('data-container');
         const timeframeSelect = document.getElementById('timeframe');
         const updateButton = document.getElementById('updateIndicators');
+        const saveInputButton = document.getElementById('saveInput');
+        const saveSupertrendButton = document.getElementById('saveSupertrendInput');
 
         let eventSource;
+        let currentIndicator = 'EMA';
+        let currentInputId = 'emaValue';
+
+        // Handle modal open for indicators using vanilla JavaScript
+        const inputModal = document.getElementById('inputModal');
+        if (inputModal) {
+            inputModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                currentIndicator = button.getAttribute('data-indicator');
+                currentInputId = button.getAttribute('data-input-id');
+                
+                // Update modal title and labels
+                document.getElementById('inputModalLabel').textContent = `${currentIndicator} Value`;
+                document.getElementById('modalFieldLabel').textContent = `${currentIndicator} Value`;
+                
+                // Pre-fill with current value if it exists
+                const currentValue = document.getElementById(currentInputId).value || '';
+                document.getElementById('headerInput').value = currentValue;
+            });
+        }
 
         function createEventSource(timeframe, ema, sma, hma, macd, supertrendLength, supertrendMultiplier) {
             if (eventSource) {
@@ -308,6 +378,60 @@
             console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${emaValue}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}`);
 
             eventSource = createEventSource(timeframeSelect.value, emaValue, sma, hma, macd, supertrendLength, supertrendMultiplier);
+        });
+
+        // Add event listener for the generic "Update" button in the modal
+        saveInputButton.addEventListener('click', function() {
+            // Get the indicator value from the modal input
+            const indicatorValue = document.getElementById('headerInput').value || 0;
+            
+            // Update the corresponding input field
+            document.getElementById(currentInputId).value = indicatorValue;
+            
+            // Get all indicator values
+            const ema = document.getElementById('emaValue').value || 0;
+            const sma = document.getElementById('smaValue').value || 0;
+            const hma = document.getElementById('hmaValue').value || 0;
+            const macd = document.getElementById('macdValue').value || 0;
+            const supertrendLength = document.getElementById('supertrendLength').value || 14;
+            const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
+            
+            console.log(`Update ${currentIndicator} button clicked, using value:`, indicatorValue);
+            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${ema}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}`);
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('inputModal'));
+            modal.hide();
+            
+            // Create new EventSource with updated values
+            eventSource = createEventSource(timeframeSelect.value, ema, sma, hma, macd, supertrendLength, supertrendMultiplier);
+        });
+
+        // Add event listener for the Supertrend "Update" button
+        saveSupertrendButton.addEventListener('click', function() {
+            // Get the Supertrend values from the modal inputs
+            const supertrendLength = document.getElementById('supertrendLengthInput').value || 14;
+            const supertrendMultiplier = document.getElementById('supertrendMultiplierInput').value || 3;
+            
+            // Update the corresponding input fields
+            document.getElementById('supertrendLength').value = supertrendLength;
+            document.getElementById('supertrendMultiplier').value = supertrendMultiplier;
+            
+            // Get other indicator values
+            const ema = document.getElementById('emaValue').value || 0;
+            const sma = document.getElementById('smaValue').value || 0;
+            const hma = document.getElementById('hmaValue').value || 0;
+            const macd = document.getElementById('macdValue').value || 0;
+            
+            console.log('Update Supertrend button clicked, using length:', supertrendLength, 'and multiplier:', supertrendMultiplier);
+            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${ema}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}`);
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('supertrendModal'));
+            modal.hide();
+            
+            // Create new EventSource with updated values
+            eventSource = createEventSource(timeframeSelect.value, ema, sma, hma, macd, supertrendLength, supertrendMultiplier);
         });
     </script>
     {% endblock %}
