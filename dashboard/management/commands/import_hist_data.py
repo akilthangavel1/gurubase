@@ -35,12 +35,15 @@ def data_exists(table_name, datetime_value):
         print("An error occurred:", e)
         return False
 
+
 def future_format_symbol(symbol):
-    return "NSE:" + symbol + "25MARFUT"
+    return "NSE:" + symbol + "25APRFUT"
+
 
 def date_to_timestamp(date_str, date_format="%d/%m/%Y"):
     dt = datetime.strptime(date_str, date_format)
     return int(time.mktime(dt.timetuple()))
+
 
 def process_ohlc_data(response):
     if 'candles' not in response:
@@ -85,8 +88,12 @@ class Command(BaseCommand):
         for ticker in ticker_details:
             try:
                 self.stdout.write(self.style.SUCCESS(f"Processing ticker: {ticker.ticker_symbol}"))
-                from_date = (datetime.now() - timedelta(days=20)).strftime("%d/%m/%Y")
-                to_date = (datetime.now() - timedelta(days=0)).strftime("%d/%m/%Y")
+                from_date = (datetime.now() - timedelta(days=6)).strftime("%d/%m/%Y")
+                # print(from_date)
+                # print(type(from_date))
+                to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+                from_date = "28/03/2025"
+                to_date = "07/04/2025"
                 print(ticker.ticker_symbol)
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 print(symbol)
@@ -95,8 +102,6 @@ class Command(BaseCommand):
                 access_token = get_access_token()
                 print(symbol)
                 ohlc_daily_data = fetch_ohlc_data(symbol, resolution, from_date, to_date, client_id, access_token)
-                print("#########################")
-                print(ohlc_daily_data)
                 processed_daily_ohlc = process_ohlc_data(ohlc_daily_data)
                 time.sleep(1)
                 for _, row in processed_daily_ohlc.iterrows():
