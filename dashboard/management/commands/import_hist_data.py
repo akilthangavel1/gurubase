@@ -121,5 +121,6 @@ class Command(BaseCommand):
             
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Error processing ticker {ticker.ticker_symbol}: {e}"))
+                time.sleep(20)
         
         self.stdout.write(self.style.SUCCESS("Data Inserted"))
