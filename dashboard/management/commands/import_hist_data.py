@@ -10,7 +10,7 @@ import pandas as pd
 
 def insert_data_into_historical_db(table_name, datetime_value, open_price, high_price, low_price, close_price, volume):
     table_name = table_name.lower()
-    print(table_name)
+    # print(table_name)
     insert_query = f"""
     INSERT INTO "{table_name}" (datetime, open_price, high_price, low_price, close_price, volume)
     VALUES (%s, %s, %s, %s, %s, %s)
@@ -19,7 +19,7 @@ def insert_data_into_historical_db(table_name, datetime_value, open_price, high_
     try:
         with connection.cursor() as cursor:
             cursor.execute(insert_query, [datetime_value, open_price, high_price, low_price, close_price, volume])
-            print(f"Data inserted successfully into {table_name} table.")
+            # print(f"Data inserted successfully into {table_name} table.")
     except Exception as e:
         print(f"Error inserting data into {table_name} table: {e}")
 
