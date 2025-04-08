@@ -37,7 +37,14 @@ def data_exists(table_name, datetime_value):
 
 
 def future_format_symbol(symbol):
-    return "NSE:" + symbol + "25APRFUT"
+    if symbol == "BAJAJAUTO":
+        return "NSE:" + "BAJAJ-AUTO" + "25APRFUT"
+    elif symbol == "MM":
+        return "NSE:" + "M&M" + "25APRFUT"
+    elif symbol == "MMFIN":
+        return "NSE:" + "M&MFIN" + "25APRFUT"
+    else:
+        return "NSE:" + symbol + "25APRFUT"
 
 
 def date_to_timestamp(date_str, date_format="%d/%m/%Y"):
@@ -93,10 +100,8 @@ class Command(BaseCommand):
                 # print(type(from_date))
                 to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
                 from_date = "28/03/2025"
-                to_date = "07/04/2025"
-                print(ticker.ticker_symbol)
+                to_date = "08/04/2025"
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
-                print(symbol)
                 resolution = "1"
                 client_id = "MMKQTWNJH3-100"
                 access_token = get_access_token()
@@ -115,10 +120,10 @@ class Command(BaseCommand):
                             close_price=row.close,
                             volume=row.volume
                         )
-                        self.stdout.write(self.style.SUCCESS(f"Inserted data for {ticker.ticker_symbol} on {row.datetime}."))
+                        # self.stdout.write(self.style.SUCCESS(f"Inserted data for {ticker.ticker_symbol} on {row.datetime}."))
                     else:
-                        self.stdout.write(self.style.WARNING(f"Data for {ticker.ticker_symbol} on {row.datetime} already exists. Skipping."))
-            
+                        # self.stdout.write(self.style.WARNING(f"Data for {ticker.ticker_symbol} on {row.datetime} already exists. Skipping."))
+                        pass
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Error processing ticker {ticker.ticker_symbol}: {e}"))
                 time.sleep(20)

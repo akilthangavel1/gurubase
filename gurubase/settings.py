@@ -77,8 +77,8 @@ DATABASES = {
         'NAME': 'gurubase',        
         'USER': 'akil',         
         'PASSWORD': 'Akil@2007',   
-        'HOST': 'localhost',         # database host
-        'PORT': '5432',             # database port
+        'HOST': 'localhost',         
+        'PORT': '5432',             
     }
 }
 

@@ -33,7 +33,6 @@ def initialize_fyers():
 def get_live_data():
     fyers = initialize_fyers()
     tickers = TickerBase.objects.all()
-    # Create comma-separated string of symbols in required format
     symbols = ','.join([f"NSE:{ticker.ticker_symbol.upper()}27MARFUT" for ticker in tickers])
     data = {
         "symbols": symbols
