@@ -9,6 +9,7 @@ import logging
 from dashboard.models import TickerBase
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.http import urlencode
+import time  # Import time module for sleep
 logger = logging.getLogger(__name__)
 
 # Create your views here.
@@ -56,6 +57,32 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                 ORDER BY interval_start DESC
                 LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
             """
+        elif timeframe == '10':
+            # For 10-minute timeframe
+            query = f"""
+                WITH ten_min_groups AS (
+                    SELECT 
+                        date_trunc('hour', datetime) + 
+                        INTERVAL '10 min' * (date_part('minute', datetime)::integer / 10) AS interval_start,
+                        FIRST_VALUE(open_price) OVER w AS open_price,
+                        MAX(high_price) OVER w AS high_price,
+                        MIN(low_price) OVER w AS low_price,
+                        LAST_VALUE(close_price) OVER w AS close_price,
+                        SUM(volume) OVER w AS volume
+                    FROM "{table_name}"
+                    WINDOW w AS (
+                        PARTITION BY date_trunc('hour', datetime) + 
+                        INTERVAL '10 min' * (date_part('minute', datetime)::integer / 10)
+                        ORDER BY datetime
+                        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                    )
+                )
+                SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
+                       close_price, volume
+                FROM ten_min_groups
+                ORDER BY interval_start DESC
+                LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
+            """
         elif timeframe == '15':
             # For 15-minute timeframe
             query = f"""
@@ -83,12 +110,84 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                 LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
             """
         elif timeframe == '30':
-            # For 30-minute timeframe
+            # For 30-minute timeframe, aligned to market hours starting at 9:15
             query = f"""
-                WITH thirty_min_groups AS (
+                WITH market_aligned_30min AS (
+                    SELECT 
+                        -- Special handling for the last 15-minute candle (3:15-3:30)
+                        CASE
+                            -- If time is between 3:15 PM and 3:30 PM, create a special interval
+                            WHEN (EXTRACT(HOUR FROM datetime) = 15 AND EXTRACT(MINUTE FROM datetime) >= 15) 
+                                THEN date_trunc('day', datetime) + INTERVAL '15 hours 15 minutes'
+                            -- Otherwise use the standard 30-minute intervals from 9:15
+                            ELSE
+                                CASE
+                                    -- Calculate the reference time (9:15 AM on the same day)
+                                    WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                        THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                    ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                END +
+                                -- Calculate how many 30-minute intervals have passed since 9:15
+                                INTERVAL '30 minutes' * 
+                                FLOOR(
+                                    EXTRACT(EPOCH FROM (datetime - 
+                                        CASE
+                                            WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                                THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                            ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                        END
+                                    )) / 1800  -- 1800 seconds = 30 minutes
+                                )
+                        END AS interval_start,
+                        FIRST_VALUE(open_price) OVER w AS open_price,
+                        MAX(high_price) OVER w AS high_price,
+                        MIN(low_price) OVER w AS low_price,
+                        LAST_VALUE(close_price) OVER w AS close_price,
+                        SUM(volume) OVER w AS volume
+                    FROM "{table_name}"
+                    WINDOW w AS (
+                        PARTITION BY 
+                        CASE
+                            -- If time is between 3:15 PM and 3:30 PM, create a special interval
+                            WHEN (EXTRACT(HOUR FROM datetime) = 15 AND EXTRACT(MINUTE FROM datetime) >= 15) 
+                                THEN date_trunc('day', datetime) + INTERVAL '15 hours 15 minutes'
+                            -- Otherwise use the standard 30-minute intervals from 9:15
+                            ELSE
+                                CASE
+                                    -- Calculate the reference time (9:15 AM on the same day)
+                                    WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                        THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                    ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                END +
+                                -- Calculate how many 30-minute intervals have passed since 9:15
+                                INTERVAL '30 minutes' * 
+                                FLOOR(
+                                    EXTRACT(EPOCH FROM (datetime - 
+                                        CASE
+                                            WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                                THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                            ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                        END
+                                    )) / 1800
+                                )
+                        END
+                        ORDER BY datetime
+                        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                    )
+                )
+                SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
+                       close_price, volume
+                FROM market_aligned_30min
+                ORDER BY interval_start DESC
+                LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
+            """
+        elif timeframe == '45':
+            # For 45-minute timeframe
+            query = f"""
+                WITH forty_five_min_groups AS (
                     SELECT 
                         date_trunc('hour', datetime) + 
-                        INTERVAL '30 min' * (date_part('minute', datetime)::integer / 30) AS interval_start,
+                        INTERVAL '45 min' * (date_part('minute', datetime)::integer / 45) AS interval_start,
                         FIRST_VALUE(open_price) OVER w AS open_price,
                         MAX(high_price) OVER w AS high_price,
                         MIN(low_price) OVER w AS low_price,
@@ -97,66 +196,302 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                     FROM "{table_name}"
                     WINDOW w AS (
                         PARTITION BY date_trunc('hour', datetime) + 
-                        INTERVAL '30 min' * (date_part('minute', datetime)::integer / 30)
+                        INTERVAL '45 min' * (date_part('minute', datetime)::integer / 45)
                         ORDER BY datetime
                         ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                     )
                 )
                 SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
                        close_price, volume
-                FROM thirty_min_groups
+                FROM forty_five_min_groups
                 ORDER BY interval_start DESC
                 LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
             """
         elif timeframe == '60':
-            # For 1-hour timeframe
+            # For 1-hour timeframe using a reference table of time slots with timezone adjustment
+            # The data is in UTC (hours 3-4) but we want to interpret it as IST market hours (9:15-15:30)
             query = f"""
-                WITH hourly_groups AS (
-                    SELECT 
-                        date_trunc('hour', datetime) AS interval_start,
-                        FIRST_VALUE(open_price) OVER w AS open_price,
-                        MAX(high_price) OVER w AS high_price,
-                        MIN(low_price) OVER w AS low_price,
-                        LAST_VALUE(close_price) OVER w AS close_price,
-                        SUM(volume) OVER w AS volume
+                WITH hour_slots AS (
+                    -- Generate all possible hour slots for a trading day (UTC times)
+                    -- UTC+5:30 -> UTC conversion: 9:15 IST = 3:45 UTC, 15:30 IST = 10:00 UTC
+                    SELECT generate_series(0, 6) as slot_id,
+                           '03:45'::time + (generate_series(0, 6) || ' hour')::interval as slot_time,
+                           '09:15'::time + (generate_series(0, 6) || ' hour')::interval as display_time
+                ),
+                trading_days AS (
+                    -- Get distinct days from the data
+                    SELECT DISTINCT date_trunc('day', datetime) as day_date
                     FROM "{table_name}"
-                    WINDOW w AS (
-                        PARTITION BY date_trunc('hour', datetime)
-                        ORDER BY datetime
-                        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                    )
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM datetime) = 3 AND EXTRACT(MINUTE FROM datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM datetime) = 10 AND EXTRACT(MINUTE FROM datetime) <= 0))
+                ),
+                all_slots AS (
+                    -- Cross join to create all possible hour slots for all trading days
+                    SELECT 
+                        td.day_date,
+                        td.day_date + hs.slot_time as interval_start,
+                        td.day_date + hs.display_time as display_time,
+                        hs.slot_id
+                    FROM trading_days td
+                    CROSS JOIN hour_slots hs
+                ),
+                hour_candles AS (
+                    -- Match data points to their corresponding hour slot (in UTC)
+                    SELECT 
+                        as_slot.display_time as display_interval,
+                        as_slot.interval_start,
+                        data.datetime,
+                        data.open_price,
+                        data.high_price,
+                        data.low_price,
+                        data.close_price,
+                        data.volume
+                    FROM "{table_name}" data
+                    JOIN all_slots as_slot
+                        ON date_trunc('day', data.datetime) = as_slot.day_date
+                        -- Match data to candle based on time (UTC)
+                        AND (
+                            -- Regular 1-hour candles
+                            (as_slot.slot_id < 6 AND 
+                             data.datetime >= as_slot.interval_start AND 
+                             data.datetime < as_slot.interval_start + INTERVAL '1 hour')
+                            OR
+                            -- Special case for the last candle (15:15-15:30 IST = 9:45-10:00 UTC)
+                            (as_slot.slot_id = 6 AND
+                             data.datetime >= as_slot.interval_start AND
+                             data.datetime <= as_slot.day_date + INTERVAL '10 hours')
+                        )
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM data.datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM data.datetime) = 3 AND EXTRACT(MINUTE FROM data.datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM data.datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM data.datetime) = 10 AND EXTRACT(MINUTE FROM data.datetime) <= 0))
+                ),
+                aggregated_candles AS (
+                    -- Aggregate the data within each hour slot
+                    SELECT 
+                        display_interval,
+                        FIRST_VALUE(open_price) OVER (PARTITION BY display_interval ORDER BY datetime) AS open_price,
+                        MAX(high_price) OVER (PARTITION BY display_interval) AS high_price,
+                        MIN(low_price) OVER (PARTITION BY display_interval) AS low_price,
+                        LAST_VALUE(close_price) OVER (PARTITION BY display_interval ORDER BY datetime ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS close_price,
+                        SUM(volume) OVER (PARTITION BY display_interval) AS volume
+                    FROM hour_candles
+                ),
+                final_candles AS (
+                    -- Remove duplicates
+                    SELECT DISTINCT
+                        display_interval,
+                        open_price,
+                        high_price,
+                        low_price,
+                        close_price,
+                        volume
+                    FROM aggregated_candles
                 )
-                SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
-                       close_price, volume
-                FROM hourly_groups
-                ORDER BY interval_start DESC
-                LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
+                
+                SELECT display_interval as datetime, open_price, high_price, low_price, close_price, volume
+                FROM final_candles
+                ORDER BY display_interval DESC
+                LIMIT 3 -- Fetch the last 3 records for calculating ATP and swings
+            """
+        elif timeframe == '120':
+            # For 2-hour timeframe
+            query = f"""
+                WITH hour_slots AS (
+                    -- Generate time slots for a trading day (UTC times)
+                    -- We need 3 slots for 2-hour candles: 9:15-11:15, 11:15-13:15, 13:15-15:30
+                    -- UTC+5:30 -> UTC conversion: 9:15 IST = 3:45 UTC, 15:30 IST = 10:00 UTC
+                    VALUES
+                        (0, '03:45'::time, '09:15'::time),  -- 9:15-11:15 IST = 3:45-5:45 UTC
+                        (1, '05:45'::time, '11:15'::time),  -- 11:15-13:15 IST = 5:45-7:45 UTC
+                        (2, '07:45'::time, '13:15'::time)   -- 13:15-15:30 IST = 7:45-10:00 UTC
+                ),
+                trading_days AS (
+                    -- Get distinct days from the data
+                    SELECT DISTINCT date_trunc('day', datetime) as day_date
+                    FROM "{table_name}"
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM datetime) = 3 AND EXTRACT(MINUTE FROM datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM datetime) = 10 AND EXTRACT(MINUTE FROM datetime) <= 0))
+                ),
+                all_slots AS (
+                    -- Cross join to create all possible 2-hour slots for all trading days
+                    SELECT 
+                        td.day_date,
+                        td.day_date + hs.column2 as interval_start,
+                        td.day_date + hs.column3 as display_time,
+                        hs.column1 as slot_id
+                    FROM trading_days td
+                    CROSS JOIN hour_slots hs
+                ),
+                hour_candles AS (
+                    -- Match data points to their corresponding 2-hour slot (in UTC)
+                    SELECT 
+                        as_slot.display_time as display_interval,
+                        as_slot.interval_start,
+                        data.datetime,
+                        data.open_price,
+                        data.high_price,
+                        data.low_price,
+                        data.close_price,
+                        data.volume
+                    FROM "{table_name}" data
+                    JOIN all_slots as_slot
+                        ON date_trunc('day', data.datetime) = as_slot.day_date
+                        -- Match data to candle based on time (UTC)
+                        AND (
+                            -- First 2-hour candle (9:15-11:15 IST)
+                            (as_slot.slot_id = 0 AND 
+                             data.datetime >= as_slot.interval_start AND 
+                             data.datetime < as_slot.day_date + INTERVAL '5 hours 45 minutes')
+                            OR
+                            -- Second 2-hour candle (11:15-13:15 IST)
+                            (as_slot.slot_id = 1 AND
+                             data.datetime >= as_slot.interval_start AND 
+                             data.datetime < as_slot.day_date + INTERVAL '7 hours 45 minutes')
+                            OR
+                            -- Third 2-hour candle including last period (13:15-15:30 IST)
+                            (as_slot.slot_id = 2 AND
+                             data.datetime >= as_slot.interval_start AND
+                             data.datetime <= as_slot.day_date + INTERVAL '10 hours')
+                        )
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM data.datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM data.datetime) = 3 AND EXTRACT(MINUTE FROM data.datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM data.datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM data.datetime) = 10 AND EXTRACT(MINUTE FROM data.datetime) <= 0))
+                ),
+                aggregated_candles AS (
+                    -- Aggregate the data within each 2-hour slot
+                    SELECT 
+                        display_interval,
+                        FIRST_VALUE(open_price) OVER (PARTITION BY display_interval ORDER BY datetime) AS open_price,
+                        MAX(high_price) OVER (PARTITION BY display_interval) AS high_price,
+                        MIN(low_price) OVER (PARTITION BY display_interval) AS low_price,
+                        LAST_VALUE(close_price) OVER (PARTITION BY display_interval ORDER BY datetime ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS close_price,
+                        SUM(volume) OVER (PARTITION BY display_interval) AS volume
+                    FROM hour_candles
+                ),
+                final_candles AS (
+                    -- Remove duplicates
+                    SELECT DISTINCT
+                        display_interval,
+                        open_price,
+                        high_price,
+                        low_price,
+                        close_price,
+                        volume
+                    FROM aggregated_candles
+                )
+                
+                SELECT display_interval as datetime, open_price, high_price, low_price, close_price, volume
+                FROM final_candles
+                ORDER BY display_interval DESC
+                LIMIT 3 -- Fetch the last 3 records for calculating ATP and swings
             """
         elif timeframe == '240':
-            # For 4-hour timeframe
+            # For 4-hour timeframe using a reference table of time slots with timezone adjustment
+            # The data is in UTC (hours 3-4) but we want to interpret it as IST market hours (9:15-15:30)
             query = f"""
-                WITH four_hour_groups AS (
-                    SELECT 
-                        date_trunc('day', datetime) + 
-                        INTERVAL '4 hour' * (date_part('hour', datetime)::integer / 4) AS interval_start,
-                        FIRST_VALUE(open_price) OVER w AS open_price,
-                        MAX(high_price) OVER w AS high_price,
-                        MIN(low_price) OVER w AS low_price,
-                        LAST_VALUE(close_price) OVER w AS close_price,
-                        SUM(volume) OVER w AS volume
+                WITH hour_slots AS (
+                    -- Generate time slots for a trading day (UTC times)
+                    -- We only need 2 slots for 4-hour candles: 9:15-13:15, 13:15-15:30
+                    -- UTC+5:30 -> UTC conversion: 9:15 IST = 3:45 UTC, 15:30 IST = 10:00 UTC
+                    VALUES
+                        (0, '03:45'::time, '09:15'::time),  -- 9:15-13:15 IST = 3:45-7:45 UTC
+                        (1, '07:45'::time, '13:15'::time)   -- 13:15-15:30 IST = 7:45-10:00 UTC
+                ),
+                trading_days AS (
+                    -- Get distinct days from the data
+                    SELECT DISTINCT date_trunc('day', datetime) as day_date
                     FROM "{table_name}"
-                    WINDOW w AS (
-                        PARTITION BY date_trunc('day', datetime) + 
-                        INTERVAL '4 hour' * (date_part('hour', datetime)::integer / 4)
-                        ORDER BY datetime
-                        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                    )
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM datetime) = 3 AND EXTRACT(MINUTE FROM datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM datetime) = 10 AND EXTRACT(MINUTE FROM datetime) <= 0))
+                ),
+                all_slots AS (
+                    -- Cross join to create all possible 4-hour slots for all trading days
+                    SELECT 
+                        td.day_date,
+                        td.day_date + hs.column2 as interval_start,
+                        td.day_date + hs.column3 as display_time,
+                        hs.column1 as slot_id
+                    FROM trading_days td
+                    CROSS JOIN hour_slots hs
+                ),
+                hour_candles AS (
+                    -- Match data points to their corresponding 4-hour slot (in UTC)
+                    SELECT 
+                        as_slot.display_time as display_interval,
+                        as_slot.interval_start,
+                        data.datetime,
+                        data.open_price,
+                        data.high_price,
+                        data.low_price,
+                        data.close_price,
+                        data.volume
+                    FROM "{table_name}" data
+                    JOIN all_slots as_slot
+                        ON date_trunc('day', data.datetime) = as_slot.day_date
+                        -- Match data to candle based on time (UTC)
+                        AND (
+                            -- First 4-hour candle (9:15-13:15 IST)
+                            (as_slot.slot_id = 0 AND 
+                             data.datetime >= as_slot.interval_start AND 
+                             data.datetime < as_slot.day_date + INTERVAL '7 hours 45 minutes')
+                            OR
+                            -- Second 4-hour candle including last period (13:15-15:30 IST)
+                            (as_slot.slot_id = 1 AND
+                             data.datetime >= as_slot.interval_start AND
+                             data.datetime <= as_slot.day_date + INTERVAL '10 hours')
+                        )
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM data.datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM data.datetime) = 3 AND EXTRACT(MINUTE FROM data.datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM data.datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM data.datetime) = 10 AND EXTRACT(MINUTE FROM data.datetime) <= 0))
+                ),
+                aggregated_candles AS (
+                    -- Aggregate the data within each 4-hour slot
+                    SELECT 
+                        display_interval,
+                        FIRST_VALUE(open_price) OVER (PARTITION BY display_interval ORDER BY datetime) AS open_price,
+                        MAX(high_price) OVER (PARTITION BY display_interval) AS high_price,
+                        MIN(low_price) OVER (PARTITION BY display_interval) AS low_price,
+                        LAST_VALUE(close_price) OVER (PARTITION BY display_interval ORDER BY datetime ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS close_price,
+                        SUM(volume) OVER (PARTITION BY display_interval) AS volume
+                    FROM hour_candles
+                ),
+                final_candles AS (
+                    -- Remove duplicates
+                    SELECT DISTINCT
+                        display_interval,
+                        open_price,
+                        high_price,
+                        low_price,
+                        close_price,
+                        volume
+                    FROM aggregated_candles
                 )
-                SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
-                       close_price, volume
-                FROM four_hour_groups
-                ORDER BY interval_start DESC
-                LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
+                
+                SELECT display_interval as datetime, open_price, high_price, low_price, close_price, volume
+                FROM final_candles
+                ORDER BY display_interval DESC
+                LIMIT 3 -- Fetch the last 3 records for calculating ATP and swings
             """
         elif timeframe == '1440':
             # For 1-day timeframe (24 hours = 1440 minutes)
@@ -307,231 +642,6 @@ def sse_dynamic_data(request):
     response['X-Accel-Buffering'] = 'no'
     return response
 
-def get_historical_data(ticker_symbol, timeframe='1'):
-    try:
-        with connection.cursor() as cursor:
-            table_name = f"{ticker_symbol}_future_historical_data"
-            
-            if timeframe == '5':
-                # For 5-minute timeframe, group the 1-minute data
-                query = f"""
-                    WITH five_min_groups AS (
-                        SELECT 
-                            date_trunc('hour', datetime) + 
-                            INTERVAL '5 min' * (date_part('minute', datetime)::integer / 5) AS interval_start,
-                            FIRST_VALUE(open_price) OVER w AS open_price,
-                            MAX(high_price) OVER w AS high_price,
-                            MIN(low_price) OVER w AS low_price,
-                            LAST_VALUE(close_price) OVER w AS close_price,
-                            SUM(volume) OVER w AS volume,
-                            AVG((high_price + low_price + close_price)/3) OVER w AS atp
-                        FROM "{table_name}"
-                        WHERE datetime >= NOW() - INTERVAL '24 hours'
-                        WINDOW w AS (
-                            PARTITION BY date_trunc('hour', datetime) + 
-                            INTERVAL '5 min' * (date_part('minute', datetime)::integer / 5)
-                            ORDER BY datetime
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                        )
-                    )
-                    SELECT DISTINCT *
-                    FROM five_min_groups
-                    ORDER BY interval_start DESC
-                """
-            elif timeframe == '15':
-                # For 15-minute timeframe, group the 1-minute data
-                query = f"""
-                    WITH fifteen_min_groups AS (
-                        SELECT 
-                            date_trunc('hour', datetime) + 
-                            INTERVAL '15 min' * (date_part('minute', datetime)::integer / 15) AS interval_start,
-                            FIRST_VALUE(open_price) OVER w AS open_price,
-                            MAX(high_price) OVER w AS high_price,
-                            MIN(low_price) OVER w AS low_price,
-                            LAST_VALUE(close_price) OVER w AS close_price,
-                            SUM(volume) OVER w AS volume,
-                            AVG((high_price + low_price + close_price)/3) OVER w AS atp
-                        FROM "{table_name}"
-                        WHERE datetime >= NOW() - INTERVAL '24 hours'
-                        WINDOW w AS (
-                            PARTITION BY date_trunc('hour', datetime) + 
-                            INTERVAL '15 min' * (date_part('minute', datetime)::integer / 15)
-                            ORDER BY datetime
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                        )
-                    )
-                    SELECT DISTINCT *
-                    FROM fifteen_min_groups
-                    ORDER BY interval_start DESC
-                """
-            elif timeframe == '30':
-                # For 30-minute timeframe, group the 1-minute data
-                query = f"""
-                    WITH thirty_min_groups AS (
-                        SELECT 
-                            date_trunc('hour', datetime) + 
-                            INTERVAL '30 min' * (date_part('minute', datetime)::integer / 30) AS interval_start,
-                            FIRST_VALUE(open_price) OVER w AS open_price,
-                            MAX(high_price) OVER w AS high_price,
-                            MIN(low_price) OVER w AS low_price,
-                            LAST_VALUE(close_price) OVER w AS close_price,
-                            SUM(volume) OVER w AS volume,
-                            AVG((high_price + low_price + close_price)/3) OVER w AS atp
-                        FROM "{table_name}"
-                        WHERE datetime >= NOW() - INTERVAL '24 hours'
-                        WINDOW w AS (
-                            PARTITION BY date_trunc('hour', datetime) + 
-                            INTERVAL '30 min' * (date_part('minute', datetime)::integer / 30)
-                            ORDER BY datetime
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                        )
-                    )
-                    SELECT DISTINCT *
-                    FROM thirty_min_groups
-                    ORDER BY interval_start DESC
-                """
-            elif timeframe == '60':
-                # For 1-hour timeframe, group the 1-minute data
-                query = f"""
-                    WITH hourly_groups AS (
-                        SELECT 
-                            date_trunc('hour', datetime) AS interval_start,
-                            FIRST_VALUE(open_price) OVER w AS open_price,
-                            MAX(high_price) OVER w AS high_price,
-                            MIN(low_price) OVER w AS low_price,
-                            LAST_VALUE(close_price) OVER w AS close_price,
-                            SUM(volume) OVER w AS volume,
-                            AVG((high_price + low_price + close_price)/3) OVER w AS atp
-                        FROM "{table_name}"
-                        WHERE datetime >= NOW() - INTERVAL '7 days'
-                        WINDOW w AS (
-                            PARTITION BY date_trunc('hour', datetime)
-                            ORDER BY datetime
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                        )
-                    )
-                    SELECT DISTINCT *
-                    FROM hourly_groups
-                    ORDER BY interval_start DESC
-                """
-            elif timeframe == '240':
-                # For 4-hour timeframe, group the 1-minute data
-                query = f"""
-                    WITH four_hour_groups AS (
-                        SELECT 
-                            date_trunc('day', datetime) + 
-                            INTERVAL '4 hour' * (date_part('hour', datetime)::integer / 4) AS interval_start,
-                            FIRST_VALUE(open_price) OVER w AS open_price,
-                            MAX(high_price) OVER w AS high_price,
-                            MIN(low_price) OVER w AS low_price,
-                            LAST_VALUE(close_price) OVER w AS close_price,
-                            SUM(volume) OVER w AS volume,
-                            AVG((high_price + low_price + close_price)/3) OVER w AS atp
-                        FROM "{table_name}"
-                        WHERE datetime >= NOW() - INTERVAL '30 days'
-                        WINDOW w AS (
-                            PARTITION BY date_trunc('day', datetime) + 
-                            INTERVAL '4 hour' * (date_part('hour', datetime)::integer / 4)
-                            ORDER BY datetime
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                        )
-                    )
-                    SELECT DISTINCT *
-                    FROM four_hour_groups
-                    ORDER BY interval_start DESC
-                """
-            elif timeframe == '1440':
-                # For 1-day timeframe (1440 minutes), group the 1-minute data
-                query = f"""
-                    WITH daily_groups AS (
-                        SELECT 
-                            date_trunc('day', datetime) AS interval_start,
-                            FIRST_VALUE(open_price) OVER w AS open_price,
-                            MAX(high_price) OVER w AS high_price,
-                            MIN(low_price) OVER w AS low_price,
-                            LAST_VALUE(close_price) OVER w AS close_price,
-                            SUM(volume) OVER w AS volume,
-                            AVG((high_price + low_price + close_price)/3) OVER w AS atp
-                        FROM "{table_name}"
-                        WHERE datetime >= NOW() - INTERVAL '90 days'
-                        WINDOW w AS (
-                            PARTITION BY date_trunc('day', datetime)
-                            ORDER BY datetime
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                        )
-                    )
-                    SELECT DISTINCT *
-                    FROM daily_groups
-                    ORDER BY interval_start DESC
-                """
-            else:
-                # For 1-minute timeframe, get raw data
-                query = f"""
-                    SELECT 
-                        datetime,
-                        open_price,
-                        high_price,
-                        low_price,
-                        close_price,
-                        volume,
-                        (high_price + low_price + close_price)/3 as atp
-                    FROM "{table_name}"
-                    WHERE datetime >= NOW() - INTERVAL '24 hours'
-                    ORDER BY datetime DESC
-                """
-            
-            cursor.execute(query)
-            data = cursor.fetchall()
-            
-            if not data:
-                return None
-                
-            # Get the latest and previous candle data
-            latest_data = data[0]
-            previous_data = data[1] if len(data) > 1 else None
-            
-            # Calculate ATP (Average Trading Price) for last 3 candles
-            last_3_data = data[:3]
-            last_3_atp = sum([(d[2] + d[3] + d[4])/3 for d in last_3_data])/len(last_3_data) if len(last_3_data) > 0 else None
-            
-            # Calculate current and previous ATP
-            current_atp = (latest_data[2] + latest_data[3] + latest_data[4])/3 if latest_data else None
-            previous_atp = (previous_data[2] + previous_data[3] + previous_data[4])/3 if previous_data else None
-            
-            # Calculate swing points from last 20 candles
-            last_20_candles = data[:20]
-            highs, lows = find_swing_highs_lows([d[4] for d in last_20_candles])
-            
-            swings = {
-                'highs': [h[1] for h in highs[:3]] + [None] * (3 - len(highs[:3])),
-                'lows': [l[1] for l in lows[:3]] + [None] * (3 - len(lows[:3]))
-            }
-            
-            return {
-                'ticker_symbol': ticker_symbol,
-                'current_candle_open': round(latest_data[1], 2) if latest_data[1] is not None else None,
-                'current_candle_high': round(latest_data[2], 2) if latest_data[2] is not None else None,
-                'current_candle_low': round(latest_data[3], 2) if latest_data[3] is not None else None,
-                'current_candle_close': round(latest_data[4], 2) if latest_data[4] is not None else None,
-                'previous_candle_open': round(previous_data[1], 2) if previous_data and previous_data[1] is not None else None,
-                'previous_candle_high': round(previous_data[2], 2) if previous_data and previous_data[2] is not None else None,
-                'previous_candle_low': round(previous_data[3], 2) if previous_data and previous_data[3] is not None else None,
-                'previous_candle_close': round(previous_data[4], 2) if previous_data and previous_data[4] is not None else None,
-                'current_candle_atp': round(current_atp, 2) if current_atp is not None else None,
-                'previous_candle_atp': round(previous_atp, 2) if previous_atp is not None else None,
-                'last_3_candles_atp': round(last_3_atp, 2) if last_3_atp is not None else None,
-                'prev_swing_high_1': round(swings['highs'][0], 2) if swings['highs'][0] is not None else None,
-                'prev_swing_high_2': round(swings['highs'][1], 2) if swings['highs'][1] is not None else None,
-                'prev_swing_high_3': round(swings['highs'][2], 2) if swings['highs'][2] is not None else None,
-                'prev_swing_low_1': round(swings['lows'][0], 2) if swings['lows'][0] is not None else None,
-                'prev_swing_low_2': round(swings['lows'][1], 2) if swings['lows'][1] is not None else None,
-                'prev_swing_low_3': round(swings['lows'][2], 2) if swings['lows'][2] is not None else None,
-                'bias': calculate_bias(latest_data, previous_data, swings)
-            }
-            
-    except Exception as e:
-        logger.error(f"Error fetching historical data for {ticker_symbol}: {str(e)}")
-        return None
 
 def find_swing_highs_lows(prices, percentage_threshold=1.0):
     
