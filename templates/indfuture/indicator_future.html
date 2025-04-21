@@ -166,7 +166,14 @@
                         </div>
                     </th>
                     <th>AO</th>
-                    <th>Keltner Upper</th>
+                    <th>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>Keltner Upper</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#keltnerModal">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
                     <th>Keltner Middle</th>
                     <th>Keltner Lower</th>
                     <th>Pivot</th>
@@ -202,6 +209,9 @@
         <input type="text" id="macdValue" value="0">
         <input type="number" id="supertrendLength" value="14">
         <input type="number" id="supertrendMultiplier" value="3">
+        <input type="number" id="keltnerEmaLength" value="20">
+        <input type="number" id="keltnerAtrLength" value="14">
+        <input type="number" id="keltnerMultiplier" value="2">
     </div>
 
     <!-- Input Modal -->
@@ -256,12 +266,48 @@
             </div>
         </div>
     </div>
+
+    <!-- Keltner Channels Modal -->
+    <div class="modal fade" id="keltnerModal" tabindex="-1" aria-labelledby="keltnerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="keltnerModalLabel">Keltner Channels Settings</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="keltnerEmaLengthInput" class="form-label text-light">EMA Length</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerEmaLengthInput"
+                            placeholder="Enter EMA length value" value="20">
+                    </div>
+                    <div class="mb-3">
+                        <label for="keltnerAtrLengthInput" class="form-label text-light">ATR Length</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerAtrLengthInput"
+                            placeholder="Enter ATR length value" value="14">
+                    </div>
+                    <div class="mb-3">
+                        <label for="keltnerMultiplierInput" class="form-label text-light">Multiplier</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerMultiplierInput"
+                            placeholder="Enter multiplier value" value="2">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveKeltnerInput">Update Keltner Channels</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const dataContainer = document.getElementById('data-container');
         const timeframeSelect = document.getElementById('timeframe');
         const updateButton = document.getElementById('updateIndicators');
         const saveInputButton = document.getElementById('saveInput');
         const saveSupertrendButton = document.getElementById('saveSupertrendInput');
+        const saveKeltnerButton = document.getElementById('saveKeltnerInput');
 
         let eventSource;
         let currentIndicator = 'EMA';
@@ -285,7 +331,7 @@
             });
         }
 
-        function createEventSource(timeframe, ema, sma, hma, macd, supertrendLength, supertrendMultiplier) {
+        function createEventSource(timeframe, ema, sma, hma, macd, supertrendLength, supertrendMultiplier, keltnerEmaLength, keltnerAtrLength, keltnerMultiplier) {
             if (eventSource) {
                 eventSource.close();
             }
@@ -294,7 +340,7 @@
             const tableBody = document.querySelector('#dynamicDataTable tbody');
             tableBody.innerHTML = `<tr><td colspan="27">Loading data...</td></tr>`;
 
-            const newEventSource = new EventSource(`{% url "stream_indicator_data" %}?timeframe=${timeframe}&ema=${ema}&sma=${sma}&hma=${hma}&macd=${macd}&supertrendLength=${supertrendLength}&supertrendMultiplier=${supertrendMultiplier}`);
+            const newEventSource = new EventSource(`{% url "stream_indicator_data" %}?timeframe=${timeframe}&ema=${ema}&sma=${sma}&hma=${hma}&macd=${macd}&supertrendLength=${supertrendLength}&supertrendMultiplier=${supertrendMultiplier}&keltnerEmaLength=${keltnerEmaLength}&keltnerAtrLength=${keltnerAtrLength}&keltnerMultiplier=${keltnerMultiplier}`);
 
             newEventSource.onopen = () => console.log('EventSource connection opened with timeframe:', timeframe);
 
@@ -362,7 +408,22 @@
         const defaultMACD = document.getElementById('macdValue').value || 0;
         const defaultSupertrendLength = document.getElementById('supertrendLength').value || 14;
         const defaultSupertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
-        eventSource = createEventSource(timeframeSelect.value, defaultEMA, defaultSMA, defaultHMA, defaultMACD, defaultSupertrendLength, defaultSupertrendMultiplier);
+        const defaultKeltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
+        const defaultKeltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
+        const defaultKeltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
+        
+        eventSource = createEventSource(
+            timeframeSelect.value, 
+            defaultEMA, 
+            defaultSMA, 
+            defaultHMA, 
+            defaultMACD, 
+            defaultSupertrendLength, 
+            defaultSupertrendMultiplier,
+            defaultKeltnerEmaLength,
+            defaultKeltnerAtrLength,
+            defaultKeltnerMultiplier
+        );
 
         // Update EventSource when indicators change
         updateButton.addEventListener('click', function () {
@@ -372,12 +433,26 @@
             const macd = document.getElementById('macdValue').value || 0;
             const supertrendLength = document.getElementById('supertrendLength').value || 14;
             const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
+            const keltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
+            const keltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
+            const keltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
             const emaValue = ema === 0 ? 10 : ema;  // Default EMA to 10 if 0
 
             console.log('Update Indicators button clicked');
-            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${emaValue}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}`);
+            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${emaValue}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}, Keltner EMA Length=${keltnerEmaLength}, Keltner ATR Length=${keltnerAtrLength}, Keltner Multiplier=${keltnerMultiplier}`);
 
-            eventSource = createEventSource(timeframeSelect.value, emaValue, sma, hma, macd, supertrendLength, supertrendMultiplier);
+            eventSource = createEventSource(
+                timeframeSelect.value, 
+                emaValue, 
+                sma, 
+                hma, 
+                macd, 
+                supertrendLength, 
+                supertrendMultiplier, 
+                keltnerEmaLength, 
+                keltnerAtrLength, 
+                keltnerMultiplier
+            );
         });
 
         // Add event listener for the generic "Update" button in the modal
@@ -395,16 +470,30 @@
             const macd = document.getElementById('macdValue').value || 0;
             const supertrendLength = document.getElementById('supertrendLength').value || 14;
             const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
+            const keltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
+            const keltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
+            const keltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
             
             console.log(`Update ${currentIndicator} button clicked, using value:`, indicatorValue);
-            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${ema}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}`);
+            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${ema}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}, Keltner EMA Length=${keltnerEmaLength}, Keltner ATR Length=${keltnerAtrLength}, Keltner Multiplier=${keltnerMultiplier}`);
             
             // Close the modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('inputModal'));
             modal.hide();
             
             // Create new EventSource with updated values
-            eventSource = createEventSource(timeframeSelect.value, ema, sma, hma, macd, supertrendLength, supertrendMultiplier);
+            eventSource = createEventSource(
+                timeframeSelect.value, 
+                ema, 
+                sma, 
+                hma, 
+                macd, 
+                supertrendLength, 
+                supertrendMultiplier,
+                keltnerEmaLength,
+                keltnerAtrLength,
+                keltnerMultiplier
+            );
         });
 
         // Add event listener for the Supertrend "Update" button
@@ -422,16 +511,72 @@
             const sma = document.getElementById('smaValue').value || 0;
             const hma = document.getElementById('hmaValue').value || 0;
             const macd = document.getElementById('macdValue').value || 0;
+            const keltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
+            const keltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
+            const keltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
             
             console.log('Update Supertrend button clicked, using length:', supertrendLength, 'and multiplier:', supertrendMultiplier);
-            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${ema}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}`);
+            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${ema}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}, Keltner EMA Length=${keltnerEmaLength}, Keltner ATR Length=${keltnerAtrLength}, Keltner Multiplier=${keltnerMultiplier}`);
             
             // Close the modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('supertrendModal'));
             modal.hide();
             
             // Create new EventSource with updated values
-            eventSource = createEventSource(timeframeSelect.value, ema, sma, hma, macd, supertrendLength, supertrendMultiplier);
+            eventSource = createEventSource(
+                timeframeSelect.value, 
+                ema, 
+                sma, 
+                hma, 
+                macd, 
+                supertrendLength, 
+                supertrendMultiplier,
+                keltnerEmaLength,
+                keltnerAtrLength,
+                keltnerMultiplier
+            );
+        });
+
+        // Add event listener for the Keltner Channels "Update" button
+        saveKeltnerButton.addEventListener('click', function() {
+            // Get the Keltner values from the modal inputs
+            const keltnerEmaLength = document.getElementById('keltnerEmaLengthInput').value || 20;
+            const keltnerAtrLength = document.getElementById('keltnerAtrLengthInput').value || 14;
+            const keltnerMultiplier = document.getElementById('keltnerMultiplierInput').value || 2;
+            
+            // Update the corresponding input fields
+            document.getElementById('keltnerEmaLength').value = keltnerEmaLength;
+            document.getElementById('keltnerAtrLength').value = keltnerAtrLength;
+            document.getElementById('keltnerMultiplier').value = keltnerMultiplier;
+            
+            // Get other indicator values
+            const ema = document.getElementById('emaValue').value || 0;
+            const sma = document.getElementById('smaValue').value || 0;
+            const hma = document.getElementById('hmaValue').value || 0;
+            const macd = document.getElementById('macdValue').value || 0;
+            const supertrendLength = document.getElementById('supertrendLength').value || 14;
+            const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
+            
+            console.log('Update Keltner Channels button clicked, using EMA length:', keltnerEmaLength, 'ATR length:', keltnerAtrLength, 'and multiplier:', keltnerMultiplier);
+            console.log(`Connecting with: timeframe=${timeframeSelect.value}, EMA=${ema}, SMA=${sma}, HMA=${hma}, MACD=${macd}, Supertrend Length=${supertrendLength}, Supertrend Multiplier=${supertrendMultiplier}, Keltner EMA Length=${keltnerEmaLength}, Keltner ATR Length=${keltnerAtrLength}, Keltner Multiplier=${keltnerMultiplier}`);
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('keltnerModal'));
+            modal.hide();
+            
+            // Create new EventSource with updated values
+            eventSource = createEventSource(
+                timeframeSelect.value, 
+                ema, 
+                sma, 
+                hma, 
+                macd, 
+                supertrendLength, 
+                supertrendMultiplier,
+                keltnerEmaLength,
+                keltnerAtrLength,
+                keltnerMultiplier
+            );
         });
     </script>
     {% endblock %}

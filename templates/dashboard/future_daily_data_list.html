@@ -1,0 +1,108 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Future Daily Historical Data{% endblock %}
+{% block extra_css %}<style>
+    body {
+      background-color: #212529;
+      color: #e9ecef;
+    }
+    .table {
+      color: #e9ecef;
+    }
+    .modal-content {
+      background-color: #343a40;
+      color: #e9ecef;
+    }
+    .form-control, .form-select, .input-group-text {
+      background-color: #343a40;
+      border-color: #495057;
+      color: #e9ecef;
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: #3b4148;
+      color: #e9ecef;
+    }
+    .badge.bg-light {
+      background-color: #343a40 !important;
+      color: #e9ecef !important;
+    }
+    .btn-light {
+      background-color: #343a40;
+      border-color: #495057;
+      color: #e9ecef;
+    }
+    .btn-outline-primary {
+      color: #8bb9fe;
+      border-color: #0d6efd;
+    }
+    .table-striped > tbody > tr:nth-of-type(odd) > * {
+      color: #e9ecef;
+    }
+    /* Fix for navbar dropdowns appearing behind other elements */
+    .navbar-nav .dropdown-menu {
+        z-index: 1030 !important; /* Higher than default Bootstrap z-index */
+    }
+    
+    /* Ensure the navbar itself has proper z-index */
+    .navbar {
+        z-index: 1020 !important;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Future Daily Historical Data</h1>
+    
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Select a Ticker</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="tickersTable">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Name</th>
+                            <th>Sector</th>
+                            <th>Market Cap</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticker in tickers %}
+                        <tr>
+                            <td>{{ ticker.ticker_symbol }}</td>
+                            <td>{{ ticker.ticker_name }}</td>
+                            <td>{{ ticker.get_ticker_sector_display }}</td>
+                            <td>{{ ticker.get_ticker_market_cap_display }}</td>
+                            <td>
+                                <a href="{% url 'future_daily_data_detail' ticker.ticker_symbol %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-line"></i> View Data
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No tickers available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#tickersTable').DataTable({
+            "order": [[0, "asc"]],
+            "pageLength": 25
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %} 

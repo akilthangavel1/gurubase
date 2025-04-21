@@ -34,11 +34,11 @@ def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10, macd
     df = df.sort_values(by='datetime', ascending=True)
 
 
-    df['ema'] = ta.ema(df['close'], length=10)
+    df['ema'] = ta.ema(df['close'], length=ema_length)
 
     # Calculate SMA
     df['sma'] = ta.sma(df['close'], length=sma_length)
-
+    
     # Calculate HMA
     df['hma'] = ta.hma(df['close'], length=hma_length)
 

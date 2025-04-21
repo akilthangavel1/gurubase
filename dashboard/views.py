@@ -359,6 +359,10 @@ def clear_ticker_data(request):
                 future_table_name = f"{ticker_symbol}_future_historical_data"
                 cursor.execute(f"TRUNCATE TABLE {future_table_name}")
                 
+                # Clear future daily historical data
+                future_daily_table_name = f"{ticker_symbol}_future_daily_historical_data"
+                cursor.execute(f"TRUNCATE TABLE {future_daily_table_name}")
+                
             messages.success(request, f'Successfully cleared data for {ticker_symbol}')
         except Exception as e:
             messages.error(request, f'Error clearing data: {str(e)}')
@@ -382,17 +386,23 @@ def data_management(request):
                 
             # Get future historical data count
             try:
-                print(ticker.ticker_symbol + "_future_historical_data")
                 cursor.execute(f"SELECT COUNT(*) FROM {ticker.ticker_symbol}_future_historical_data")
                 future_count = cursor.fetchone()[0]
-                print(future_count)
             except:
                 future_count = 0
+                
+            # Get future daily historical data count
+            try:
+                cursor.execute(f"SELECT COUNT(*) FROM {ticker.ticker_symbol}_future_daily_historical_data")
+                future_daily_count = cursor.fetchone()[0]
+            except:
+                future_daily_count = 0
                 
             ticker_data.append({
                 'ticker_symbol': ticker.ticker_symbol,
                 'historical_count': historical_count,
-                'future_count': future_count
+                'future_count': future_count,
+                'future_daily_count': future_daily_count
             })
     
     return render(request, 'dashboard/data_management.html', {
@@ -416,6 +426,10 @@ def clear_all_data(request):
                         # Clear future historical data
                         future_table_name = f"{ticker.ticker_symbol}_future_historical_data"
                         cursor.execute(f"TRUNCATE TABLE {future_table_name}")
+                        
+                        # Clear future daily historical data
+                        future_daily_table_name = f"{ticker.ticker_symbol}_future_daily_historical_data"
+                        cursor.execute(f"TRUNCATE TABLE {future_daily_table_name}")
                         
                     except Exception as e:
                         # Log the error but continue with other tickers
@@ -758,3 +772,55 @@ def sse_future_dynamic_data(request):
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
+
+def future_daily_data(request):
+    """Display list of all tickers for future daily data selection"""
+    tickers = TickerBase.objects.all().order_by('ticker_sector', 'ticker_name')
+    return render(request, 'dashboard/future_daily_data_list.html', {'tickers': tickers})
+
+def future_daily_data_detail(request, ticker_symbol):
+    """Display future daily historical data for a specific ticker"""
+    ticker = get_object_or_404(TickerBase, ticker_symbol=ticker_symbol)
+    
+    try:
+        table_name = f"{ticker_symbol}_future_daily_historical_data"
+        
+        with connection.cursor() as cursor:
+            # Check if table exists
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 
+                    FROM information_schema.tables 
+                    WHERE table_name = %s
+                )
+            """, [table_name.lower()])
+            
+            if not cursor.fetchone()[0]:
+                return render(request, 'dashboard/future_daily_data_detail.html', {
+                    'ticker': ticker,
+                    'error': "No future daily historical data available for this ticker"
+                })
+            
+            # Fetch data
+            query = """
+                SELECT datetime, open_price, high_price, low_price, 
+                       close_price, volume 
+                FROM "{}"
+                ORDER BY datetime DESC
+                LIMIT 100
+            """.format(table_name)
+            
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+            return render(request, 'dashboard/future_daily_data_detail.html', {
+                'ticker': ticker,
+                'data': data
+            })
+            
+    except Exception as e:
+        return render(request, 'dashboard/future_daily_data_detail.html', {
+            'ticker': ticker,
+            'error': f"An error occurred: {str(e)}"
+        })

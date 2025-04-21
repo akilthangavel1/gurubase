@@ -73,11 +73,12 @@ class TickerBase(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Override save to validate ticker_symbol and create four associated tables:
+        Override save to validate ticker_symbol and create five associated tables:
         1. `<ticker_symbol>_historical_data` - Historical OHLC data table
         2. `<ticker_symbol>_websocket_data` - Real-time WebSocket data table
         3. `<ticker_symbol>_future_historical_data` - Futures historical OHLC data table
         4. `<ticker_symbol>_future_websocket_data` - Futures real-time WebSocket data table
+        5. `<ticker_symbol>_future_daily_historical_data` - Futures daily historical OHLC data table
         """
         # Validate ticker_symbol
         if not re.match(r'^[a-zA-Z0-9_]+$', self.ticker_symbol):
@@ -94,6 +95,7 @@ class TickerBase(models.Model):
         wc_table = f"{self.ticker_symbol}_websocket_data"
         future_table = f"{self.ticker_symbol}_future_historical_data"
         future_wc_table = f"{self.ticker_symbol}_future_websocket_data"
+        future_daily_table = f"{self.ticker_symbol}_future_daily_historical_data"
 
         # SQL queries to create the tables
         create_base_table_query = f"""
@@ -132,6 +134,17 @@ class TickerBase(models.Model):
             ltp FLOAT NOT NULL
         )
         """
+        create_future_daily_table_query = f"""
+        CREATE TABLE IF NOT EXISTS "{future_daily_table}" (
+            id SERIAL PRIMARY KEY,
+            datetime TIMESTAMPTZ NOT NULL,
+            open_price FLOAT NOT NULL,
+            high_price FLOAT NOT NULL,
+            low_price FLOAT NOT NULL,
+            close_price FLOAT NOT NULL,
+            volume BIGINT
+        )
+        """
 
         # Execute the queries to create tables
         try:
@@ -140,6 +153,7 @@ class TickerBase(models.Model):
                 cursor.execute(create_wc_table_query)
                 cursor.execute(create_future_table_query)
                 cursor.execute(create_future_wc_table_query)
+                cursor.execute(create_future_daily_table_query)
         except Exception as e:
             raise ValidationError(f"Error creating tables for {self.ticker_symbol}: {str(e)}")
 

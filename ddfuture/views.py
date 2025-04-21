@@ -58,12 +58,35 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                 LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
             """
         elif timeframe == '10':
-            # For 10-minute timeframe
+            # For 10-minute timeframe, aligned to market hours starting at 9:15
             query = f"""
-                WITH ten_min_groups AS (
+                WITH market_aligned_10min AS (
                     SELECT 
-                        date_trunc('hour', datetime) + 
-                        INTERVAL '10 min' * (date_part('minute', datetime)::integer / 10) AS interval_start,
+                        -- Special handling for the last 5-minute candle (3:25-3:30)
+                        CASE
+                            -- If time is between 3:25 PM and 3:30 PM, create a special interval
+                            WHEN (EXTRACT(HOUR FROM datetime) = 15 AND EXTRACT(MINUTE FROM datetime) >= 25) 
+                                THEN date_trunc('day', datetime) + INTERVAL '15 hours 25 minutes'
+                            -- Otherwise use the standard 10-minute intervals from 9:15
+                            ELSE
+                                CASE
+                                    -- Calculate the reference time (9:15 AM on the same day)
+                                    WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                        THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                    ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                END +
+                                -- Calculate how many 10-minute intervals have passed since 9:15
+                                INTERVAL '10 minutes' * 
+                                FLOOR(
+                                    EXTRACT(EPOCH FROM (datetime - 
+                                        CASE
+                                            WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                                THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                            ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                        END
+                                    )) / 600  -- 600 seconds = 10 minutes
+                                )
+                        END AS interval_start,
                         FIRST_VALUE(open_price) OVER w AS open_price,
                         MAX(high_price) OVER w AS high_price,
                         MIN(low_price) OVER w AS low_price,
@@ -71,15 +94,38 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                         SUM(volume) OVER w AS volume
                     FROM "{table_name}"
                     WINDOW w AS (
-                        PARTITION BY date_trunc('hour', datetime) + 
-                        INTERVAL '10 min' * (date_part('minute', datetime)::integer / 10)
+                        PARTITION BY 
+                        CASE
+                            -- If time is between 3:25 PM and 3:30 PM, create a special interval
+                            WHEN (EXTRACT(HOUR FROM datetime) = 15 AND EXTRACT(MINUTE FROM datetime) >= 25) 
+                                THEN date_trunc('day', datetime) + INTERVAL '15 hours 25 minutes'
+                            -- Otherwise use the standard 10-minute intervals from 9:15
+                            ELSE
+                                CASE
+                                    -- Calculate the reference time (9:15 AM on the same day)
+                                    WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                        THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                    ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                END +
+                                -- Calculate how many 10-minute intervals have passed since 9:15
+                                INTERVAL '10 minutes' * 
+                                FLOOR(
+                                    EXTRACT(EPOCH FROM (datetime - 
+                                        CASE
+                                            WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                                THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                            ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                        END
+                                    )) / 600
+                                )
+                        END
                         ORDER BY datetime
                         ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                     )
                 )
                 SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
                        close_price, volume
-                FROM ten_min_groups
+                FROM market_aligned_10min
                 ORDER BY interval_start DESC
                 LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
             """
@@ -301,16 +347,20 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                 LIMIT 3 -- Fetch the last 3 records for calculating ATP and swings
             """
         elif timeframe == '120':
-            # For 2-hour timeframe
+            # For 2-hour timeframe using a reference table of time slots with timezone adjustment
+            # The data is in UTC (hours 3-4) but we want to interpret it as IST market hours (9:15-15:30)
             query = f"""
                 WITH hour_slots AS (
                     -- Generate time slots for a trading day (UTC times)
-                    -- We need 3 slots for 2-hour candles: 9:15-11:15, 11:15-13:15, 13:15-15:30
+                    -- We need 4 slots for 2-hour candles: 9:15-11:15, 11:15-13:15, 13:15-15:15, 15:15-15:30
                     -- UTC+5:30 -> UTC conversion: 9:15 IST = 3:45 UTC, 15:30 IST = 10:00 UTC
-                    VALUES
-                        (0, '03:45'::time, '09:15'::time),  -- 9:15-11:15 IST = 3:45-5:45 UTC
-                        (1, '05:45'::time, '11:15'::time),  -- 11:15-13:15 IST = 5:45-7:45 UTC
-                        (2, '07:45'::time, '13:15'::time)   -- 13:15-15:30 IST = 7:45-10:00 UTC
+                    SELECT 0 as slot_id, '03:45'::time as slot_time, '09:15'::time as display_time  -- 9:15-11:15 IST = 3:45-5:45 UTC
+                    UNION ALL
+                    SELECT 1 as slot_id, '05:45'::time as slot_time, '11:15'::time as display_time  -- 11:15-13:15 IST = 5:45-7:45 UTC
+                    UNION ALL
+                    SELECT 2 as slot_id, '07:45'::time as slot_time, '13:15'::time as display_time  -- 13:15-15:15 IST = 7:45-9:45 UTC
+                    UNION ALL
+                    SELECT 3 as slot_id, '09:45'::time as slot_time, '15:15'::time as display_time  -- 15:15-15:30 IST = 9:45-10:00 UTC
                 ),
                 trading_days AS (
                     -- Get distinct days from the data
@@ -327,9 +377,9 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                     -- Cross join to create all possible 2-hour slots for all trading days
                     SELECT 
                         td.day_date,
-                        td.day_date + hs.column2 as interval_start,
-                        td.day_date + hs.column3 as display_time,
-                        hs.column1 as slot_id
+                        td.day_date + hs.slot_time as interval_start,
+                        td.day_date + hs.display_time as display_time,
+                        hs.slot_id
                     FROM trading_days td
                     CROSS JOIN hour_slots hs
                 ),
@@ -359,17 +409,22 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                              data.datetime >= as_slot.interval_start AND 
                              data.datetime < as_slot.day_date + INTERVAL '7 hours 45 minutes')
                             OR
-                            -- Third 2-hour candle including last period (13:15-15:30 IST)
+                            -- Third 2-hour candle (13:15-15:15 IST)
                             (as_slot.slot_id = 2 AND
+                             data.datetime >= as_slot.interval_start AND
+                             data.datetime < as_slot.day_date + INTERVAL '9 hours 45 minutes')
+                            OR
+                            -- Special final 15-min candle (15:15-15:30 IST)
+                            (as_slot.slot_id = 3 AND
                              data.datetime >= as_slot.interval_start AND
                              data.datetime <= as_slot.day_date + INTERVAL '10 hours')
                         )
                     WHERE
                         -- Only include data from trading hours (UTC times)
-                        (EXTRACT(HOUR FROM data.datetime) >= 3 AND 
-                         NOT (EXTRACT(HOUR FROM data.datetime) = 3 AND EXTRACT(MINUTE FROM data.datetime) < 45)) AND
-                        (EXTRACT(HOUR FROM data.datetime) < 10 OR 
-                         (EXTRACT(HOUR FROM data.datetime) = 10 AND EXTRACT(MINUTE FROM data.datetime) <= 0))
+                        (EXTRACT(HOUR FROM datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM datetime) = 3 AND EXTRACT(MINUTE FROM datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM datetime) = 10 AND EXTRACT(MINUTE FROM datetime) <= 0))
                 ),
                 aggregated_candles AS (
                     -- Aggregate the data within each 2-hour slot
