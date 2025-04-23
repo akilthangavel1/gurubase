@@ -100,7 +100,7 @@ class Command(BaseCommand):
                 # print(type(from_date))
                 to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
                 from_date = "15/03/2025"
-                to_date = "21/04/2025"
+                to_date = "23/04/2025"
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 resolution = "1"
                 client_id = "MMKQTWNJH3-100"
