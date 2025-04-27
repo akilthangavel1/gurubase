@@ -33,6 +33,14 @@ def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10, macd
     # Sort the DataFrame by 'datetime' in ascending order
     df = df.sort_values(by='datetime', ascending=True)
 
+    # Find the highest indicator length to determine minimum required data points
+    max_length = max(ema_length, sma_length, hma_length, macd_slow, supertrend_length, 20)  # 20 is for Keltner Channels
+    required_rows = max_length * 2  # Double the highest value for better accuracy
+    
+    # If we have more rows than required, slice the dataframe to keep only the needed rows
+    if len(df) > required_rows:
+        df = df.iloc[-required_rows:]
+        # print(f"Sliced dataframe to last {required_rows} rows based on highest indicator length: {max_length}")
 
     df['ema'] = ta.ema(df['close'], length=ema_length)
 
@@ -233,7 +241,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM thirty_min_groups
                 ORDER BY interval_start DESC
-                LIMIT 700
+                LIMIT 500
             """
         elif timeframe == '60':
             query = f"""
@@ -256,6 +264,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM hourly_groups
                 ORDER BY interval_start DESC
+                LIMIT 500
             """
         elif timeframe == '240':
             query = f"""
@@ -280,6 +289,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM four_hour_groups
                 ORDER BY interval_start DESC
+                LIMIT 500
             """
         elif timeframe == '1440':
             query = f"""
@@ -302,7 +312,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM daily_groups
                 ORDER BY interval_start DESC
-                
+                LIMIT 500
             """
         else:
             query = f"""
