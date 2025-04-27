@@ -183,6 +183,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM five_min_groups
                 ORDER BY interval_start DESC
+                LIMIT 500
             """
         elif timeframe == '15':
             query = f"""
@@ -207,6 +208,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM fifteen_min_groups
                 ORDER BY interval_start DESC
+                LIMIT 500
             """
         elif timeframe == '30':
             query = f"""
@@ -231,6 +233,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM thirty_min_groups
                 ORDER BY interval_start DESC
+                LIMIT 700
             """
         elif timeframe == '60':
             query = f"""
@@ -299,6 +302,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM daily_groups
                 ORDER BY interval_start DESC
+                
             """
         else:
             query = f"""
@@ -306,6 +310,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                        close_price, volume
                 FROM "{table_name}"
                 ORDER BY datetime DESC
+                LIMIT 500
             """
         
         cursor.execute(query)

@@ -585,70 +585,185 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
         cursor.execute(query)
         columns = [col[0] for col in cursor.description]
         data = cursor.fetchall()
-        if data:
-            # Process data to calculate required fields
-            latest_data = data[0]
-            previous_data = data[1] if len(data) > 1 else None
-            last_3_data = data[:3]
-
-            # Calculate ATP and swings
-            current_atp = calculate_atp(latest_data)
-            previous_atp = calculate_atp(previous_data) if previous_data else None
-            last_3_atp = calculate_last_3_atp(last_3_data)
-
-            # Calculate swings
-            swings = calculate_swings(last_3_data)
+        ohlcv_data = pd.DataFrame(data, columns=columns)
+        # print(ohlcv_data)
+    
+        if not ohlcv_data.empty:
+            # Get latest candle data from DataFrame
+            latest_data = ohlcv_data.iloc[0]
+            previous_data = ohlcv_data.iloc[1] if len(ohlcv_data) > 1 else None
+            last_3_data = ohlcv_data.iloc[:3]
+            
+            # Calculate ATP using DataFrame
+            current_atp = calculate_atp_from_df(latest_data)
+            previous_atp = calculate_atp_from_df(previous_data) if previous_data is not None else None
+            last_3_atp = calculate_last_3_atp_from_df(last_3_data)
+            
+            # Log data for debugging instead of printing to console
+            logger.debug(f"OHLCV data for {ticker_symbol}: {ohlcv_data.head().to_dict()}")
+            
+            # Calculate swings using DataFrame
+            swings = calculate_swings_from_df(last_3_data)
 
             return {
                 'ticker_symbol': ticker_symbol,
-                'current_candle_open': round(latest_data[1], 2) if latest_data[1] is not None else None,
-                'current_candle_high': round(latest_data[2], 2) if latest_data[2] is not None else None,
-                'current_candle_low': round(latest_data[3], 2) if latest_data[3] is not None else None,
-                'current_candle_close': round(latest_data[4], 2) if latest_data[4] is not None else None,
-                'previous_candle_open': round(previous_data[1], 2) if previous_data and previous_data[1] is not None else None,
-                'previous_candle_high': round(previous_data[2], 2) if previous_data and previous_data[2] is not None else None,
-                'previous_candle_low': round(previous_data[3], 2) if previous_data and previous_data[3] is not None else None,
-                'previous_candle_close': round(previous_data[4], 2) if previous_data and previous_data[4] is not None else None,
+                'current_candle_open': round(float(latest_data['open_price']), 2) if pd.notna(latest_data['open_price']) else None,
+                'current_candle_high': round(float(latest_data['high_price']), 2) if pd.notna(latest_data['high_price']) else None,
+                'current_candle_low': round(float(latest_data['low_price']), 2) if pd.notna(latest_data['low_price']) else None,
+                'current_candle_close': round(float(latest_data['close_price']), 2) if pd.notna(latest_data['close_price']) else None,
+                'previous_candle_open': round(float(previous_data['open_price']), 2) if previous_data is not None and pd.notna(previous_data['open_price']) else None,
+                'previous_candle_high': round(float(previous_data['high_price']), 2) if previous_data is not None and pd.notna(previous_data['high_price']) else None,
+                'previous_candle_low': round(float(previous_data['low_price']), 2) if previous_data is not None and pd.notna(previous_data['low_price']) else None,
+                'previous_candle_close': round(float(previous_data['close_price']), 2) if previous_data is not None and pd.notna(previous_data['close_price']) else None,
                 'current_candle_atp': round(current_atp, 2) if current_atp is not None else None,
                 'previous_candle_atp': round(previous_atp, 2) if previous_atp is not None else None,
                 'last_3_candles_atp': round(last_3_atp, 2) if last_3_atp is not None else None,
-                'prev_swing_high_1': round(swings['highs'][0], 2) if swings['highs'][0] is not None else None,
-                'prev_swing_high_2': round(swings['highs'][1], 2) if swings['highs'][1] is not None else None,
-                'prev_swing_high_3': round(swings['highs'][2], 2) if swings['highs'][2] is not None else None,
-                'prev_swing_low_1': round(swings['lows'][0], 2) if swings['lows'][0] is not None else None,
-                'prev_swing_low_2': round(swings['lows'][1], 2) if swings['lows'][1] is not None else None,
-                'prev_swing_low_3': round(swings['lows'][2], 2) if swings['lows'][2] is not None else None,
-                'bias': calculate_bias(latest_data, previous_data, swings)
+                'prev_swing_high_1': round(swings['highs'][0], 2) if swings['highs'] and len(swings['highs']) > 0 and swings['highs'][0] is not None else None,
+                'prev_swing_high_2': round(swings['highs'][1], 2) if swings['highs'] and len(swings['highs']) > 1 and swings['highs'][1] is not None else None,
+                'prev_swing_high_3': round(swings['highs'][2], 2) if swings['highs'] and len(swings['highs']) > 2 and swings['highs'][2] is not None else None,
+                'prev_swing_low_1': round(swings['lows'][0], 2) if swings['lows'] and len(swings['lows']) > 0 and swings['lows'][0] is not None else None,
+                'prev_swing_low_2': round(swings['lows'][1], 2) if swings['lows'] and len(swings['lows']) > 1 and swings['lows'][1] is not None else None,
+                'prev_swing_low_3': round(swings['lows'][2], 2) if swings['lows'] and len(swings['lows']) > 2 and swings['lows'][2] is not None else None,
+                'bias': calculate_bias_from_df(latest_data, previous_data, swings)
             }
         return None
 
-def calculate_atp(data):
-    """Calculate Average Traded Price (ATP)"""
-    if not data:
+def calculate_atp_from_df(data):
+    """Calculate Average Traded Price (ATP) from DataFrame row"""
+    if data is None:
         return None
-    return round((data[2] + data[3] + data[4]) / 3, 2)
+    return round((data['high_price'] + data['low_price'] + data['close_price']) / 3, 2)
 
-def calculate_last_3_atp(data):
-    """Calculate ATP for the last 3 candles"""
-    if not data:
+def calculate_last_3_atp_from_df(data):
+    """Calculate ATP for the last 3 candles using DataFrame"""
+    if data is None or len(data) == 0:
         return None
-    return round(sum(calculate_atp(d) for d in data) / len(data), 2)
+    atps = [calculate_atp_from_df(data.iloc[i]) for i in range(len(data))]
+    return round(sum(atps) / len(atps), 2)
 
-def calculate_swings(data):
-    """Calculate swing highs and lows"""
-    highs = sorted([d[2] for d in data], reverse=True)[:3]
-    lows = sorted([d[3] for d in data])[:3]
+def find_last_swing_highs(df, percentage_threshold=1.0, last_n=6):
+    """
+    Find last N swing highs in a DataFrame based on 'high_price'.
+    
+    Args:
+        df (pd.DataFrame): DataFrame with 'datetime' and 'high_price' columns.
+        percentage_threshold (float): Minimum percentage change to qualify as swing high.
+        last_n (int): Number of swing highs to return.
+
+    Returns:
+        pd.DataFrame: DataFrame containing last N swing highs.
+    """
+    if len(df) < 3:
+        return pd.DataFrame()
+    
+    swing_highs = []
+    threshold = percentage_threshold / 100.0
+
+    for i in range(1, len(df) - 1):
+        prev_high = df.iloc[i - 1]['high_price']
+        curr_high = df.iloc[i]['high_price']
+        next_high = df.iloc[i + 1]['high_price']
+
+        if (curr_high > prev_high and curr_high > next_high):
+            if prev_high != 0 and next_high != 0:
+                change_from_prev = (curr_high - prev_high) / prev_high
+                change_to_next = (curr_high - next_high) / curr_high
+                if change_from_prev >= threshold and change_to_next >= threshold:
+                    swing_highs.append({
+                        'datetime': df.iloc[i]['datetime'],
+                        'high_price': curr_high,
+                        'index': i
+                    })
+
+    # Create a DataFrame from swing highs
+    swing_highs_df = pd.DataFrame(swing_highs)
+    
+    if swing_highs_df.empty:
+        return swing_highs_df
+
+    # Sort by datetime if needed
+    swing_highs_df = swing_highs_df.sort_values(by='datetime', ascending=False).reset_index(drop=True)
+
+    # Return only last N swings
+    return swing_highs_df.head(last_n)
+
+def find_last_swing_lows(df, percentage_threshold=1.0, last_n=6):
+    """
+    Find last N swing lows in a DataFrame based on 'low_price'.
+    
+    Args:
+        df (pd.DataFrame): DataFrame with 'datetime' and 'low_price' columns.
+        percentage_threshold (float): Minimum percentage change to qualify as swing low.
+        last_n (int): Number of swing lows to return.
+
+    Returns:
+        pd.DataFrame: DataFrame containing last N swing lows.
+    """
+    if len(df) < 3:
+        return pd.DataFrame()
+    
+    swing_lows = []
+    threshold = percentage_threshold / 100.0
+
+    for i in range(1, len(df) - 1):
+        prev_low = df.iloc[i - 1]['low_price']
+        curr_low = df.iloc[i]['low_price']
+        next_low = df.iloc[i + 1]['low_price']
+
+        if (curr_low < prev_low and curr_low < next_low):
+            if prev_low != 0 and curr_low != 0:
+                change_from_prev = (prev_low - curr_low) / prev_low
+                change_to_next = (next_low - curr_low) / curr_low
+                if change_from_prev >= threshold and change_to_next >= threshold:
+                    swing_lows.append({
+                        'datetime': df.iloc[i]['datetime'],
+                        'low_price': curr_low,
+                        'index': i
+                    })
+
+    # Create a DataFrame from swing lows
+    swing_lows_df = pd.DataFrame(swing_lows)
+    
+    if swing_lows_df.empty:
+        return swing_lows_df
+
+    # Sort by datetime if needed
+    swing_lows_df = swing_lows_df.sort_values(by='datetime', ascending=False).reset_index(drop=True)
+
+    # Return only last N swings
+    return swing_lows_df.head(last_n)
+
+def calculate_swings_from_df(data):
+    """Calculate swing highs and lows using the improved swing detection functions"""
+    if data is None or len(data) == 0:
+        return {'highs': [], 'lows': []}
+    
+    # Find swing highs and lows
+    swing_highs_df = find_last_swing_highs(data, percentage_threshold=1.0, last_n=3)
+    swing_lows_df = find_last_swing_lows(data, percentage_threshold=1.0, last_n=3)
+    
+    # Extract the values
+    highs = swing_highs_df['high_price'].tolist() if not swing_highs_df.empty else []
+    lows = swing_lows_df['low_price'].tolist() if not swing_lows_df.empty else []
+    
+    # If we don't have any swing points, fall back to simple max/min approach
+    if not highs:
+        highs = sorted(data['high_price'].tolist(), reverse=True)[:3]
+    if not lows:
+        lows = sorted(data['low_price'].tolist())[:3]
+    
     return {'highs': highs, 'lows': lows}
 
-def calculate_bias(latest_data, previous_data, swings):
-    """Determine market bias"""
-    if not latest_data or not previous_data:
+def calculate_bias_from_df(latest_data, previous_data, swings):
+    if latest_data is None or previous_data is None or not swings['highs'] or not swings['lows']:
         return 'NEUTRAL'
-    current_price = latest_data[4]
-    previous_close = previous_data[4]
-    swing_high1 = swings['highs'][0]
-    swing_low1 = swings['lows'][0]
-
+    current_price = latest_data['close_price']
+    previous_close = previous_data['close_price']
+    swing_high1 = swings['highs'][0] if len(swings['highs']) > 0 else None
+    swing_low1 = swings['lows'][0] if len(swings['lows']) > 0 else None
+    
+    if swing_high1 is None or swing_low1 is None:
+        return 'NEUTRAL'
     if current_price > previous_close and current_price > swing_high1:
         return 'BULLISH'
     elif current_price < previous_close and current_price < swing_low1:
@@ -732,39 +847,43 @@ def find_swing_highs_lows(prices, percentage_threshold=1.0):
     
     return swing_highs, swing_lows
 
-# Example usage with sample data
-if __name__ == "__main__":
-    # Sample price data (e.g., daily closing prices)
-    price_data = [100, 102, 105, 103, 101, 99, 97, 100, 102, 101, 98]
+
     
-    # Set percentage threshold (e.g., 1% change)
-    threshold = 2.0  # 2% change required
-    
-    # Calculate swings
-    highs, lows = find_swing_highs_lows(price_data, threshold)
-    
-    # Print results
-    print("Swing Highs (index, price):")
-    for high in highs:
-        print(f"Index: {high[0]}, Price: {high[1]}")
-    
-    print("\nSwing Lows (index, price):")
-    for low in lows:
-        print(f"Index: {low[0]}, Price: {low[1]}")
-    
-    # Optional: Visualize the data
-    import matplotlib.pyplot as plt
-    
-    plt.plot(price_data, label='Price', marker='o')
-    for high in highs:
-        plt.plot(high[0], high[1], 'ro', label='Swing High' if high == highs[0] else "")
-    for low in lows:
-        plt.plot(low[0], low[1], 'go', label='Swing Low' if low == lows[0] else "")
-    plt.legend()
-    plt.title(f"Swing Highs and Lows ({threshold}% threshold)")
-    plt.xlabel("Time")
-    plt.ylabel("Price")
-    plt.grid(True)
-    plt.show()
+
+
+# Keep the original functions for backward compatibility
+def calculate_atp(data):
+    """Calculate Average Traded Price (ATP)"""
+    if not data:
+        return None
+    return round((data[2] + data[3] + data[4]) / 3, 2)
+
+def calculate_last_3_atp(data):
+    """Calculate ATP for the last 3 candles"""
+    if not data:
+        return None
+    return round(sum(calculate_atp(d) for d in data) / len(data), 2)
+
+def calculate_swings(data):
+    """Calculate swing highs and lows"""
+    highs = sorted([d[2] for d in data], reverse=True)[:3]
+    lows = sorted([d[3] for d in data])[:3]
+    return {'highs': highs, 'lows': lows}
+
+def calculate_bias(latest_data, previous_data, swings):
+    """Determine market bias"""
+    if not latest_data or not previous_data:
+        return 'NEUTRAL'
+    current_price = latest_data[4]
+    previous_close = previous_data[4]
+    swing_high1 = swings['highs'][0]
+    swing_low1 = swings['lows'][0]
+
+    if current_price > previous_close and current_price > swing_high1:
+        return 'BULLISH'
+    elif current_price < previous_close and current_price < swing_low1:
+        return 'BEARISH'
+    else:
+        return 'NEUTRAL'
 
     
