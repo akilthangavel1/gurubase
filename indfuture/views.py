@@ -24,9 +24,9 @@ def future_dynamic_data(request):
     return render(request, 'ddfuture/dynamic_data_future.html')
 
 
-def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10, macd_fast=12, macd_slow=26, macd_signal=9, supertrend_length=14, supertrend_multiplier=3):
+def calculate_indicators(data, daily_data=None, ema_length=10, sma_length=10, hma_length=10, macd_fast=12, macd_slow=26, macd_signal=9, supertrend_length=14, supertrend_multiplier=3, keltner_ema_length=20, keltner_atr_length=14, keltner_multiplier=2):
    
-    # print(f"Calculating indicators with parameters - EMA: {ema_length}, SMA: {sma_length}, HMA: {hma_length}, MACD: {macd_fast},{macd_slow},{macd_signal}")
+    # Convert main data to DataFrame
     df = pd.DataFrame(data, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
     df['datetime'] = pd.to_datetime(df['datetime'])
 
@@ -34,13 +34,12 @@ def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10, macd
     df = df.sort_values(by='datetime', ascending=True)
 
     # Find the highest indicator length to determine minimum required data points
-    max_length = max(ema_length, sma_length, hma_length, macd_slow, supertrend_length, 20)  # 20 is for Keltner Channels
+    max_length = max(ema_length, sma_length, hma_length, macd_slow, supertrend_length, keltner_ema_length, keltner_atr_length)
     required_rows = max_length * 2  # Double the highest value for better accuracy
     
     # If we have more rows than required, slice the dataframe to keep only the needed rows
     if len(df) > required_rows:
         df = df.iloc[-required_rows:]
-        # print(f"Sliced dataframe to last {required_rows} rows based on highest indicator length: {max_length}")
 
     df['ema'] = ta.ema(df['close'], length=ema_length)
 
@@ -63,36 +62,99 @@ def calculate_indicators(data, ema_length=10, sma_length=10, hma_length=10, macd
     # Calculate Awesome Oscillator
     df['ao'] = ta.ao(df['high'], df['low'])
 
-    # Calculate Keltner Channels
-    keltner = ta.kc(df['high'], df['low'], df['close'], length=20, scalar=2.0)
-    df['keltner_upper'] = keltner['KCUe_20_2.0']
-    df['keltner_middle'] = keltner['KCBe_20_2.0']
-    df['keltner_lower'] = keltner['KCLe_20_2.0']
-    # Calculate Classic Pivot Points manually
-    df['pivot'] = (df['high'] + df['low'] + df['close']) / 3
+    # Calculate Keltner Channels with user-specified parameters
+    keltner = ta.kc(df['high'], df['low'], df['close'], length=keltner_ema_length, scalar=keltner_multiplier, mamode='ema', atr_length=keltner_atr_length)
+    kc_upper_key = f'KCUe_{keltner_ema_length}_{keltner_multiplier}'
+    kc_middle_key = f'KCBe_{keltner_ema_length}_{keltner_multiplier}'
+    kc_lower_key = f'KCLe_{keltner_ema_length}_{keltner_multiplier}'
+    
+    if kc_upper_key in keltner.columns:    
+        df['keltner_upper'] = keltner[kc_upper_key]
+    else:
+        logger.warning(f"Keltner column {kc_upper_key} not found. Using default fallback.")
+        df['keltner_upper'] = keltner[keltner.columns[0]]  # Fallback to first column
+        
+    if kc_middle_key in keltner.columns:
+        df['keltner_middle'] = keltner[kc_middle_key]
+    else:
+        logger.warning(f"Keltner column {kc_middle_key} not found. Using default fallback.")
+        df['keltner_middle'] = keltner[keltner.columns[1]]  # Fallback to second column
+        
+    if kc_lower_key in keltner.columns:
+        df['keltner_lower'] = keltner[kc_lower_key]
+    else:
+        logger.warning(f"Keltner column {kc_lower_key} not found. Using default fallback.")
+        df['keltner_lower'] = keltner[keltner.columns[2]]  # Fallback to third column
 
-    df['r1'] = 2 * df['pivot'] - df['low']
-    df['s1'] = 2 * df['pivot'] - df['high']
-    df['r2'] = df['pivot'] + (df['high'] - df['low'])
-    df['s2'] = df['pivot'] - (df['high'] - df['low'])
-    df['r3'] = df['high'] + 2 * (df['pivot'] - df['low'])
-    df['s3'] = df['low'] - 2 * (df['high'] - df['pivot'])
+    # Calculate pivot points from daily data if provided
+    if daily_data and len(daily_data) > 0:
+        # Convert daily data to DataFrame
+        daily_df = pd.DataFrame(daily_data, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
+        daily_df['datetime'] = pd.to_datetime(daily_df['datetime'])
+        
+        # Sort the DataFrame by 'datetime' in ascending order
+        daily_df = daily_df.sort_values(by='datetime', ascending=True)
+        
+        # Use the latest daily candle for pivot calculations
+        latest_daily = daily_df.iloc[-1]
+        
+        # Calculate Classic Pivot Points from daily data
+        pivot = (latest_daily['high'] + latest_daily['low'] + latest_daily['close']) / 3
+        r1 = 2 * pivot - latest_daily['low']
+        s1 = 2 * pivot - latest_daily['high']
+        r2 = pivot + (latest_daily['high'] - latest_daily['low'])
+        s2 = pivot - (latest_daily['high'] - latest_daily['low'])
+        r3 = latest_daily['high'] + 2 * (pivot - latest_daily['low'])
+        s3 = latest_daily['low'] - 2 * (latest_daily['high'] - pivot)
+        
+        # Calculate Camarilla Pivot Points from daily data
+        camarilla_r1 = latest_daily['close'] + (latest_daily['high'] - latest_daily['low']) * 1.1 / 12
+        camarilla_r2 = latest_daily['close'] + (latest_daily['high'] - latest_daily['low']) * 1.1 / 6
+        camarilla_r3 = latest_daily['close'] + (latest_daily['high'] - latest_daily['low']) * 1.1 / 4
+        camarilla_r4 = latest_daily['close'] + (latest_daily['high'] - latest_daily['low']) * 1.1 / 2
+        camarilla_s1 = latest_daily['close'] - (latest_daily['high'] - latest_daily['low']) * 1.1 / 12
+        camarilla_s2 = latest_daily['close'] - (latest_daily['high'] - latest_daily['low']) * 1.1 / 6
+        camarilla_s3 = latest_daily['close'] - (latest_daily['high'] - latest_daily['low']) * 1.1 / 4
+        camarilla_s4 = latest_daily['close'] - (latest_daily['high'] - latest_daily['low']) * 1.1 / 2
+        
+        # Add these values to all rows in the main DataFrame
+        df['pivot'] = pivot
+        df['r1'] = r1
+        df['s1'] = s1
+        df['r2'] = r2
+        df['s2'] = s2
+        df['r3'] = r3
+        df['s3'] = s3
+        df['camarilla_r1'] = camarilla_r1
+        df['camarilla_r2'] = camarilla_r2
+        df['camarilla_r3'] = camarilla_r3
+        df['camarilla_r4'] = camarilla_r4
+        df['camarilla_s1'] = camarilla_s1
+        df['camarilla_s2'] = camarilla_s2
+        df['camarilla_s3'] = camarilla_s3
+        df['camarilla_s4'] = camarilla_s4
+    else:
+        # If no daily data provided, calculate from the input data as fallback
+        logger.warning("No daily data provided for pivot calculations. Using current timeframe data as fallback.")
+        
+        # Calculate Classic Pivot Points from current timeframe
+        df['pivot'] = (df['high'] + df['low'] + df['close']) / 3
+        df['r1'] = 2 * df['pivot'] - df['low']
+        df['s1'] = 2 * df['pivot'] - df['high']
+        df['r2'] = df['pivot'] + (df['high'] - df['low'])
+        df['s2'] = df['pivot'] - (df['high'] - df['low'])
+        df['r3'] = df['high'] + 2 * (df['pivot'] - df['low'])
+        df['s3'] = df['low'] - 2 * (df['high'] - df['pivot'])
 
-    # Calculate Camarilla Pivot Points
-    df['camarilla_r1'] = df['close'] + (df['high'] - df['low']) * 1.1 / 12
-    df['camarilla_r2'] = df['close'] + (df['high'] - df['low']) * 1.1 / 6
-    df['camarilla_r3'] = df['close'] + (df['high'] - df['low']) * 1.1 / 4
-    df['camarilla_r4'] = df['close'] + (df['high'] - df['low']) * 1.1 / 2
-    df['camarilla_s1'] = df['close'] - (df['high'] - df['low']) * 1.1 / 12
-    df['camarilla_s2'] = df['close'] - (df['high'] - df['low']) * 1.1 / 6
-    df['camarilla_s3'] = df['close'] - (df['high'] - df['low']) * 1.1 / 4
-    df['camarilla_s4'] = df['close'] - (df['high'] - df['low']) * 1.1 / 2
-
-    # Convert 'datetime' column to datetime type if it's not already
-    # df['datetime'] = pd.to_datetime(df['datetime'])
-
-    # # Sort the DataFrame by 'datetime' in ascending order
-    # df = df.sort_values(by='datetime', ascending=True)
+        # Calculate Camarilla Pivot Points from current timeframe
+        df['camarilla_r1'] = df['close'] + (df['high'] - df['low']) * 1.1 / 12
+        df['camarilla_r2'] = df['close'] + (df['high'] - df['low']) * 1.1 / 6
+        df['camarilla_r3'] = df['close'] + (df['high'] - df['low']) * 1.1 / 4
+        df['camarilla_r4'] = df['close'] + (df['high'] - df['low']) * 1.1 / 2
+        df['camarilla_s1'] = df['close'] - (df['high'] - df['low']) * 1.1 / 12
+        df['camarilla_s2'] = df['close'] - (df['high'] - df['low']) * 1.1 / 6
+        df['camarilla_s3'] = df['close'] - (df['high'] - df['low']) * 1.1 / 4
+        df['camarilla_s4'] = df['close'] - (df['high'] - df['low']) * 1.1 / 2
 
     # Return the latest values
     latest_data = df.iloc[-1]
@@ -138,23 +200,41 @@ def stream_indicator_data(request):
     macd = '12,6,26' if macd == '0' else macd
     supertrend_length = request.GET.get('supertrendLength', '14')
     supertrend_multiplier = request.GET.get('supertrendMultiplier', '3')
-    logger.info(f"Received request with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
+    
+    # Get Keltner Channel parameters
+    keltner_ema_length = request.GET.get('keltnerEmaLength', '20')
+    keltner_atr_length = request.GET.get('keltnerAtrLength', '14')
+    keltner_multiplier = request.GET.get('keltnerMultiplier', '2')
+    
+    logger.info(f"Received request with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, "
+                f"Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}, "
+                f"Keltner EMA Length: {keltner_ema_length}, Keltner ATR Length: {keltner_atr_length}, Keltner Multiplier: {keltner_multiplier}")
 
     # Pass the parameters to the stream generator
     response = StreamingHttpResponse(
-        generate_dynamic_stream(timeframe, ema, sma, hma, macd, supertrend_length, supertrend_multiplier),
+        generate_dynamic_stream(
+            timeframe, ema, sma, hma, macd, 
+            supertrend_length, supertrend_multiplier,
+            keltner_ema_length, keltner_atr_length, keltner_multiplier
+        ),
         content_type='text/event-stream'
     )
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
 
-async def fetch_latest_data(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3'):
+async def fetch_latest_data(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3', keltner_ema_length='20', keltner_atr_length='14', keltner_multiplier='2'):
     """Fetch the latest data for a given ticker symbol."""
     try:
-        logger.info(f"Fetching data for {ticker_symbol} with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
+        logger.info(f"Fetching data for {ticker_symbol} with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, "
+                    f"Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}, "
+                    f"Keltner EMA Length: {keltner_ema_length}, Keltner ATR Length: {keltner_atr_length}, Keltner Multiplier: {keltner_multiplier}")
         # Use sync_to_async to wrap the database operation
-        data = await sync_to_async(_fetch_data_from_db)(ticker_symbol, timeframe, ema, sma, hma, macd, supertrend_length, supertrend_multiplier)
+        data = await sync_to_async(_fetch_data_from_db)(
+            ticker_symbol, timeframe, ema, sma, hma, macd, 
+            supertrend_length, supertrend_multiplier, 
+            keltner_ema_length, keltner_atr_length, keltner_multiplier
+        )
         if data:
             logger.info(f"Fetched data for {ticker_symbol}: {data}")
         else:
@@ -164,7 +244,7 @@ async def fetch_latest_data(ticker_symbol, timeframe='1', ema='10', sma='10', hm
         logger.error(f"Error fetching data for {ticker_symbol}: {str(e)}")
         return None
 
-def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3'):
+def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3', keltner_ema_length='20', keltner_atr_length='14', keltner_multiplier='2'):
     with connection.cursor() as cursor:
         table_name = f"{ticker_symbol}_future_historical_data"
         
@@ -327,19 +407,28 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
         columns = [col[0] for col in cursor.description]
         data = cursor.fetchall()
         if data:
+            # Fetch daily data for pivot points
+            daily_data = _fetch_daily_data_from_db(ticker_symbol)
+            
             # Convert data to DataFrame and calculate indicators
             macd_fast = int(macd.split(',')[0])
             macd_slow = int(macd.split(',')[1])
             macd_signal = int(macd.split(',')[2])
-            indicators = calculate_indicators(data, ema_length=int(ema), sma_length=int(sma), hma_length=int(hma), macd_fast=macd_fast, macd_slow=macd_slow, macd_signal=macd_signal, supertrend_length=int(supertrend_length), supertrend_multiplier=float(supertrend_multiplier))
-            
-            
-            # indicators = calculate_indicators(
-            #     data,
-            #     ema_length=int(ema),
-            #     sma_length=int(sma),
-            #     hma_length=int(hma),
-            # )
+            indicators = calculate_indicators(
+                data, 
+                daily_data,
+                ema_length=int(ema), 
+                sma_length=int(sma), 
+                hma_length=int(hma), 
+                macd_fast=macd_fast, 
+                macd_slow=macd_slow, 
+                macd_signal=macd_signal, 
+                supertrend_length=int(supertrend_length), 
+                supertrend_multiplier=float(supertrend_multiplier), 
+                keltner_ema_length=int(keltner_ema_length), 
+                keltner_atr_length=int(keltner_atr_length), 
+                keltner_multiplier=float(keltner_multiplier)
+            )
 
             return {
                 'ticker_symbol': ticker_symbol,
@@ -371,17 +460,21 @@ def calculate_bias(latest_data, previous_data, swings):
         logger.error("Invalid data format for bias calculation")
         return 'NEUTRAL'
 
-async def generate_dynamic_stream(timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3'):
+async def generate_dynamic_stream(timeframe='1', ema='10', sma='10', hma='10', macd='12,26,9', supertrend_length='14', supertrend_multiplier='3', keltner_ema_length='20', keltner_atr_length='14', keltner_multiplier='2'):
     while True:
         try:
-            logger.info(f"Generating stream with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
+            logger.info(f"Generating stream with parameters - Timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}, Keltner EMA Length: {keltner_ema_length}, Keltner ATR Length: {keltner_atr_length}, Keltner Multiplier: {keltner_multiplier}")
             # Get all tickers
             tickers = await sync_to_async(list)(TickerBase.objects.all())
             formatted_data = []
 
             for ticker in tickers:
                 # Fetch data based on the timeframe and indicators
-                data = await fetch_latest_data(ticker.ticker_symbol, timeframe, ema, sma, hma, macd, supertrend_length, supertrend_multiplier)
+                data = await fetch_latest_data(
+                    ticker.ticker_symbol, timeframe, ema, sma, hma, macd, 
+                    supertrend_length, supertrend_multiplier,
+                    keltner_ema_length, keltner_atr_length, keltner_multiplier
+                )
                 if data:
                     formatted_data.append(data)
 
@@ -391,7 +484,7 @@ async def generate_dynamic_stream(timeframe='1', ema='10', sma='10', hma='10', m
                 yield f"data: {json.dumps({'message': 'No data available'}, cls=DjangoJSONEncoder)}\n\n"
 
             # Log the timeframe and indicators being used
-            logger.debug(f"Streaming data with timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}")
+            logger.debug(f"Streaming data with timeframe: {timeframe}, EMA: {ema}, SMA: {sma}, HMA: {hma}, MACD: {macd}, Supertrend Length: {supertrend_length}, Supertrend Multiplier: {supertrend_multiplier}, Keltner EMA Length: {keltner_ema_length}, Keltner ATR Length: {keltner_atr_length}, Keltner Multiplier: {keltner_multiplier}")
             await asyncio.sleep(1)  # Update every second
 
         except Exception as e:
@@ -421,4 +514,37 @@ def calculate_supertrend(data, period=10, multiplier=3):
                 supertrend.append(min(upper_band, supertrend[-1]))
 
     return "Bullish" if data[-1][4] > supertrend[-1] else "Bearish"
+
+def _fetch_daily_data_from_db(ticker_symbol):
+    """Fetch daily candle data for a ticker symbol specifically for pivot calculations."""
+    with connection.cursor() as cursor:
+        table_name = f"{ticker_symbol}_future_historical_data"
+        
+        # Always fetch daily data regardless of user-selected timeframe
+        query = f"""
+            WITH daily_groups AS (
+                SELECT 
+                    date_trunc('day', datetime) AS interval_start,
+                    FIRST_VALUE(open_price) OVER w AS open_price,
+                    MAX(high_price) OVER w AS high_price,
+                    MIN(low_price) OVER w AS low_price,
+                    LAST_VALUE(close_price) OVER w AS close_price,
+                    SUM(volume) OVER w AS volume
+                FROM "{table_name}"
+                WINDOW w AS (
+                    PARTITION BY date_trunc('day', datetime)
+                    ORDER BY datetime
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                )
+            )
+            SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
+                   close_price, volume
+            FROM daily_groups
+            ORDER BY interval_start DESC
+            LIMIT 30  -- Get the last 30 days for pivot calculations
+        """
+        
+        cursor.execute(query)
+        data = cursor.fetchall()
+        return data
 

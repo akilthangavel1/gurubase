@@ -38,13 +38,13 @@ def data_exists(table_name, datetime_value):
 
 def future_format_symbol(symbol):
     if symbol == "BAJAJAUTO":
-        return "NSE:" + "BAJAJ-AUTO" + "25APRFUT"
+        return "NSE:" + "BAJAJ-AUTO" + "25MAYFUT"
     elif symbol == "MM":
-        return "NSE:" + "M&M" + "25APRFUT"
+        return "NSE:" + "M&M" + "25MAYFUT"
     elif symbol == "MMFIN":
-        return "NSE:" + "M&MFIN" + "25APRFUT"
+        return "NSE:" + "M&MFIN" + "25MAYFUT"
     else:
-        return "NSE:" + symbol + "25APRFUT"
+        return "NSE:" + symbol + "25MAYFUT"
 
 
 def date_to_timestamp(date_str, date_format="%d/%m/%Y"):
@@ -96,11 +96,9 @@ class Command(BaseCommand):
             try:
                 self.stdout.write(self.style.SUCCESS(f"Processing ticker: {ticker.ticker_symbol}"))
                 from_date = (datetime.now() - timedelta(days=6)).strftime("%d/%m/%Y")
-                # print(from_date)
-                # print(type(from_date))
                 to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
-                from_date = "15/03/2025"
-                to_date = "23/04/2025"
+                from_date = "20/04/2025"
+                to_date = "30/04/2025"
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 resolution = "1"
                 client_id = "MMKQTWNJH3-100"

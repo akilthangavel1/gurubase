@@ -295,6 +295,7 @@
                 </div>
                 <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning" id="resetKeltnerDefaults">Reset to Defaults</button>
                     <button type="button" class="btn btn-primary" id="saveKeltnerInput">Update Keltner Channels</button>
                 </div>
             </div>
@@ -308,6 +309,7 @@
         const saveInputButton = document.getElementById('saveInput');
         const saveSupertrendButton = document.getElementById('saveSupertrendInput');
         const saveKeltnerButton = document.getElementById('saveKeltnerInput');
+        const resetKeltnerButton = document.getElementById('resetKeltnerDefaults');
 
         let eventSource;
         let currentIndicator = 'EMA';
@@ -330,6 +332,38 @@
                 document.getElementById('headerInput').value = currentValue;
             });
         }
+        
+        // Handle Keltner Channels modal open
+        const keltnerModal = document.getElementById('keltnerModal');
+        if (keltnerModal) {
+            keltnerModal.addEventListener('show.bs.modal', function(event) {
+                // Pre-fill with current values
+                const currentEmaLength = document.getElementById('keltnerEmaLength').value || '20';
+                const currentAtrLength = document.getElementById('keltnerAtrLength').value || '14';
+                const currentMultiplier = document.getElementById('keltnerMultiplier').value || '2';
+                
+                document.getElementById('keltnerEmaLengthInput').value = currentEmaLength;
+                document.getElementById('keltnerAtrLengthInput').value = currentAtrLength;
+                document.getElementById('keltnerMultiplierInput').value = currentMultiplier;
+                
+                console.log('Opening Keltner modal with values:', currentEmaLength, currentAtrLength, currentMultiplier);
+            });
+        }
+        
+        // Handle Supertrend modal open
+        const supertrendModal = document.getElementById('supertrendModal');
+        if (supertrendModal) {
+            supertrendModal.addEventListener('show.bs.modal', function(event) {
+                // Pre-fill with current values
+                const currentLength = document.getElementById('supertrendLength').value || '14';
+                const currentMultiplier = document.getElementById('supertrendMultiplier').value || '3';
+                
+                document.getElementById('supertrendLengthInput').value = currentLength;
+                document.getElementById('supertrendMultiplierInput').value = currentMultiplier;
+                
+                console.log('Opening Supertrend modal with values:', currentLength, currentMultiplier);
+            });
+        }
 
         function createEventSource(timeframe, ema, sma, hma, macd, supertrendLength, supertrendMultiplier, keltnerEmaLength, keltnerAtrLength, keltnerMultiplier) {
             if (eventSource) {
@@ -340,7 +374,45 @@
             const tableBody = document.querySelector('#dynamicDataTable tbody');
             tableBody.innerHTML = `<tr><td colspan="27">Loading data...</td></tr>`;
 
-            const newEventSource = new EventSource(`{% url "stream_indicator_data" %}?timeframe=${timeframe}&ema=${ema}&sma=${sma}&hma=${hma}&macd=${macd}&supertrendLength=${supertrendLength}&supertrendMultiplier=${supertrendMultiplier}&keltnerEmaLength=${keltnerEmaLength}&keltnerAtrLength=${keltnerAtrLength}&keltnerMultiplier=${keltnerMultiplier}`);
+            // Log all parameters being sent to the server
+            console.log('Creating EventSource with parameters:');
+            console.log('- Timeframe:', timeframe);
+            console.log('- EMA:', ema);
+            console.log('- SMA:', sma);
+            console.log('- HMA:', hma);
+            console.log('- MACD:', macd);
+            console.log('- Supertrend Length:', supertrendLength);
+            console.log('- Supertrend Multiplier:', supertrendMultiplier);
+            console.log('- Keltner EMA Length:', keltnerEmaLength);
+            console.log('- Keltner ATR Length:', keltnerAtrLength);
+            console.log('- Keltner Multiplier:', keltnerMultiplier);
+
+            // Ensure all parameters are valid
+            timeframe = parseInt(timeframe) || 1;
+            ema = parseInt(ema) || 0;
+            sma = parseInt(sma) || 0;
+            hma = parseInt(hma) || 0;
+            macd = macd || '0';  // MACD could be a string config
+            supertrendLength = parseInt(supertrendLength) || 14;
+            supertrendMultiplier = parseInt(supertrendMultiplier) || 3;
+            keltnerEmaLength = parseInt(keltnerEmaLength) || 20;
+            keltnerAtrLength = parseInt(keltnerAtrLength) || 14;
+            keltnerMultiplier = parseInt(keltnerMultiplier) || 2;
+
+            const queryParams = new URLSearchParams({
+                timeframe: timeframe,
+                ema: ema,
+                sma: sma,
+                hma: hma,
+                macd: macd,
+                supertrendLength: supertrendLength,
+                supertrendMultiplier: supertrendMultiplier,
+                keltnerEmaLength: keltnerEmaLength,
+                keltnerAtrLength: keltnerAtrLength,
+                keltnerMultiplier: keltnerMultiplier
+            });
+
+            const newEventSource = new EventSource(`{% url "stream_indicator_data" %}?${queryParams.toString()}`);
 
             newEventSource.onopen = () => console.log('EventSource connection opened with timeframe:', timeframe);
 
@@ -360,6 +432,11 @@
                 if (data.message) {
                     tableBody.innerHTML = `<tr><td colspan="27">${data.message}</td></tr>`;
                 } else {
+                    // Log first data object to help with debugging
+                    if (data.length > 0) {
+                        console.log('First data item received:', data[0]);
+                    }
+                    
                     data.forEach(ticker => {
                         const row = document.createElement('tr');
 
@@ -371,20 +448,26 @@
                         // Add other values
                         const values = [
                             ticker.ema, ticker.sma, ticker.hma, ticker.macd, ticker.signal_line,
-                            ticker.supertrend, ticker.ao, ticker.kc_upper, ticker.kc_middle,
-                            ticker.kc_lower, ticker.pivot, ticker.r1, ticker.s1, ticker.r2,
+                            ticker.supertrend, ticker.ao, ticker.keltner_upper, ticker.keltner_middle,
+                            ticker.keltner_lower, ticker.pivot, ticker.r1, ticker.s1, ticker.r2,
                             ticker.s2, ticker.r3, ticker.s3, ticker.camarilla_r1, ticker.camarilla_r2,
                             ticker.camarilla_r3, ticker.camarilla_r4, ticker.camarilla_s1,
                             ticker.camarilla_s2, ticker.camarilla_s3, ticker.camarilla_s4, ticker.bias
                         ];
 
-                        values.forEach((value) => {
+                        values.forEach((value, index) => {
                             const cell = document.createElement('td');
 
                             // Format numbers
                             if (typeof value === 'number') {
                                 const formattedValue = value.toFixed(2);
                                 cell.textContent = formattedValue;
+                                
+                                // Keltner cells are at index 7, 8, and 9 in the values array
+                                if (index === 7 || index === 8 || index === 9) {
+                                    // Basic highlighting just like other indicators
+                                    cell.style.backgroundColor = '#364252';
+                                }
                             }
                             // Other values
                             else {
@@ -396,6 +479,9 @@
 
                         tableBody.appendChild(row);
                     });
+                    
+                    // Initialize tooltips after data is added to the table
+                    setTimeout(initializeTooltips, 100);
                 }
             };
             return newEventSource;
@@ -411,6 +497,20 @@
         const defaultKeltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
         const defaultKeltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
         const defaultKeltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
+        
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Function to reinitialize tooltips after data updates
+        function initializeTooltips() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
         
         eventSource = createEventSource(
             timeframeSelect.value, 
@@ -448,9 +548,9 @@
                 hma, 
                 macd, 
                 supertrendLength, 
-                supertrendMultiplier, 
-                keltnerEmaLength, 
-                keltnerAtrLength, 
+                supertrendMultiplier,
+                keltnerEmaLength,
+                keltnerAtrLength,
                 keltnerMultiplier
             );
         });
@@ -578,5 +678,17 @@
                 keltnerMultiplier
             );
         });
+
+        // Reset Keltner defaults when button is clicked
+        if (resetKeltnerButton) {
+            resetKeltnerButton.addEventListener('click', function() {
+                // Set default values
+                document.getElementById('keltnerEmaLengthInput').value = 20;
+                document.getElementById('keltnerAtrLengthInput').value = 14;
+                document.getElementById('keltnerMultiplierInput').value = 2;
+                
+                console.log('Keltner values reset to defaults');
+            });
+        }
     </script>
     {% endblock %}

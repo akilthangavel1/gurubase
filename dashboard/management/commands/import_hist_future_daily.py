@@ -38,13 +38,13 @@ def data_exists(table_name, datetime_value):
 
 def future_format_symbol(symbol):
     if symbol == "BAJAJAUTO":
-        return "NSE:" + "BAJAJ-AUTO" + "25APRFUT"
+        return "NSE:" + "BAJAJ-AUTO" + "25MAYFUT"
     elif symbol == "MM":
-        return "NSE:" + "M&M" + "25APRFUT"
+        return "NSE:" + "M&M" + "25MAYFUT"
     elif symbol == "MMFIN":
-        return "NSE:" + "M&MFIN" + "25APRFUT"
+        return "NSE:" + "M&MFIN" + "25MAYFUT"
     else:
-        return "NSE:" + symbol + "25APRFUT"
+        return "NSE:" + symbol + "25MAYFUT"
 
 
 def date_to_timestamp(date_str, date_format="%d/%m/%Y"):
