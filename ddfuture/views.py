@@ -585,12 +585,13 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
         cursor.execute(query)
         columns = [col[0] for col in cursor.description]
         data = cursor.fetchall()
-        ohlcv_data = pd.DataFrame(data, columns=columns)
-        # print(ohlcv_data)
+        ohlcv_data = pd.DataFrame(data, columns=columns) 
+        # print(ohlcv_data.he)
     
         if not ohlcv_data.empty:
             # Get latest candle data from DataFrame
             latest_data = ohlcv_data.iloc[0]
+            print(latest_data)
             previous_data = ohlcv_data.iloc[1] if len(ohlcv_data) > 1 else None
             last_3_data = ohlcv_data.iloc[:3]
             
