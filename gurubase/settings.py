@@ -68,8 +68,7 @@ WSGI_APPLICATION = 'gurubase.wsgi.application'
 
 ASGI_APPLICATION = 'gurubase.asgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+
 
 DATABASES = {
     'default': {
@@ -83,8 +82,7 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -178,13 +176,13 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET')
 
 # Add these settings
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
-SOCIAL_AUTH_REDIRECT_IS_HTTPS = True # Set to False in development
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True # Set to True in production
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
 ]
 
-# Login URLs
+
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_URL = 'logout'

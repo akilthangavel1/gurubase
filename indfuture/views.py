@@ -407,10 +407,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
         columns = [col[0] for col in cursor.description]
         data = cursor.fetchall()
         if data:
-            # Fetch daily data for pivot points
             daily_data = _fetch_daily_data_from_db(ticker_symbol)
-            
-            # Convert data to DataFrame and calculate indicators
             macd_fast = int(macd.split(',')[0])
             macd_slow = int(macd.split(',')[1])
             macd_signal = int(macd.split(',')[2])
@@ -518,7 +515,7 @@ def calculate_supertrend(data, period=10, multiplier=3):
 def _fetch_daily_data_from_db(ticker_symbol):
     """Fetch daily candle data for a ticker symbol specifically for pivot calculations."""
     with connection.cursor() as cursor:
-        table_name = f"{ticker_symbol}_future_historical_data"
+        table_name = f"{ticker_symbol}_future_daily_historical_data"
         
         # Always fetch daily data regardless of user-selected timeframe
         query = f"""

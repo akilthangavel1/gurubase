@@ -67,7 +67,7 @@ def process_ohlc_data(response):
 def fetch_ohlc_data(symbol, resolution, from_date, to_date, client_id, access_token, date_format="%d/%m/%Y"):
     fyers = fyersModel.FyersModel(client_id=client_id, is_async=False, token=access_token, log_path="")
     range_from = date_to_timestamp(from_date, date_format)
-    range_to = date_to_timestamp(to_date, date_format) + 24 * 60 * 60 
+    range_to = date_to_timestamp(to_date, date_format)
     data = {
         "symbol": symbol,
         "resolution": resolution,        
@@ -95,18 +95,17 @@ class Command(BaseCommand):
         for ticker in ticker_details:
             try:
                 self.stdout.write(self.style.SUCCESS(f"Processing ticker: {ticker.ticker_symbol}"))
-                from_date = (datetime.now() - timedelta(days=6)).strftime("%d/%m/%Y")
-                # print(from_date)
-                # print(type(from_date))
-                to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
-                from_date = "20/04/2025"
-                to_date = "30/04/2025"
+                # from_date = (datetime.now() - timedelta(days=6)).strftime("%d/%m/%Y")
+                # to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+                from_date = "27/04/2025"
+                to_date = "06/05/2025"
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 resolution = "D"
                 client_id = "MMKQTWNJH3-100"
                 access_token = get_access_token()
                 print(symbol)
                 ohlc_daily_data = fetch_ohlc_data(symbol, resolution, from_date, to_date, client_id, access_token)
+                print(ohlc_daily_data)
                 processed_daily_ohlc = process_ohlc_data(ohlc_daily_data)
                 time.sleep(1)
                 for _, row in processed_daily_ohlc.iterrows():

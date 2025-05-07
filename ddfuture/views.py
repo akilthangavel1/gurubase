@@ -28,10 +28,23 @@ async def fetch_latest_data(ticker_symbol, timeframe='1'):
 
 def _fetch_data_from_db(ticker_symbol, timeframe='1'):
     """Helper function to fetch data from the database."""
-    with connection.cursor() as cursor:
+    if timeframe == '1440':
+        table_name = f"{ticker_symbol}_future_daily_historical_data"
+    else:
         table_name = f"{ticker_symbol}_future_historical_data"
-        
-        if timeframe == '5':
+    
+    with connection.cursor() as cursor:
+        if timeframe == '1440':
+            # For 1-day timeframe, fetch directly from daily table using IST day boundaries by adding 5.5 hours
+            query = f'''
+                SELECT 
+                    date_trunc('day', datetime) AS date,
+                    open_price, high_price, low_price, close_price, volume
+                FROM "{table_name}"
+                ORDER BY date DESC
+                LIMIT 3
+            '''
+        elif timeframe == '5':
             # For 5-minute timeframe, use the same query from get_historical_data
             query = f"""
                 WITH five_min_groups AS (
@@ -548,30 +561,30 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                 ORDER BY display_interval DESC
                 LIMIT 3 -- Fetch the last 3 records for calculating ATP and swings
             """
-        elif timeframe == '1440':
-            # For 1-day timeframe (24 hours = 1440 minutes)
-            query = f"""
-                WITH daily_groups AS (
-                    SELECT 
-                        date_trunc('day', datetime) AS interval_start,
-                        FIRST_VALUE(open_price) OVER w AS open_price,
-                        MAX(high_price) OVER w AS high_price,
-                        MIN(low_price) OVER w AS low_price,
-                        LAST_VALUE(close_price) OVER w AS close_price,
-                        SUM(volume) OVER w AS volume
-                    FROM "{table_name}"
-                    WINDOW w AS (
-                        PARTITION BY date_trunc('day', datetime)
-                        ORDER BY datetime
-                        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-                    )
-                )
-                SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
-                       close_price, volume
-                FROM daily_groups
-                ORDER BY interval_start DESC
-                LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
-            """
+        # elif timeframe == '1440':
+        #     # For 1-day timeframe (24 hours = 1440 minutes)
+        #     query = f"""
+        #         WITH daily_groups AS (
+        #             SELECT 
+        #                 date_trunc('day', datetime) AS interval_start,
+        #                 FIRST_VALUE(open_price) OVER w AS open_price,
+        #                 MAX(high_price) OVER w AS high_price,
+        #                 MIN(low_price) OVER w AS low_price,
+        #                 LAST_VALUE(close_price) OVER w AS close_price,
+        #                 SUM(volume) OVER w AS volume
+        #             FROM "{table_name}"
+        #             WINDOW w AS (
+        #                 PARTITION BY date_trunc('day', datetime)
+        #                 ORDER BY datetime
+        #                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+        #             )
+        #         )
+        #         SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
+        #                close_price, volume
+        #         FROM daily_groups
+        #         ORDER BY interval_start DESC
+        #         LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
+        #     """
         else:
             # For 1-minute timeframe, use the original query
             query = f"""
@@ -625,7 +638,7 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                 'prev_swing_low_1': round(swings['lows'][0], 2) if swings['lows'] and len(swings['lows']) > 0 and swings['lows'][0] is not None else None,
                 'prev_swing_low_2': round(swings['lows'][1], 2) if swings['lows'] and len(swings['lows']) > 1 and swings['lows'][1] is not None else None,
                 'prev_swing_low_3': round(swings['lows'][2], 2) if swings['lows'] and len(swings['lows']) > 2 and swings['lows'][2] is not None else None,
-                'bias': calculate_bias_from_df(latest_data, previous_data, swings)
+                'bias': calculate_bias_from_df(latest_data, previous_data, swings, previous_bias='NEUTRAL')
             }
         return None
 
@@ -728,10 +741,10 @@ def find_last_swing_lows(df, percentage_threshold=1.0, last_n=6):
     if swing_lows_df.empty:
         return swing_lows_df
 
-    # Sort by datetime if needed
+
     swing_lows_df = swing_lows_df.sort_values(by='datetime', ascending=False).reset_index(drop=True)
 
-    # Return only last N swings
+
     return swing_lows_df.head(last_n)
 
 def calculate_swings_from_df(data):
@@ -740,8 +753,8 @@ def calculate_swings_from_df(data):
         return {'highs': [], 'lows': []}
     
     # Find swing highs and lows
-    swing_highs_df = find_last_swing_highs(data, percentage_threshold=1.0, last_n=3)
-    swing_lows_df = find_last_swing_lows(data, percentage_threshold=1.0, last_n=3)
+    swing_highs_df = find_last_swing_highs(data, percentage_threshold=1.0, last_n=20)
+    swing_lows_df = find_last_swing_lows(data, percentage_threshold=1.0, last_n=20)
     
     # Extract the values
     highs = swing_highs_df['high_price'].tolist() if not swing_highs_df.empty else []
@@ -755,22 +768,21 @@ def calculate_swings_from_df(data):
     
     return {'highs': highs, 'lows': lows}
 
-def calculate_bias_from_df(latest_data, previous_data, swings):
-    if latest_data is None or previous_data is None or not swings['highs'] or not swings['lows']:
+def calculate_bias_from_df(latest_data, previous_data, swings, previous_bias='NEUTRAL'):
+    if latest_data is None or previous_data is None:
         return 'NEUTRAL'
-    current_price = latest_data['close_price']
-    previous_close = previous_data['close_price']
-    swing_high1 = swings['highs'][0] if len(swings['highs']) > 0 else None
-    swing_low1 = swings['lows'][0] if len(swings['lows']) > 0 else None
     
-    if swing_high1 is None or swing_low1 is None:
-        return 'NEUTRAL'
-    if current_price > previous_close and current_price > swing_high1:
+    current_high = latest_data['high_price']
+    current_low = latest_data['low_price']
+    previous_high = previous_data['high_price']
+    previous_low = previous_data['low_price']
+
+    if previous_high < current_high and previous_low < current_low:
         return 'BULLISH'
-    elif current_price < previous_close and current_price < swing_low1:
+    elif previous_high > current_high and previous_low > current_low:
         return 'BEARISH'
     else:
-        return 'NEUTRAL'
+        return previous_bias
 
 async def generate_dynamic_stream(timeframe='1'):
     while True:
@@ -800,8 +812,6 @@ async def generate_dynamic_stream(timeframe='1'):
             await asyncio.sleep(1)
 
 def sse_dynamic_data(request):
-    """SSE endpoint for real-time dynamic data updates with timeframe support"""
-    # Get the timeframe from the query parameters, default to '1' if not provided
     timeframe = request.GET.get('timeframe', '1')
 
     # Pass the timeframe to the stream generator
