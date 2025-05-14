@@ -1,0 +1,307 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Dynamic Data - Futures - GuruBase{% endblock %}
+{% block extra_css %}<style>
+    body {
+        background-color: #212529;
+        color: #e9ecef;
+    }
+
+    .table {
+        color: #e9ecef;
+    }
+
+    .modal-content {
+        background-color: #343a40;
+        color: #e9ecef;
+    }
+
+    .form-control,
+    .form-select,
+    .input-group-text {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #e9ecef;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #3b4148;
+        color: #e9ecef;
+    }
+
+    .badge.bg-light {
+        background-color: #343a40 !important;
+        color: #e9ecef !important;
+    }
+
+    .btn-light {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #e9ecef;
+    }
+
+    .btn-outline-primary {
+        color: #8bb9fe;
+        border-color: #0d6efd;
+    }
+
+    .table-striped>tbody>tr:nth-of-type(odd)>* {
+        color: #e9ecef;
+    }
+    
+    /* Fix for navbar dropdowns appearing behind other elements */
+    .navbar-nav .dropdown-menu {
+        z-index: 1030 !important; /* Higher than default Bootstrap z-index */
+    }
+    
+    /* Ensure the navbar itself has proper z-index */
+    .navbar {
+        z-index: 1020 !important;
+    }
+</style>{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+   
+
+    <!-- Timeframe Selection -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <label class="input-group-text" for="timeframeSelect">Select Timeframe:</label>
+                <select class="form-select" id="timeframe">
+                    <option value="1" selected>1 Minute</option>
+                    <option value="5">5 Minutes</option>
+                    <option value="10">10 Minutes</option>
+                    <option value="15">15 Minutes</option>
+                    <option value="30">30 Minutes</option>
+                    <option value="45">45 Minutes</option>
+                    <option value="60">1 Hour</option>
+                    <option value="120">2 Hours</option>
+                    <option value="240">4 Hours</option>
+                    <option value="1440">1 Day</option>
+                </select>
+                <button class="btn btn-primary" id="updateTimeframe">Apply</button>
+                <button class="btn btn-secondary" type="button">Reset</button>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="btn-group float-end" role="group" aria-label="Table actions">
+                <button type="button" class="btn btn-success">Export CSV</button>
+                <button type="button" class="btn btn-info">Export Excel</button>
+                <button type="button" class="btn btn-warning">Print</button>
+                <button type="button" class="btn btn-dark">Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Filter Options -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="btn-group" role="group" aria-label="Filter options">
+                <button type="button" class="btn btn-outline-primary">Filter</button>
+                <button type="button" class="btn btn-outline-primary">Group By</button>
+                <button type="button" class="btn btn-outline-primary">Sort</button>
+                <button type="button" class="btn btn-outline-primary">Columns</button>
+                <button type="button" class="btn btn-outline-primary">Save View</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Last Updated Information -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="text-muted small">
+                    <span class="badge bg-dark text-light p-2">
+                        <i class="bi bi-clock"></i> Last Updated: <span id="lastUpdatedTime">April 12, 2023
+                            14:35:22</span>
+                    </span>
+                    <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2 text-info" id="refreshTimestamp">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+                <div>
+                    <span class="badge bg-primary" id="recordCount">15 records</span>
+                    <span class="badge bg-secondary ms-1">Filtered: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-dark" id="dynamicDataTable">
+            <thead class="table-dark">
+                <tr>
+                    <th rowspan="2">Ticker</th>
+                    <th colspan="4">Current Candle</th>
+                    <th colspan="4">Previous Candle</th>
+                    <th colspan="3">ATP Values</th>
+                    <th colspan="3">Swing Highs</th>
+                    <th colspan="3">Swing Lows</th>
+                    <th rowspan="2">Bias</th>
+                </tr>
+                <tr>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Close</th>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Close</th>
+                    <th>Current</th>
+                    <th>Previous</th>
+                    <th>Last 3</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                </tr>
+            </thead>
+            <tbody>
+               
+               
+               
+            </tbody>
+        </table>
+    </div>
+    <div id="loading-indicator">
+        Loading data...
+    </div>
+</div>
+
+
+<script>
+
+    const timeframeSelect = document.getElementById('timeframe');
+    const updateButton = document.getElementById('updateTimeframe');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const tableContainer = document.querySelector('table').parentElement;
+    const lastUpdatedTime = document.getElementById('lastUpdatedTime');
+    const recordCount = document.getElementById('recordCount');
+
+    let eventSource;
+
+    // Initially hide the table until data loads
+    tableContainer.style.display = 'none';
+
+    function updateLastUpdatedTime() {
+        const now = new Date();
+        lastUpdatedTime.textContent = now.toLocaleString();
+    }
+
+    function createEventSource(timeframe) {
+        if (eventSource) {
+            console.log('Closing existing EventSource');
+            eventSource.close();
+        }
+
+        // Show loading indicator
+        loadingIndicator.style.display = 'block';
+        tableContainer.style.display = 'none';
+
+        console.log('Creating new EventSource with timeframe:', timeframe);
+        const newEventSource = new EventSource(`{% url "stream_dynamic_data" %}?timeframe=${timeframe}`);
+
+        newEventSource.onopen = () => console.log('EventSource connection opened with timeframe:', timeframe);
+
+        newEventSource.onerror = (error) => {
+            console.error('EventSource error:', error);
+            loadingIndicator.innerHTML = 'Error connecting to the server. Please try again later.';
+        };
+
+        newEventSource.onmessage = function (event) {
+            // Hide loading indicator and show table
+            loadingIndicator.style.display = 'none';
+            tableContainer.style.display = 'block';
+
+            const data = JSON.parse(event.data);
+            const tableBody = document.querySelector('#dynamicDataTable tbody');
+
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+
+            if (data.message) {
+                loadingIndicator.innerHTML = data.message;
+                loadingIndicator.style.display = 'block';
+                tableContainer.style.display = 'none';
+            } else {
+                updateLastUpdatedTime();
+                recordCount.textContent = `${data.length} records`;
+
+                data.forEach(ticker => {
+                    const row = document.createElement('tr');
+
+                    // Ticker cell
+                    const tickerCell = document.createElement('td');
+                    tickerCell.textContent = ticker.ticker_symbol;
+                    row.appendChild(tickerCell);
+
+                    // Create cells for all data points
+                    const values = [
+                        // Current candle group
+                        ticker.current_candle_open,
+                        ticker.current_candle_high,
+                        ticker.current_candle_low,
+                        ticker.current_candle_close,
+
+                        // Previous candle group
+                        ticker.previous_candle_open,
+                        ticker.previous_candle_high,
+                        ticker.previous_candle_low,
+                        ticker.previous_candle_close,
+
+                        // ATP values group
+                        ticker.current_candle_atp,
+                        ticker.previous_candle_atp,
+                        ticker.last_3_candles_atp,
+
+                        // Swing highs group
+                        ticker.prev_swing_high_1,
+                        ticker.prev_swing_high_2,
+                        ticker.prev_swing_high_3,
+
+                        // Swing lows group
+                        ticker.prev_swing_low_1,
+                        ticker.prev_swing_low_2,
+                        ticker.prev_swing_low_3,
+                    ];
+
+                    values.forEach(value => {
+                        const cell = document.createElement('td');
+
+                        if (typeof value === 'number') {
+                            cell.textContent = value.toFixed(2);
+                        } else {
+                            cell.textContent = value || '-';
+                        }
+                        row.appendChild(cell);
+                    });
+
+                    // Add bias cell
+                    const biasCell = document.createElement('td');
+                    biasCell.textContent = ticker.bias || 'NEUTRAL';
+                    row.appendChild(biasCell);
+
+                    tableBody.appendChild(row);
+                });
+            }
+        };
+        return newEventSource;
+    }
+
+    // Initialize EventSource
+    eventSource = createEventSource(timeframeSelect.value);
+
+    // Update EventSource when timeframe changes
+    updateButton.addEventListener('click', function () {
+        eventSource = createEventSource(timeframeSelect.value);
+    });
+</script>
+{% endblock %}

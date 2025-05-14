@@ -1,0 +1,165 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Dashboard | GuruBase{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .dashboard-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .dashboard-table td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .dashboard-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .dashboard-table tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold">Dashboard</h1>
+            <p class="lead">Welcome to your financial overview dashboard</p>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Portfolio Value</h5>
+                    <h2 class="display-6 fw-bold text-primary">$24,856.78</h2>
+                    <p class="text-success"><i class="fas fa-arrow-up me-1"></i> 4.2% Today</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Open Positions</h5>
+                    <h2 class="display-6 fw-bold text-primary">15</h2>
+                    <p class="text-muted">Across 8 markets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Alerts</h5>
+                    <h2 class="display-6 fw-bold text-primary">3</h2>
+                    <p class="text-danger">Price threshold crossed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Recent Transactions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Asset</th>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>May 15, 2023</td>
+                                    <td>AAPL</td>
+                                    <td>Buy</td>
+                                    <td>$175.34</td>
+                                    <td>10 shares</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>May 14, 2023</td>
+                                    <td>TSLA</td>
+                                    <td>Sell</td>
+                                    <td>$212.89</td>
+                                    <td>5 shares</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>May 12, 2023</td>
+                                    <td>MSFT</td>
+                                    <td>Buy</td>
+                                    <td>$310.65</td>
+                                    <td>3 shares</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>May 10, 2023</td>
+                                    <td>BTC</td>
+                                    <td>Buy</td>
+                                    <td>$29,435.21</td>
+                                    <td>0.025 BTC</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>May 8, 2023</td>
+                                    <td>AMZN</td>
+                                    <td>Buy</td>
+                                    <td>$105.66</td>
+                                    <td>12 shares</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-end">
+                    <a href="#" class="btn btn-primary btn-sm">View All Transactions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Additional dashboard-specific JavaScript can be added here
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Dashboard loaded');
+    });
+</script>
+{% endblock %}

@@ -12,21 +12,16 @@ from django.utils.http import urlencode
 import time  # Import time module for sleep
 logger = logging.getLogger(__name__)
 
-# Create your views here.
-def future_dynamic_data(request):
-    return render(request, 'ddfuture/dynamic_data_future.html')
 
-async def fetch_latest_data(ticker_symbol, timeframe='1'):
-    """Fetch the latest data for a given ticker symbol."""
+async def retrieve_latest_data(ticker_symbol, timeframe='1'):
     try:
-        # Use sync_to_async to wrap the database operation
-        data = await sync_to_async(_fetch_data_from_db)(ticker_symbol, timeframe)
+        data = await sync_to_async(_retrieve_data_from_db)(ticker_symbol, timeframe)
         return data
     except Exception as e:
         logger.error(f"Error fetching data for {ticker_symbol}: {str(e)}")
         return None
 
-def _fetch_data_from_db(ticker_symbol, timeframe='1'):
+def _retrieve_data_from_db(ticker_symbol, timeframe='1'):
     """Helper function to fetch data from the database."""
     if timeframe == '1440':
         table_name = f"{ticker_symbol}_future_daily_historical_data"
@@ -609,15 +604,15 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
             last_3_data = ohlcv_data.iloc[:3]
             
             # Calculate ATP using DataFrame
-            current_atp = calculate_atp_from_df(latest_data)
-            previous_atp = calculate_atp_from_df(previous_data) if previous_data is not None else None
-            last_3_atp = calculate_last_3_atp_from_df(last_3_data)
+            current_atp = compute_atp_from_df(latest_data)
+            previous_atp = compute_atp_from_df(previous_data) if previous_data is not None else None
+            last_3_atp = compute_last_3_atp_from_df(last_3_data)
             
             # Log data for debugging instead of printing to console
             logger.debug(f"OHLCV data for {ticker_symbol}: {ohlcv_data.head().to_dict()}")
             
             # Calculate swings using DataFrame
-            swings = calculate_swings_from_df(last_3_data)
+            swings = compute_swings_from_df(last_3_data)
 
             return {
                 'ticker_symbol': ticker_symbol,
@@ -638,35 +633,24 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                 'prev_swing_low_1': round(swings['lows'][0], 2) if swings['lows'] and len(swings['lows']) > 0 and swings['lows'][0] is not None else None,
                 'prev_swing_low_2': round(swings['lows'][1], 2) if swings['lows'] and len(swings['lows']) > 1 and swings['lows'][1] is not None else None,
                 'prev_swing_low_3': round(swings['lows'][2], 2) if swings['lows'] and len(swings['lows']) > 2 and swings['lows'][2] is not None else None,
-                'bias': calculate_bias_from_df(latest_data, previous_data, swings, previous_bias='NEUTRAL')
+                'bias': determine_bias_from_df(latest_data, previous_data, swings, previous_bias='NEUTRAL')
             }
         return None
 
-def calculate_atp_from_df(data):
+def compute_atp_from_df(data):
     """Calculate Average Traded Price (ATP) from DataFrame row"""
     if data is None:
         return None
     return round((data['high_price'] + data['low_price'] + data['close_price']) / 3, 2)
 
-def calculate_last_3_atp_from_df(data):
+def compute_last_3_atp_from_df(data):
     """Calculate ATP for the last 3 candles using DataFrame"""
     if data is None or len(data) == 0:
         return None
-    atps = [calculate_atp_from_df(data.iloc[i]) for i in range(len(data))]
+    atps = [compute_atp_from_df(data.iloc[i]) for i in range(len(data))]
     return round(sum(atps) / len(atps), 2)
 
-def find_last_swing_highs(df, percentage_threshold=1.0, last_n=6):
-    """
-    Find last N swing highs in a DataFrame based on 'high_price'.
-    
-    Args:
-        df (pd.DataFrame): DataFrame with 'datetime' and 'high_price' columns.
-        percentage_threshold (float): Minimum percentage change to qualify as swing high.
-        last_n (int): Number of swing highs to return.
-
-    Returns:
-        pd.DataFrame: DataFrame containing last N swing highs.
-    """
+def identify_last_swing_highs(df, percentage_threshold=1.0, last_n=6):
     if len(df) < 3:
         return pd.DataFrame()
     
@@ -701,18 +685,7 @@ def find_last_swing_highs(df, percentage_threshold=1.0, last_n=6):
     # Return only last N swings
     return swing_highs_df.head(last_n)
 
-def find_last_swing_lows(df, percentage_threshold=1.0, last_n=6):
-    """
-    Find last N swing lows in a DataFrame based on 'low_price'.
-    
-    Args:
-        df (pd.DataFrame): DataFrame with 'datetime' and 'low_price' columns.
-        percentage_threshold (float): Minimum percentage change to qualify as swing low.
-        last_n (int): Number of swing lows to return.
-
-    Returns:
-        pd.DataFrame: DataFrame containing last N swing lows.
-    """
+def identify_last_swing_lows(df, percentage_threshold=1.0, last_n=6):
     if len(df) < 3:
         return pd.DataFrame()
     
@@ -747,14 +720,14 @@ def find_last_swing_lows(df, percentage_threshold=1.0, last_n=6):
 
     return swing_lows_df.head(last_n)
 
-def calculate_swings_from_df(data):
+def compute_swings_from_df(data):
     """Calculate swing highs and lows using the improved swing detection functions"""
     if data is None or len(data) == 0:
         return {'highs': [], 'lows': []}
     
     # Find swing highs and lows
-    swing_highs_df = find_last_swing_highs(data, percentage_threshold=1.0, last_n=20)
-    swing_lows_df = find_last_swing_lows(data, percentage_threshold=1.0, last_n=20)
+    swing_highs_df = identify_last_swing_highs(data, percentage_threshold=1.0, last_n=20)
+    swing_lows_df = identify_last_swing_lows(data, percentage_threshold=1.0, last_n=20)
     
     # Extract the values
     highs = swing_highs_df['high_price'].tolist() if not swing_highs_df.empty else []
@@ -768,7 +741,7 @@ def calculate_swings_from_df(data):
     
     return {'highs': highs, 'lows': lows}
 
-def calculate_bias_from_df(latest_data, previous_data, swings, previous_bias='NEUTRAL'):
+def determine_bias_from_df(latest_data, previous_data, swings, previous_bias='NEUTRAL'):
     if latest_data is None or previous_data is None:
         return 'NEUTRAL'
     
@@ -784,7 +757,7 @@ def calculate_bias_from_df(latest_data, previous_data, swings, previous_bias='NE
     else:
         return previous_bias
 
-async def generate_dynamic_stream(timeframe='1'):
+async def stream_dynamic_data(timeframe='1'):
     while True:
         try:
             # Get all tickers
@@ -793,7 +766,7 @@ async def generate_dynamic_stream(timeframe='1'):
 
             for ticker in tickers:
                 # Fetch data based on the timeframe
-                data = await fetch_latest_data(ticker.ticker_symbol, timeframe)
+                data = await retrieve_latest_data(ticker.ticker_symbol, timeframe)
                 if data:
                     formatted_data.append(data)
 
@@ -807,16 +780,16 @@ async def generate_dynamic_stream(timeframe='1'):
             await asyncio.sleep(1)  # Update every second
 
         except Exception as e:
-            logger.error(f"Error in generate_dynamic_stream: {str(e)}")
+            logger.error(f"Error in stream_dynamic_data: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)}, cls=DjangoJSONEncoder)}\n\n"
             await asyncio.sleep(1)
 
-def sse_dynamic_data(request):
+def send_sse_dynamic_data(request):
     timeframe = request.GET.get('timeframe', '1')
 
     # Pass the timeframe to the stream generator
     response = StreamingHttpResponse(
-        generate_dynamic_stream(timeframe),
+        stream_dynamic_data(timeframe),
         content_type='text/event-stream'
     )
     response['Cache-Control'] = 'no-cache'
@@ -824,7 +797,7 @@ def sse_dynamic_data(request):
     return response
 
 
-def find_swing_highs_lows(prices, percentage_threshold=1.0):
+def identify_swing_points(prices, percentage_threshold=1.0):
     
     if len(prices) < 3:
         return [], []  # Need at least 3 points to determine swings
@@ -863,25 +836,25 @@ def find_swing_highs_lows(prices, percentage_threshold=1.0):
 
 
 # Keep the original functions for backward compatibility
-def calculate_atp(data):
+def compute_atp(data):
     """Calculate Average Traded Price (ATP)"""
     if not data:
         return None
     return round((data[2] + data[3] + data[4]) / 3, 2)
 
-def calculate_last_3_atp(data):
+def compute_last_3_atp(data):
     """Calculate ATP for the last 3 candles"""
     if not data:
         return None
-    return round(sum(calculate_atp(d) for d in data) / len(data), 2)
+    return round(sum(compute_atp(d) for d in data) / len(data), 2)
 
-def calculate_swings(data):
+def compute_swings(data):
     """Calculate swing highs and lows"""
     highs = sorted([d[2] for d in data], reverse=True)[:3]
     lows = sorted([d[3] for d in data])[:3]
     return {'highs': highs, 'lows': lows}
 
-def calculate_bias(latest_data, previous_data, swings):
+def determine_bias(latest_data, previous_data, swings):
     """Determine market bias"""
     if not latest_data or not previous_data:
         return 'NEUTRAL'
