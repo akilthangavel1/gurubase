@@ -1,7 +1,9 @@
 {% extends 'dashboard/base.html' %}
 
 {% block title %}Dynamic Data - Futures - GuruBase{% endblock %}
-{% block extra_css %}<style>
+{% block extra_css %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<style>
     body {
         background-color: #212529;
         color: #e9ecef;
@@ -58,6 +60,24 @@
     /* Ensure the navbar itself has proper z-index */
     .navbar {
         z-index: 1020 !important;
+    }
+
+    /* Drag and drop styles */
+    th.ui-sortable-helper {
+        display: table-cell;
+        background-color: #343a40 !important;
+        opacity: 0.8;
+        cursor: move;
+    }
+    
+    .column-draggable {
+        cursor: grab;
+    }
+    
+    .ui-sortable-placeholder {
+        visibility: visible !important;
+        background-color: #495057 !important;
+        border: 2px dashed #0d6efd;
     }
 </style>{% endblock %}
 {% block content %}
@@ -132,35 +152,38 @@
     </div>
 
     <div class="table-responsive">
+        <div class="alert alert-info mb-2" id="drag-drop-hint" style="display: none;">
+            <i class="bi bi-info-circle"></i> Tip: Drag and drop column headers to reorder columns
+        </div>
         <table class="table table-bordered table-striped table-dark" id="dynamicDataTable">
             <thead class="table-dark">
-                <tr>
+                <tr id="header-row-1">
                     <th rowspan="2">Ticker</th>
-                    <th colspan="4">Current Candle</th>
-                    <th colspan="4">Previous Candle</th>
-                    <th colspan="3">ATP Values</th>
-                    <th colspan="3">Swing Highs</th>
-                    <th colspan="3">Swing Lows</th>
-                    <th rowspan="2">Bias</th>
+                    <th colspan="4" class="column-group">Current Candle</th>
+                    <th colspan="4" class="column-group">Previous Candle</th>
+                    <th colspan="3" class="column-group">ATP Values</th>
+                    <th colspan="3" class="column-group">Swing Highs</th>
+                    <th colspan="3" class="column-group">Swing Lows</th>
+                    <th rowspan="2" class="column-draggable" data-col-index="18">Bias</th>
                 </tr>
-                <tr>
-                    <th>Open</th>
-                    <th>High</th>
-                    <th>Low</th>
-                    <th>Close</th>
-                    <th>Open</th>
-                    <th>High</th>
-                    <th>Low</th>
-                    <th>Close</th>
-                    <th>Current</th>
-                    <th>Previous</th>
-                    <th>Last 3</th>
-                    <th>1</th>
-                    <th>2</th>
-                    <th>3</th>
-                    <th>1</th>
-                    <th>2</th>
-                    <th>3</th>
+                <tr id="header-row-2">
+                    <th class="column-draggable" data-col-index="1">Open</th>
+                    <th class="column-draggable" data-col-index="2">High</th>
+                    <th class="column-draggable" data-col-index="3">Low</th>
+                    <th class="column-draggable" data-col-index="4">Close</th>
+                    <th class="column-draggable" data-col-index="5">Open</th>
+                    <th class="column-draggable" data-col-index="6">High</th>
+                    <th class="column-draggable" data-col-index="7">Low</th>
+                    <th class="column-draggable" data-col-index="8">Close</th>
+                    <th class="column-draggable" data-col-index="9">Current</th>
+                    <th class="column-draggable" data-col-index="10">Previous</th>
+                    <th class="column-draggable" data-col-index="11">Last 3</th>
+                    <th class="column-draggable" data-col-index="12">1</th>
+                    <th class="column-draggable" data-col-index="13">2</th>
+                    <th class="column-draggable" data-col-index="14">3</th>
+                    <th class="column-draggable" data-col-index="15">1</th>
+                    <th class="column-draggable" data-col-index="16">2</th>
+                    <th class="column-draggable" data-col-index="17">3</th>
                 </tr>
             </thead>
             <tbody>
@@ -175,133 +198,339 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeframeSelect = document.getElementById('timeframe');
+        const updateButton = document.getElementById('updateTimeframe');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const tableContainer = document.querySelector('table').parentElement;
+        const lastUpdatedTime = document.getElementById('lastUpdatedTime');
+        const recordCount = document.getElementById('recordCount');
 
-    const timeframeSelect = document.getElementById('timeframe');
-    const updateButton = document.getElementById('updateTimeframe');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const tableContainer = document.querySelector('table').parentElement;
-    const lastUpdatedTime = document.getElementById('lastUpdatedTime');
-    const recordCount = document.getElementById('recordCount');
+        let eventSource;    
+        
+        // Column order tracking - initialize with default order
+        let columnOrder = Array.from({length: 20}, (_, i) => i);
 
-    let eventSource;
-
-    // Initially hide the table until data loads
-    tableContainer.style.display = 'none';
-
-    function updateLastUpdatedTime() {
-        const now = new Date();
-        lastUpdatedTime.textContent = now.toLocaleString();
-    }
-
-    function createEventSource(timeframe) {
-        if (eventSource) {
-            console.log('Closing existing EventSource');
-            eventSource.close();
+        // Initialize column drag and drop once jQuery is fully loaded
+        if (typeof jQuery !== 'undefined' && typeof $.ui !== 'undefined') {
+            initializeColumnDragDrop();
+        } else {
+            console.error("jQuery or jQuery UI not loaded properly");
+            // Try to load jQuery and jQuery UI again
+            const jq = document.createElement('script');
+            jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+            document.head.appendChild(jq);
+            
+            jq.onload = function() {
+                const jqui = document.createElement('script');
+                jqui.src = "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js";
+                document.head.appendChild(jqui);
+                
+                jqui.onload = function() {
+                    initializeColumnDragDrop();
+                };
+            };
         }
 
-        // Show loading indicator
-        loadingIndicator.style.display = 'block';
+        function initializeColumnDragDrop() {
+            console.log("Initializing column drag and drop");
+            
+            // Load saved column order from localStorage if exists
+            const savedOrder = localStorage.getItem('columnOrder');
+            if (savedOrder) {
+                try {
+                    columnOrder = JSON.parse(savedOrder);
+                    console.log("Loaded saved column order:", columnOrder);
+                    
+                    // Apply saved order to header immediately after loading
+                    // Use setTimeout to ensure DOM is fully loaded
+                    setTimeout(() => {
+                        applyColumnOrderToHeader();
+                    }, 100);
+                } catch (e) {
+                    console.error("Error loading saved column order:", e);
+                    localStorage.removeItem('columnOrder');
+                }
+            }
+            
+            // Make the second header row sortable
+            $("#header-row-2").sortable({
+                items: "th.column-draggable",
+                axis: "x",
+                cursor: "move",
+                opacity: 0.7,
+                tolerance: "pointer",
+                helper: function(e, ui) {
+                    // Fix the helper's width
+                    ui.width(ui.width());
+                    return ui;
+                },
+                start: function(event, ui) {
+                    ui.item.data('start_pos', ui.item.index());
+                    console.log("Drag started from position:", ui.item.data('start_pos'));
+                },
+                stop: function(event, ui) {
+                    const startPos = ui.item.data('start_pos'); // 0-indexed position within draggable headers BEFORE move
+                    const endPos = ui.item.index();           // 0-indexed position within draggable headers AFTER move
+
+                    if (startPos === endPos) return; // No change
+
+                    // Get the actual data-col-index values from the current visual order of draggable headers
+                    const draggableHeaderCells = $("#header-row-2 th.column-draggable");
+                    const newDraggableOrder = [];
+                    draggableHeaderCells.each(function() {
+                        newDraggableOrder.push(parseInt($(this).attr('data-col-index')));
+                    });
+                    
+                    // Reconstruct the full columnOrder:
+                    // Ticker (original index 0) is always first.
+                    // Bias (original index 18) is always last, after the draggable block.
+                    columnOrder = [0, ...newDraggableOrder, 18];
+                    
+                    console.log("New column order (corrected for Bias):", columnOrder);
+                    
+                    // Apply to data rows
+                    rebuildTableData();
+                    
+                    // Save to localStorage
+                    localStorage.setItem('columnOrder', JSON.stringify(columnOrder));
+                }
+            }).disableSelection();
+        }
+
+        // Apply column order to header - separate function to be called on load
+        function applyColumnOrderToHeader() {
+            // Skip first value (Ticker column) as it's not draggable
+            const headerOrder = columnOrder.slice(1);
+            
+            // Get all draggable header cells
+            const headerCells = $("#header-row-2 th.column-draggable").toArray();
+            if (headerCells.length === 0) return;
+            
+            const headerRow = headerCells[0].parentNode;
+            
+            // Create a map of data-col-index to header cell
+            const headerMap = {};
+            headerCells.forEach(cell => {
+                const index = parseInt(cell.getAttribute('data-col-index'));
+                headerMap[index] = cell;
+            });
+            
+            // Remove cells from DOM
+            headerCells.forEach(cell => cell.remove());
+            
+            // Add them back in the correct order
+            headerOrder.forEach(index => {
+                if (headerMap[index]) {
+                    headerRow.appendChild(headerMap[index]);
+                }
+            });
+        }
+
+        // Complete rebuild of table data based on column order
+        function rebuildTableData() {
+            const table = document.getElementById('dynamicDataTable');
+            if (!table) return;
+            
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            
+            const rows = Array.from(tbody.getElementsByTagName('tr'));
+            console.log("Rebuilding", rows.length, "rows based on columnOrder:", columnOrder);
+            
+            rows.forEach(row => {
+                // Create a map of original column index to cell content
+                const cellMap = {};
+                const allCells = Array.from(row.cells);
+                
+                allCells.forEach(cell => {
+                    const origIndex = parseInt(cell.getAttribute('data-original-col-index'));
+                    // For bias column, textContent will be "BULLISH", "BEARISH", or "NEUTRAL"
+                    cellMap[origIndex] = cell.textContent; 
+                });
+                
+                // Clear the row
+                while (row.firstChild) {
+                    row.removeChild(row.firstChild);
+                }
+                
+                // Rebuild the row in the correct order
+                columnOrder.forEach(origIndex => {
+                    const cell = document.createElement('td');
+                    cell.setAttribute('data-original-col-index', origIndex);
+                    const rawValueFromCell = cellMap[origIndex];
+
+                    if (origIndex === 18) { // Bias column specific rendering
+                        const biasString = rawValueFromCell || 'NEUTRAL'; // Ensure we have a string
+
+                        // Apply styling consistent with the onmessage handler
+                        if (biasString === 'BULLISH') {
+                            cell.innerHTML = `<strong>${biasString}</strong>`;
+                            cell.classList.add('text-success');
+                        } else if (biasString === 'BEARISH') {
+                            cell.innerHTML = `<strong>${biasString}</strong>`;
+                            cell.classList.add('text-danger');
+                        } else { // Includes 'NEUTRAL'
+                            cell.textContent = biasString; // NEUTRAL is not bolded, per onmessage logic
+                            cell.classList.add('text-warning');
+                        }
+                    } else {
+                        // For all other columns, just set textContent
+                        cell.textContent = rawValueFromCell || '-';
+                    }
+                    row.appendChild(cell);
+                });
+            });
+            
+            console.log("Table rebuilding complete");
+        }
+
+        // Initially hide the table until data loads
         tableContainer.style.display = 'none';
 
-        console.log('Creating new EventSource with timeframe:', timeframe);
-        const newEventSource = new EventSource(`{% url "stream_dynamic_data" %}?timeframe=${timeframe}`);
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            lastUpdatedTime.textContent = now.toLocaleString();
+        }
 
-        newEventSource.onopen = () => console.log('EventSource connection opened with timeframe:', timeframe);
-
-        newEventSource.onerror = (error) => {
-            console.error('EventSource error:', error);
-            loadingIndicator.innerHTML = 'Error connecting to the server. Please try again later.';
-        };
-
-        newEventSource.onmessage = function (event) {
-            // Hide loading indicator and show table
-            loadingIndicator.style.display = 'none';
-            tableContainer.style.display = 'block';
-
-            const data = JSON.parse(event.data);
-            const tableBody = document.querySelector('#dynamicDataTable tbody');
-
-            while (tableBody.firstChild) {
-                tableBody.removeChild(tableBody.firstChild);
+        function createEventSource(timeframe) {
+            if (eventSource) {
+                console.log('Closing existing EventSource');
+                eventSource.close();
             }
 
-            if (data.message) {
-                loadingIndicator.innerHTML = data.message;
-                loadingIndicator.style.display = 'block';
-                tableContainer.style.display = 'none';
-            } else {
-                updateLastUpdatedTime();
-                recordCount.textContent = `${data.length} records`;
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+            tableContainer.style.display = 'none';
 
-                data.forEach(ticker => {
-                    const row = document.createElement('tr');
+            console.log('Creating new EventSource with timeframe:', timeframe);
+            const newEventSource = new EventSource(`{% url "stream_dynamic_data" %}?timeframe=${timeframe}`);
 
-                    // Ticker cell
-                    const tickerCell = document.createElement('td');
-                    tickerCell.textContent = ticker.ticker_symbol;
-                    row.appendChild(tickerCell);
+            newEventSource.onopen = () => console.log('EventSource connection opened with timeframe:', timeframe);
 
-                    // Create cells for all data points
-                    const values = [
-                        // Current candle group
-                        ticker.current_candle_open,
-                        ticker.current_candle_high,
-                        ticker.current_candle_low,
-                        ticker.current_candle_close,
+            newEventSource.onerror = (error) => {
+                console.error('EventSource error:', error);
+                loadingIndicator.innerHTML = 'Error connecting to the server. Please try again later.';
+            };
 
-                        // Previous candle group
-                        ticker.previous_candle_open,
-                        ticker.previous_candle_high,
-                        ticker.previous_candle_low,
-                        ticker.previous_candle_close,
+            newEventSource.onmessage = function (event) {
+                // Hide loading indicator and show table
+                loadingIndicator.style.display = 'none';
+                tableContainer.style.display = 'block';
 
-                        // ATP values group
-                        ticker.current_candle_atp,
-                        ticker.previous_candle_atp,
-                        ticker.last_3_candles_atp,
+                const data = JSON.parse(event.data);
+                const tableBody = document.querySelector('#dynamicDataTable tbody');
 
-                        // Swing highs group
-                        ticker.prev_swing_high_1,
-                        ticker.prev_swing_high_2,
-                        ticker.prev_swing_high_3,
+                while (tableBody.firstChild) {
+                    tableBody.removeChild(tableBody.firstChild);
+                }
 
-                        // Swing lows group
-                        ticker.prev_swing_low_1,
-                        ticker.prev_swing_low_2,
-                        ticker.prev_swing_low_3,
-                    ];
+                if (data.message) {
+                    loadingIndicator.innerHTML = data.message;
+                    loadingIndicator.style.display = 'block';
+                    tableContainer.style.display = 'none';
+                } else {
+                    updateLastUpdatedTime();
+                    recordCount.textContent = `${data.length} records`;
 
-                    values.forEach(value => {
-                        const cell = document.createElement('td');
-
-                        if (typeof value === 'number') {
-                            cell.textContent = value.toFixed(2);
-                        } else {
-                            cell.textContent = value || '-';
-                        }
-                        row.appendChild(cell);
+                    data.forEach(ticker => {
+                        const row = document.createElement('tr');
+                        
+                        // Create an array to hold all cell data in original position
+                        const cellsData = [];
+                        
+                        // Ticker cell (index 0)
+                        cellsData[0] = ticker.ticker_symbol;
+                        
+                        // Current candle data (indices 1-4)
+                        cellsData[1] = ticker.current_candle_open;
+                        cellsData[2] = ticker.current_candle_high;
+                        cellsData[3] = ticker.current_candle_low;
+                        cellsData[4] = ticker.current_candle_close;
+                        
+                        // Previous candle data (indices 5-8)
+                        cellsData[5] = ticker.previous_candle_open;
+                        cellsData[6] = ticker.previous_candle_high;
+                        cellsData[7] = ticker.previous_candle_low;
+                        cellsData[8] = ticker.previous_candle_close;
+                        
+                        // ATP values (indices 9-11)
+                        cellsData[9] = ticker.current_candle_atp;
+                        cellsData[10] = ticker.previous_candle_atp;
+                        cellsData[11] = ticker.last_3_candles_atp;
+                        
+                        // Swing highs (indices 12-14)
+                        cellsData[12] = ticker.prev_swing_high_1;
+                        cellsData[13] = ticker.prev_swing_high_2;
+                        cellsData[14] = ticker.prev_swing_high_3;
+                        
+                        // Swing lows (indices 15-17)
+                        cellsData[15] = ticker.prev_swing_low_1;
+                        cellsData[16] = ticker.prev_swing_low_2;
+                        cellsData[17] = ticker.prev_swing_low_3;
+                        
+                        // Bias (index 18)
+                        cellsData[18] = ticker.bias || 'NEUTRAL';
+                        
+                        // Debug output to verify bias data is received correctly
+                        console.log(`Ticker ${ticker.ticker_symbol} bias: ${ticker.bias}`);
+                        
+                        // Add cells to the row in the correct order based on the current column order
+                        columnOrder.forEach((originalIndex, displayIndex) => {
+                            if (originalIndex !== undefined && originalIndex < cellsData.length) {
+                                const value = cellsData[originalIndex];
+                                const cell = document.createElement('td');
+                                cell.setAttribute('data-original-col-index', originalIndex);
+                                
+                                // Special formatting for bias column
+                                if (originalIndex === 18) {
+                                    const biasValue = value || 'NEUTRAL';
+                                    cell.textContent = biasValue;
+                                    
+                                    // Add visual indicators based on bias
+                                    if (biasValue === 'BULLISH') {
+                                        cell.classList.add('text-success');
+                                        cell.innerHTML = `<strong>${biasValue}</strong>`;
+                                    } else if (biasValue === 'BEARISH') {
+                                        cell.classList.add('text-danger');
+                                        cell.innerHTML = `<strong>${biasValue}</strong>`;
+                                    } else {
+                                        cell.classList.add('text-warning');
+                                        cell.textContent = biasValue;
+                                    }
+                                } else if (typeof value === 'number') {
+                                    cell.textContent = value.toFixed(2);
+                                } else {
+                                    cell.textContent = value || '-';
+                                }
+                                row.appendChild(cell);
+                            }
+                        });
+                        
+                        tableBody.appendChild(row);
                     });
+                }
+            };
+            return newEventSource;
+        }
 
-                    // Add bias cell
-                    const biasCell = document.createElement('td');
-                    biasCell.textContent = ticker.bias || 'NEUTRAL';
-                    row.appendChild(biasCell);
-
-                    tableBody.appendChild(row);
-                });
-            }
-        };
-        return newEventSource;
-    }
-
-    // Initialize EventSource
-    eventSource = createEventSource(timeframeSelect.value);
-
-    // Update EventSource when timeframe changes
-    updateButton.addEventListener('click', function () {
+        // Initialize EventSource
         eventSource = createEventSource(timeframeSelect.value);
+
+        // Update EventSource when timeframe changes
+        updateButton.addEventListener('click', function () {
+            eventSource = createEventSource(timeframeSelect.value);
+        });
+
+        // Add a refresh button handler that maintains column order
+        document.querySelector('button.btn-dark').addEventListener('click', function() {
+            // Just recreate the event source with current timeframe
+            eventSource = createEventSource(timeframeSelect.value);
+        });
     });
 </script>
 {% endblock %}

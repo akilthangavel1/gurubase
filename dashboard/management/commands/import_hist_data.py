@@ -19,7 +19,6 @@ def insert_data_into_historical_db(table_name, datetime_value, open_price, high_
     try:
         with connection.cursor() as cursor:
             cursor.execute(insert_query, [datetime_value, open_price, high_price, low_price, close_price, volume])
-            # print(f"Data inserted successfully into {table_name} table.")
     except Exception as e:
         print(f"Error inserting data into {table_name} table: {e}")
 
@@ -98,7 +97,7 @@ class Command(BaseCommand):
                 from_date = (datetime.now() - timedelta(days=6)).strftime("%d/%m/%Y")
                 to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
                 from_date = "30/04/2025"
-                to_date = "06/05/2025"
+                to_date = "13/05/2025"
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 resolution = "1"
                 client_id = "MMKQTWNJH3-100"
