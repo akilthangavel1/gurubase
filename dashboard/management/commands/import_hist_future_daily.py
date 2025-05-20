@@ -98,7 +98,7 @@ class Command(BaseCommand):
                 # from_date = (datetime.now() - timedelta(days=6)).strftime("%d/%m/%Y")
                 # to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
                 from_date = "27/04/2025"
-                to_date = "06/05/2025"
+                to_date = "20/05/2025"
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 resolution = "D"
                 client_id = "MMKQTWNJH3-100"

@@ -3,6 +3,8 @@
 {% block title %}Dynamic Data - Futures - GuruBase{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
     body {
         background-color: #212529;
@@ -165,6 +167,9 @@
                     <th colspan="3" class="column-group">Swing Highs</th>
                     <th colspan="3" class="column-group">Swing Lows</th>
                     <th rowspan="2" class="column-draggable" data-col-index="18">Bias</th>
+                    <th colspan="12" class="column-group">Current Day Data</th>
+                    <th colspan="10" class="column-group">Weekly/Monthly Data</th>
+                    <th colspan="10" class="column-group">Indicators</th>
                 </tr>
                 <tr id="header-row-2">
                     <th class="column-draggable" data-col-index="1">Open</th>
@@ -184,6 +189,84 @@
                     <th class="column-draggable" data-col-index="15">1</th>
                     <th class="column-draggable" data-col-index="16">2</th>
                     <th class="column-draggable" data-col-index="17">3</th>
+                    <!-- Current Day Data -->
+                    <th class="column-draggable" data-col-index="19">30m Top</th>
+                    <th class="column-draggable" data-col-index="20">30m Bottom</th>
+                    <th class="column-draggable" data-col-index="21">Last 5 Tops</th>
+                    <th class="column-draggable" data-col-index="22">Last 5 Bottoms</th>
+                    <th class="column-draggable" data-col-index="23">Day Top Latest</th>
+                    <th class="column-draggable" data-col-index="24">Day Bottom Latest</th>
+                    <th class="column-draggable" data-col-index="25">9:15-10:15 H/L</th>
+                    <th class="column-draggable" data-col-index="26">10:15-11:15 H/L</th>
+                    <th class="column-draggable" data-col-index="27">11:15-12:15 H/L</th>
+                    <th class="column-draggable" data-col-index="28">12:15-1:15 H/L</th>
+                    <th class="column-draggable" data-col-index="29">1:15-2:15 H/L</th>
+                    <th class="column-draggable" data-col-index="30">2:15-3:15 H/L</th>
+                    <th class="column-draggable" data-col-index="31">3 PM - 4 PM H/L</th>
+                    <!-- Weekly/Monthly Data -->
+                    <th class="column-draggable" data-col-index="32">Week Top 1</th>
+                    <th class="column-draggable" data-col-index="33">Week Top 2</th>
+                    <th class="column-draggable" data-col-index="34">Week Bottom 1</th>
+                    <th class="column-draggable" data-col-index="35">Week Bottom 2</th>
+                    <th class="column-draggable" data-col-index="36">Month Top 1</th>
+                    <th class="column-draggable" data-col-index="37">Month Top 2</th>
+                    <th class="column-draggable" data-col-index="38">Month Bottom 1</th>
+                    <th class="column-draggable" data-col-index="39">Month Bottom 2</th>
+                    <th class="column-draggable" data-col-index="40">Expiry Week VWAP</th>
+                    <th class="column-draggable" data-col-index="41">Rollover Week H/L Vol</th>
+                    <!-- Technical Indicators -->
+                    <th class="column-draggable" data-col-index="42">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>EMA</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="EMA" data-input-id="emaValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th class="column-draggable" data-col-index="43">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>SMA</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="SMA" data-input-id="smaValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th class="column-draggable" data-col-index="44">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>HMA</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="HMA" data-input-id="hmaValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th class="column-draggable" data-col-index="45">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>MACD</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="MACD" data-input-id="macdValue">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th class="column-draggable" data-col-index="46">Signal Line</th>
+                    <th class="column-draggable" data-col-index="47">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>SuperTrend</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#supertrendModal">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th class="column-draggable" data-col-index="48">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>Keltner Upper</span>
+                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#keltnerModal">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th class="column-draggable" data-col-index="49">Keltner Middle</th>
+                    <th class="column-draggable" data-col-index="50">Keltner Lower</th>
+                    <th class="column-draggable" data-col-index="51">Pivot</th>
                 </tr>
             </thead>
             <tbody>
@@ -198,8 +281,110 @@
     </div>
 </div>
 
+<!-- Hidden fields to store indicator values -->
+<div style="display: none;">
+    <input type="number" id="emaValue" value="10">
+    <input type="number" id="smaValue" value="10">
+    <input type="number" id="hmaValue" value="10">
+    <input type="text" id="macdValue" value="26,12,9">
+    <input type="number" id="supertrendLength" value="14">
+    <input type="number" id="supertrendMultiplier" value="3">
+    <input type="number" id="keltnerEmaLength" value="20">
+    <input type="number" id="keltnerAtrLength" value="14">
+    <input type="number" id="keltnerMultiplier" value="2">
+</div>
+
+<!-- Input Modal for simple indicators -->
+<div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-light" id="inputModalLabel">Indicator Value</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="headerInput" class="form-label text-light" id="modalFieldLabel">Indicator Value</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="headerInput"
+                        placeholder="Enter your value here">
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveInput">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supertrend Modal -->
+<div class="modal fade" id="supertrendModal" tabindex="-1" aria-labelledby="supertrendModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-light" id="supertrendModalLabel">Supertrend Settings</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="supertrendLengthInput" class="form-label text-light">Length</label>
+                    <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendLengthInput"
+                        placeholder="Enter length value" value="14">
+                </div>
+                <div class="mb-3">
+                    <label for="supertrendMultiplierInput" class="form-label text-light">Multiplier</label>
+                    <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendMultiplierInput"
+                        placeholder="Enter multiplier value" value="3">
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveSupertrendInput">Update Supertrend</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Keltner Channels Modal -->
+<div class="modal fade" id="keltnerModal" tabindex="-1" aria-labelledby="keltnerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-light" id="keltnerModalLabel">Keltner Channels Settings</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="keltnerEmaLengthInput" class="form-label text-light">EMA Length</label>
+                    <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerEmaLengthInput"
+                        placeholder="Enter EMA length value" value="20">
+                </div>
+                <div class="mb-3">
+                    <label for="keltnerAtrLengthInput" class="form-label text-light">ATR Length</label>
+                    <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerAtrLengthInput"
+                        placeholder="Enter ATR length value" value="14">
+                </div>
+                <div class="mb-3">
+                    <label for="keltnerMultiplierInput" class="form-label text-light">Multiplier</label>
+                    <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerMultiplierInput"
+                        placeholder="Enter multiplier value" value="2">
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" id="resetKeltnerDefaults">Reset to Defaults</button>
+                <button type="button" class="btn btn-primary" id="saveKeltnerInput">Update Keltner Channels</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -211,40 +396,39 @@
         const recordCount = document.getElementById('recordCount');
 
         let eventSource;    
+        let staticEventSource;
+        let indicatorEventSource;
+        
+        // Data storage
+        let dynamicData = [];
+        let staticData = {};
+        let indicatorData = {};
         
         // Column order tracking - initialize with default order
-        let columnOrder = Array.from({length: 20}, (_, i) => i);
+        let columnOrder = Array.from({length: 51}, (_, i) => i);
+        
+        // Current indicator being configured
+        let currentIndicator = 'EMA';
+        let currentInputId = 'emaValue';
 
-        // Initialize column drag and drop once jQuery is fully loaded
-        if (typeof jQuery !== 'undefined' && typeof $.ui !== 'undefined') {
-            initializeColumnDragDrop();
-        } else {
-            console.error("jQuery or jQuery UI not loaded properly");
-            // Try to load jQuery and jQuery UI again
-            const jq = document.createElement('script');
-            jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
-            document.head.appendChild(jq);
-            
-            jq.onload = function() {
-                const jqui = document.createElement('script');
-                jqui.src = "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js";
-                document.head.appendChild(jqui);
-                
-                jqui.onload = function() {
-                    initializeColumnDragDrop();
-                };
-            };
-        }
-
+        // Function for initializing column drag and drop
         function initializeColumnDragDrop() {
-            console.log("Initializing column drag and drop");
+            // console.log("Initializing column drag and drop");
             
             // Load saved column order from localStorage if exists
             const savedOrder = localStorage.getItem('columnOrder');
             if (savedOrder) {
                 try {
                     columnOrder = JSON.parse(savedOrder);
-                    console.log("Loaded saved column order:", columnOrder);
+                    // If the saved order doesn't include new columns, add them
+                    if (columnOrder.length < 51) {
+                        const maxIndex = Math.max(...columnOrder);
+                        // Add missing indices
+                        for (let i = maxIndex + 1; i < 51; i++) {
+                            columnOrder.push(i);
+                        }
+                        // console.log("Extended saved column order with new columns:", columnOrder);
+                    }
                     
                     // Apply saved order to header immediately after loading
                     // Use setTimeout to ensure DOM is fully loaded
@@ -271,7 +455,7 @@
                 },
                 start: function(event, ui) {
                     ui.item.data('start_pos', ui.item.index());
-                    console.log("Drag started from position:", ui.item.data('start_pos'));
+                    // console.log("Drag started from position:", ui.item.data('start_pos'));
                 },
                 stop: function(event, ui) {
                     const startPos = ui.item.data('start_pos'); // 0-indexed position within draggable headers BEFORE move
@@ -288,10 +472,19 @@
                     
                     // Reconstruct the full columnOrder:
                     // Ticker (original index 0) is always first.
-                    // Bias (original index 18) is always last, after the draggable block.
-                    columnOrder = [0, ...newDraggableOrder, 18];
+                    // Make sure all new columns are included as well
+                    const newOrder = [0, ...newDraggableOrder];
                     
-                    console.log("New column order (corrected for Bias):", columnOrder);
+                    // Ensure all column indices are included (up to 50)
+                    for (let i = 0; i < 51; i++) {
+                        if (!newOrder.includes(i)) {
+                            newOrder.push(i);
+                        }
+                    }
+                    
+                    columnOrder = newOrder;
+                    
+                    // console.log("New column order (with all columns):", columnOrder);
                     
                     // Apply to data rows
                     rebuildTableData();
@@ -340,7 +533,7 @@
             if (!tbody) return;
             
             const rows = Array.from(tbody.getElementsByTagName('tr'));
-            console.log("Rebuilding", rows.length, "rows based on columnOrder:", columnOrder);
+            // console.log("Rebuilding", rows.length, "rows based on columnOrder:", columnOrder);
             
             rows.forEach(row => {
                 // Create a map of original column index to cell content
@@ -348,8 +541,8 @@
                 const allCells = Array.from(row.cells);
                 
                 allCells.forEach(cell => {
-                    const origIndex = parseInt(cell.getAttribute('data-original-col-index'));
                     // For bias column, textContent will be "BULLISH", "BEARISH", or "NEUTRAL"
+                    const origIndex = parseInt(cell.getAttribute('data-original-col-index'));
                     cellMap[origIndex] = cell.textContent; 
                 });
                 
@@ -386,7 +579,151 @@
                 });
             });
             
-            console.log("Table rebuilding complete");
+            // console.log("Table rebuilding complete");
+        }
+
+        // Initialize column drag and drop once jQuery is fully loaded
+        if (typeof jQuery !== 'undefined' && typeof $.ui !== 'undefined') {
+            initializeColumnDragDrop();
+        } else {
+            console.error("jQuery or jQuery UI not loaded properly");
+            // Try to load jQuery and jQuery UI again
+            const jq = document.createElement('script');
+            jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+            document.head.appendChild(jq);
+            
+            jq.onload = function() {
+                const jqui = document.createElement('script');
+                jqui.src = "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js";
+                document.head.appendChild(jqui);
+                
+                jqui.onload = function() {
+                    initializeColumnDragDrop();
+                };
+            };
+        }
+
+        // Initialize modal event handlers
+        const inputModal = document.getElementById('inputModal');
+        if (inputModal) {
+            inputModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                currentIndicator = button.getAttribute('data-indicator');
+                currentInputId = button.getAttribute('data-input-id');
+                
+                // Update modal title and labels
+                document.getElementById('inputModalLabel').textContent = `${currentIndicator} Value`;
+                document.getElementById('modalFieldLabel').textContent = `${currentIndicator} Value`;
+                
+                // Pre-fill with current value if it exists
+                const currentValue = document.getElementById(currentInputId).value || '';
+                document.getElementById('headerInput').value = currentValue;
+            });
+        }
+        
+        // Handle Keltner Channels modal open
+        const keltnerModal = document.getElementById('keltnerModal');
+        if (keltnerModal) {
+            keltnerModal.addEventListener('show.bs.modal', function(event) {
+                // Pre-fill with current values
+                const currentEmaLength = document.getElementById('keltnerEmaLength').value || '20';
+                const currentAtrLength = document.getElementById('keltnerAtrLength').value || '14';
+                const currentMultiplier = document.getElementById('keltnerMultiplier').value || '2';
+                
+                document.getElementById('keltnerEmaLengthInput').value = currentEmaLength;
+                document.getElementById('keltnerAtrLengthInput').value = currentAtrLength;
+                document.getElementById('keltnerMultiplierInput').value = currentMultiplier;
+                
+                // console.log('Opening Keltner modal with values:', currentEmaLength, currentAtrLength, currentMultiplier);
+            });
+        }
+        
+        // Handle Supertrend modal open
+        const supertrendModal = document.getElementById('supertrendModal');
+        if (supertrendModal) {
+            supertrendModal.addEventListener('show.bs.modal', function(event) {
+                // Pre-fill with current values
+                const currentLength = document.getElementById('supertrendLength').value || '14';
+                const currentMultiplier = document.getElementById('supertrendMultiplier').value || '3';
+                
+                document.getElementById('supertrendLengthInput').value = currentLength;
+                document.getElementById('supertrendMultiplierInput').value = currentMultiplier;
+                
+                // console.log('Opening Supertrend modal with values:', currentLength, currentMultiplier);
+            });
+        }
+
+        // Add event listener for the generic "Update" button in the modal
+        const saveInputButton = document.getElementById('saveInput');
+        if (saveInputButton) {
+            saveInputButton.addEventListener('click', function() {
+                // Get the indicator value from the modal input
+                const indicatorValue = document.getElementById('headerInput').value || 0;
+                
+                // Update the corresponding input field
+                document.getElementById(currentInputId).value = indicatorValue;
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('inputModal'));
+                if (modal) modal.hide();
+                
+                refreshIndicatorData();
+            });
+        }
+
+        // Add event listener for the Supertrend "Update" button
+        const saveSupertrendButton = document.getElementById('saveSupertrendInput');
+        if (saveSupertrendButton) {
+            saveSupertrendButton.addEventListener('click', function() {
+                // Get the Supertrend values from the modal inputs
+                const supertrendLength = document.getElementById('supertrendLengthInput').value || 14;
+                const supertrendMultiplier = document.getElementById('supertrendMultiplierInput').value || 3;
+                
+                // Update the corresponding input fields
+                document.getElementById('supertrendLength').value = supertrendLength;
+                document.getElementById('supertrendMultiplier').value = supertrendMultiplier;
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('supertrendModal'));
+                if (modal) modal.hide();
+                
+                refreshIndicatorData();
+            });
+        }
+
+        // Add event listener for the Keltner Channels "Update" button
+        const saveKeltnerButton = document.getElementById('saveKeltnerInput');
+        if (saveKeltnerButton) {
+            saveKeltnerButton.addEventListener('click', function() {
+                // Get the Keltner values from the modal inputs
+                const keltnerEmaLength = document.getElementById('keltnerEmaLengthInput').value || 20;
+                const keltnerAtrLength = document.getElementById('keltnerAtrLengthInput').value || 14;
+                const keltnerMultiplier = document.getElementById('keltnerMultiplierInput').value || 2;
+                
+                // Update the corresponding input fields
+                document.getElementById('keltnerEmaLength').value = keltnerEmaLength;
+                document.getElementById('keltnerAtrLength').value = keltnerAtrLength;
+                document.getElementById('keltnerMultiplier').value = keltnerMultiplier;
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('keltnerModal'));
+                if (modal) modal.hide();
+                
+                refreshIndicatorData();
+            });
+        }
+
+        // Reset Keltner defaults when button is clicked
+        const resetKeltnerButton = document.getElementById('resetKeltnerDefaults');
+        if (resetKeltnerButton) {
+            resetKeltnerButton.addEventListener('click', function() {
+                // Set default values
+                document.getElementById('keltnerEmaLengthInput').value = 20;
+                document.getElementById('keltnerAtrLengthInput').value = 14;
+                document.getElementById('keltnerMultiplierInput').value = 2;
+                
+                // console.log('Keltner values reset to defaults');
+            });
         }
 
         // Initially hide the table until data loads
@@ -397,9 +734,158 @@
             lastUpdatedTime.textContent = now.toLocaleString();
         }
 
-        function createEventSource(timeframe) {
+        // Function to refresh indicator data with current settings
+        function refreshIndicatorData() {
+            // Get all indicator values
+            const ema = document.getElementById('emaValue').value || 10;
+            const sma = document.getElementById('smaValue').value || 10;
+            const hma = document.getElementById('hmaValue').value || 10;
+            const macd = document.getElementById('macdValue').value || '26,12,9';
+            const supertrendLength = document.getElementById('supertrendLength').value || 14;
+            const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
+            const keltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
+            const keltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
+            const keltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
+            
+            // Recreate indicator EventSource with new values
+            indicatorEventSource = createIndicatorEventSource();
+        }
+
+        function createIndicatorEventSource() {
+            if (indicatorEventSource) {
+                // console.log('Closing existing Indicator EventSource');
+                indicatorEventSource.close();
+            }
+
+            // console.log('Creating new Indicator EventSource');
+            // Add parameters for indicators
+            const ema = document.getElementById('emaValue').value || 10;
+            const sma = document.getElementById('smaValue').value || 10;
+            const hma = document.getElementById('hmaValue').value || 10;
+            const macd = document.getElementById('macdValue').value || '26,12,9';
+            const supertrendLength = document.getElementById('supertrendLength').value || 14;
+            const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
+            const keltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
+            const keltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
+            const keltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
+            
+            /*
+            console.log('Indicator values:');
+            console.log('- EMA:', ema);
+            console.log('- SMA:', sma);
+            console.log('- HMA:', hma);
+            console.log('- MACD:', macd);
+            console.log('- Supertrend Length:', supertrendLength);
+            console.log('- Supertrend Multiplier:', supertrendMultiplier);
+            console.log('- Keltner EMA Length:', keltnerEmaLength);
+            console.log('- Keltner ATR Length:', keltnerAtrLength);
+            console.log('- Keltner Multiplier:', keltnerMultiplier);
+            */
+            
+            const indicatorParams = new URLSearchParams({
+                timeframe: timeframeSelect.value,
+                ema: ema,
+                sma: sma,
+                hma: hma,
+                macd: macd,  // Already in the right order (SLOW,FAST,SIGNAL)
+                supertrendLength: supertrendLength,
+                supertrendMultiplier: supertrendMultiplier,
+                keltnerEmaLength: keltnerEmaLength,
+                keltnerAtrLength: keltnerAtrLength,
+                keltnerMultiplier: keltnerMultiplier
+            });
+            
+            const newIndicatorEventSource = new EventSource(`{% url "stream_indicator_data" %}?${indicatorParams.toString()}`);
+
+            newIndicatorEventSource.onopen = () => {/* console.log('Indicator EventSource connection opened') */};
+
+            newIndicatorEventSource.onerror = (error) => {
+                console.error('Indicator EventSource error:', error);
+            };
+
+            newIndicatorEventSource.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                // console.log('Received indicator data:', data);
+                
+                // Handle error messages
+                if (data.error) {
+                    console.error('Error in indicator data:', data.error);
+                    return;
+                }
+                
+                if (data.message) {
+                    console.warn('Message from indicator stream:', data.message);
+                    return;
+                }
+                
+                // Store indicator data by ticker for later merging
+                data.forEach(item => {
+                    try {
+                        if (!item || !item.ticker_symbol) {
+                            console.warn('Invalid indicator data item:', item);
+                            return;
+                        }
+                        
+                        if (!indicatorData[item.ticker_symbol]) {
+                            indicatorData[item.ticker_symbol] = {};
+                        }
+                        
+                        // Check for MACD_26_12_9 field errors
+                        if (item.macd === undefined) {
+                            console.warn(`MACD indicator missing for ${item.ticker_symbol}, using fallback`);
+                            item.macd = 0; // Use fallback value
+                        }
+                        
+                        // Update with new data, preserving old data
+                        indicatorData[item.ticker_symbol] = {...indicatorData[item.ticker_symbol], ...item};
+                    } catch (e) {
+                        console.error(`Error processing indicator data for item:`, e, item);
+                    }
+                });
+                
+                // If dynamic data is already available, merge and update table
+                if (dynamicData.length > 0) {
+                    updateTableWithMergedData();
+                }
+            };
+            return newIndicatorEventSource;
+        }
+
+        function createStaticEventSource() {
+            if (staticEventSource) {
+                console.log('Closing existing Static EventSource');
+                staticEventSource.close();
+            }
+
+            console.log('Creating new Static EventSource');
+            const newStaticEventSource = new EventSource(`{% url "sse_static_future_data" %}`);
+
+            newStaticEventSource.onopen = () => console.log('Static EventSource connection opened');
+
+            newStaticEventSource.onerror = (error) => {
+                console.error('Static EventSource error:', error);
+            };
+
+            newStaticEventSource.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                console.log('Received static data:', data);
+                
+                // Store static data by ticker for later merging
+                data.forEach(item => {
+                    staticData[item.ticker_symbol] = item;
+                });
+                
+                // If dynamic data is already available, merge and update table
+                if (dynamicData.length > 0) {
+                    updateTableWithMergedData();
+                }
+            };
+            return newStaticEventSource;
+        }
+
+        function createDynamicEventSource(timeframe) {
             if (eventSource) {
-                console.log('Closing existing EventSource');
+                // console.log('Closing existing EventSource');
                 eventSource.close();
             }
 
@@ -407,10 +893,10 @@
             loadingIndicator.style.display = 'block';
             tableContainer.style.display = 'none';
 
-            console.log('Creating new EventSource with timeframe:', timeframe);
+            // console.log('Creating new EventSource with timeframe:', timeframe);
             const newEventSource = new EventSource(`{% url "stream_dynamic_data" %}?timeframe=${timeframe}`);
 
-            newEventSource.onopen = () => console.log('EventSource connection opened with timeframe:', timeframe);
+            newEventSource.onopen = () => {/* console.log('EventSource connection opened with timeframe:', timeframe) */};
 
             newEventSource.onerror = (error) => {
                 console.error('EventSource error:', error);
@@ -423,11 +909,6 @@
                 tableContainer.style.display = 'block';
 
                 const data = JSON.parse(event.data);
-                const tableBody = document.querySelector('#dynamicDataTable tbody');
-
-                while (tableBody.firstChild) {
-                    tableBody.removeChild(tableBody.firstChild);
-                }
 
                 if (data.message) {
                     loadingIndicator.innerHTML = data.message;
@@ -435,9 +916,37 @@
                     tableContainer.style.display = 'none';
                 } else {
                     updateLastUpdatedTime();
+                    // Store the dynamic data
+                    dynamicData = data;
                     recordCount.textContent = `${data.length} records`;
 
-                    data.forEach(ticker => {
+                    // Update the table with merged data
+                    updateTableWithMergedData();
+                }
+            };
+            return newEventSource;
+        }
+
+        // For compatibility with existing code that may call this function
+        function createEventSource(timeframe) {
+            return createDynamicEventSource(timeframe);
+        }
+        
+        // Function to update the table with merged data from all sources
+        function updateTableWithMergedData() {
+            const tableBody = document.querySelector('#dynamicDataTable tbody');
+            
+            if (!tableBody) {
+                console.error("Table body not found");
+                return;
+            }
+            
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+            
+            // Merge dynamic and static data
+            dynamicData.forEach(ticker => {
                         const row = document.createElement('tr');
                         
                         // Create an array to hold all cell data in original position
@@ -476,61 +985,149 @@
                         // Bias (index 18)
                         cellsData[18] = ticker.bias || 'NEUTRAL';
                         
-                        // Debug output to verify bias data is received correctly
-                        console.log(`Ticker ${ticker.ticker_symbol} bias: ${ticker.bias}`);
+                // Get ticker symbol for lookup
+                const tickerSymbol = ticker.ticker_symbol;
+                
+                // Add static data if available for this ticker
+                if (staticData[tickerSymbol]) {
+                    const sd = staticData[tickerSymbol];
+                    
+                    // Current Day Data (indices 19-31)
+                    cellsData[19] = sd.current_day_30_mins_top_with_date_and_time_of_the_bar;
+                    cellsData[20] = sd.current_day_30_mins_bottom_with_date_and_time_of_the_bar;
+                    cellsData[21] = sd.last_5_tops_in_30_mins_with_date_and_time_of_the_bar;
+                    cellsData[22] = sd.last_5_bottoms_in_30_mins_with_date_and_time_of_the_bar;
+                    cellsData[23] = sd.day_top_latest_1_with_date;
+                    cellsData[24] = sd.day_bottom_latest_1_with_date;
+                    cellsData[25] = sd.high_low_60_min_bar_9_am_10_am;
+                    cellsData[26] = sd.high_low_60_min_bar_10_am_11_am;
+                    cellsData[27] = sd.high_low_60_min_bar_11_am_12_pm;
+                    cellsData[28] = sd.high_low_60_min_bar_12_pm_1_pm;
+                    cellsData[29] = sd.high_low_60_min_bar_1_pm_2_pm;
+                    cellsData[30] = sd.high_low_60_min_bar_2_pm_3_pm;
+                    cellsData[31] = sd.high_low_60_min_bar_3_pm_4_pm;
+                    
+                    // Weekly/Monthly Data (indices 32-41)
+                    cellsData[32] = sd.week_top_latest_1_with_date;
+                    cellsData[33] = sd.week_top_previous_1_with_date;
+                    cellsData[34] = sd.week_bottom_latest_1_with_date;
+                    cellsData[35] = sd.week_bottom_previous_1_with_date;
+                    cellsData[36] = sd.month_top_1_with_date;
+                    cellsData[37] = sd.month_top_2_with_date;
+                    cellsData[38] = sd.month_bottom_1_with_date;
+                    cellsData[39] = sd.month_bottom_2_with_date;
+                    cellsData[40] = sd.expiry_week_vwap;
+                    cellsData[41] = sd.roll_over_week_high_low_volume_bar;
+                    
+                    // Override bias if available in static data
+                    if (sd.bias) {
+                        cellsData[18] = sd.bias;
+                    }
+                }
+                
+                // Add indicator data if available for this ticker
+                if (indicatorData[tickerSymbol]) {
+                    const id = indicatorData[tickerSymbol];
+                    // console.log(`Processing indicator data for ${tickerSymbol}:`, id);
+                    
+                    // Override bias if defined in indicator data
+                    if (id.bias) {
+                        cellsData[18] = id.bias;
+                    }
+                    
+                    // Technical Indicators (indices 42-51)
+                    cellsData[42] = id.ema;
+                    cellsData[43] = id.sma;
+                    cellsData[44] = id.hma;
+                    cellsData[45] = id.macd;
+                    cellsData[46] = id.signal_line;
+                    cellsData[47] = id.supertrend;
+                    cellsData[48] = id.keltner_upper;
+                    cellsData[49] = id.keltner_middle;
+                    cellsData[50] = id.keltner_lower;
+                    cellsData[51] = id.pivot;
+                }
+                
+                // Debug output to verify bias data
+                // console.log(`Ticker ${tickerSymbol} bias: ${cellsData[18]}`);
+                
+                // Add cells to the row in the correct order based on the current column order
+                columnOrder.forEach((originalIndex, displayIndex) => {
+                    if (originalIndex !== undefined && originalIndex < cellsData.length) {
+                        const value = cellsData[originalIndex];
+                        const cell = document.createElement('td');
+                        cell.setAttribute('data-original-col-index', originalIndex);
                         
-                        // Add cells to the row in the correct order based on the current column order
-                        columnOrder.forEach((originalIndex, displayIndex) => {
-                            if (originalIndex !== undefined && originalIndex < cellsData.length) {
-                                const value = cellsData[originalIndex];
-                                const cell = document.createElement('td');
-                                cell.setAttribute('data-original-col-index', originalIndex);
-                                
-                                // Special formatting for bias column
-                                if (originalIndex === 18) {
-                                    const biasValue = value || 'NEUTRAL';
-                                    cell.textContent = biasValue;
-                                    
-                                    // Add visual indicators based on bias
-                                    if (biasValue === 'BULLISH') {
-                                        cell.classList.add('text-success');
-                                        cell.innerHTML = `<strong>${biasValue}</strong>`;
-                                    } else if (biasValue === 'BEARISH') {
-                                        cell.classList.add('text-danger');
-                                        cell.innerHTML = `<strong>${biasValue}</strong>`;
-                                    } else {
-                                        cell.classList.add('text-warning');
-                                        cell.textContent = biasValue;
-                                    }
-                                } else if (typeof value === 'number') {
-                                    cell.textContent = value.toFixed(2);
+                        // Special formatting for bias column
+                        if (originalIndex === 18) {
+                            const biasValue = value || 'NEUTRAL';
+                            cell.textContent = biasValue;
+                            
+                            // Add visual indicators based on bias
+                            if (biasValue === 'BULLISH') {
+                                cell.classList.add('text-success');
+                                cell.innerHTML = `<strong>${biasValue}</strong>`;
+                            } else if (biasValue === 'BEARISH') {
+                                cell.classList.add('text-danger');
+                                cell.innerHTML = `<strong>${biasValue}</strong>`;
+                            } else {
+                                cell.classList.add('text-warning');
+                                cell.textContent = biasValue;
+                            }
+                        } 
+                        // Special formatting for SuperTrend
+                        else if (originalIndex === 44 && value) {
+                            // SuperTrend values are often "Bullish" or "Bearish"
+                            if (value === "Bullish") {
+                                cell.classList.add('text-success');
+                                cell.innerHTML = `<strong>${value}</strong>`;
+                            } else if (value === "Bearish") {
+                                cell.classList.add('text-danger');
+                                cell.innerHTML = `<strong>${value}</strong>`;
+                            } else {
+                                cell.textContent = value;
+                            }
+                        }
+                        else if (typeof value === 'number') {
+                            // Format numbers with 2 decimal places
+                            cell.textContent = Number.isFinite(value) ? value.toFixed(2) : '-';
                                 } else {
                                     cell.textContent = value || '-';
                                 }
                                 row.appendChild(cell);
                             }
-                        });
+                });
                         
                         tableBody.appendChild(row);
                     });
-                }
-            };
-            return newEventSource;
         }
 
-        // Initialize EventSource
-        eventSource = createEventSource(timeframeSelect.value);
+        // Initialize all EventSources
+        eventSource = createDynamicEventSource(timeframeSelect.value);
+        staticEventSource = createStaticEventSource();
+        indicatorEventSource = createIndicatorEventSource();
 
         // Update EventSource when timeframe changes
         updateButton.addEventListener('click', function () {
-            eventSource = createEventSource(timeframeSelect.value);
+            const selectedTimeframe = timeframeSelect.value;
+            eventSource = createDynamicEventSource(selectedTimeframe);
+            
+            // Also refresh the indicator data with the new timeframe
+            refreshIndicatorData();
+            
+            // No need to refresh static source as it doesn't depend on timeframe
         });
 
         // Add a refresh button handler that maintains column order
-        document.querySelector('button.btn-dark').addEventListener('click', function() {
-            // Just recreate the event source with current timeframe
-            eventSource = createEventSource(timeframeSelect.value);
-        });
+        const refreshButton = document.querySelector('button.btn-dark');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                // Refresh all event sources
+                eventSource = createDynamicEventSource(timeframeSelect.value);
+                staticEventSource = createStaticEventSource();
+                refreshIndicatorData();
+            });
+        }
     });
 </script>
 {% endblock %}

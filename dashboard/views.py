@@ -85,11 +85,9 @@ def trending_stocks(request):
     return render(request, 'dashboard/trending stocks.html')
 
 def stocks(request):
-    """View for the stock screener page"""
     return render(request, 'dashboard/stocks.html')
 
 def futures(request):
-    """View for the futures page"""
     return render(request, 'dashboard/futures.html')
 
 def future_scanner(request):

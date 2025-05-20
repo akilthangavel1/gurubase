@@ -29,7 +29,7 @@ async def fetch_latest_data(ticker_symbol, timeframe='1'):
 
 
 def _fetch_data_from_db(ticker_symbol, timeframe='1'):
-    """Helper function to fetch data from the database. Always uses 1-minute timeframe."""
+    print("#########################")
     with connection.cursor() as cursor:
         table_name = f"{ticker_symbol}_future_historical_data"
         # Always use the 1-minute timeframe query
@@ -38,13 +38,109 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
                    close_price, volume
             FROM "{table_name}"
             ORDER BY datetime DESC
-            LIMIT 700  -- Fetch the last 3 records for calculating ATP and swings
+            LIMIT 700 
         """
         cursor.execute(query)
         columns = [col[0] for col in cursor.description]
         data = cursor.fetchall()
         ohlcv_data = pd.DataFrame(data, columns=columns)
-        # Convert 'datetime' column to pandas datetime and localize to IST
+
+
+        query = f"""
+                WITH hour_slots AS (
+                    -- Generate all possible hour slots for a trading day (UTC times)
+                    -- UTC+5:30 -> UTC conversion: 9:15 IST = 3:45 UTC, 15:30 IST = 10:00 UTC
+                    SELECT generate_series(0, 6) as slot_id,
+                           '03:45'::time + (generate_series(0, 6) || ' hour')::interval as slot_time,
+                           '09:15'::time + (generate_series(0, 6) || ' hour')::interval as display_time
+                ),
+                trading_days AS (
+                    -- Get distinct days from the data
+                    SELECT DISTINCT date_trunc('day', datetime) as day_date
+                    FROM "{table_name}"
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM datetime) = 3 AND EXTRACT(MINUTE FROM datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM datetime) = 10 AND EXTRACT(MINUTE FROM datetime) <= 0))
+                ),
+                all_slots AS (
+                    -- Cross join to create all possible hour slots for all trading days
+                    SELECT 
+                        td.day_date,
+                        td.day_date + hs.slot_time as interval_start,
+                        td.day_date + hs.display_time as display_time,
+                        hs.slot_id
+                    FROM trading_days td
+                    CROSS JOIN hour_slots hs
+                ),
+                hour_candles AS (
+                    -- Match data points to their corresponding hour slot (in UTC)
+                    SELECT 
+                        as_slot.display_time as display_interval,
+                        as_slot.interval_start,
+                        data.datetime,
+                        data.open_price,
+                        data.high_price,
+                        data.low_price,
+                        data.close_price,
+                        data.volume
+                    FROM "{table_name}" data
+                    JOIN all_slots as_slot
+                        ON date_trunc('day', data.datetime) = as_slot.day_date
+                        -- Match data to candle based on time (UTC)
+                        AND (
+                            -- Regular 1-hour candles
+                            (as_slot.slot_id < 6 AND 
+                             data.datetime >= as_slot.interval_start AND 
+                             data.datetime < as_slot.interval_start + INTERVAL '1 hour')
+                            OR
+                            -- Special case for the last candle (15:15-15:30 IST = 9:45-10:00 UTC)
+                            (as_slot.slot_id = 6 AND
+                             data.datetime >= as_slot.interval_start AND
+                             data.datetime <= as_slot.day_date + INTERVAL '10 hours')
+                        )
+                    WHERE
+                        -- Only include data from trading hours (UTC times)
+                        (EXTRACT(HOUR FROM data.datetime) >= 3 AND 
+                         NOT (EXTRACT(HOUR FROM data.datetime) = 3 AND EXTRACT(MINUTE FROM data.datetime) < 45)) AND
+                        (EXTRACT(HOUR FROM data.datetime) < 10 OR 
+                         (EXTRACT(HOUR FROM data.datetime) = 10 AND EXTRACT(MINUTE FROM data.datetime) <= 0))
+                ),
+                aggregated_candles AS (
+                    -- Aggregate the data within each hour slot
+                    SELECT 
+                        display_interval,
+                        FIRST_VALUE(open_price) OVER (PARTITION BY display_interval ORDER BY datetime) AS open_price,
+                        MAX(high_price) OVER (PARTITION BY display_interval) AS high_price,
+                        MIN(low_price) OVER (PARTITION BY display_interval) AS low_price,
+                        LAST_VALUE(close_price) OVER (PARTITION BY display_interval ORDER BY datetime ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS close_price,
+                        SUM(volume) OVER (PARTITION BY display_interval) AS volume
+                    FROM hour_candles
+                ),
+                final_candles AS (
+                    -- Remove duplicates
+                    SELECT DISTINCT
+                        display_interval,
+                        open_price,
+                        high_price,
+                        low_price,
+                        close_price,
+                        volume
+                    FROM aggregated_candles
+                )
+                
+                SELECT display_interval as datetime, open_price, high_price, low_price, close_price, volume
+                FROM final_candles
+                ORDER BY display_interval DESC
+                LIMIT 3 -- Fetch the last 3 records for calculating ATP and swings
+            """
+        cursor.execute(query)
+        columns = [col[0] for col in cursor.description]
+        data_one_hour = cursor.fetchall()
+        ohlcv_data_one_hour = pd.DataFrame(data_one_hour, columns=columns)
+        print(ohlcv_data_one_hour.head())
         if not ohlcv_data.empty and 'datetime' in ohlcv_data.columns:
             ohlcv_data['datetime'] = pd.to_datetime(ohlcv_data['datetime'])
             # If your DB stores UTC, localize to UTC first, then convert to IST
@@ -59,13 +155,13 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1'):
         result = {
             'ticker_symbol': ticker_symbol,
             # Use ohlcv_data for calculations
-            'high_low_60_min_bar_9_am_10_am': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 9)]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 9)]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
-            'high_low_60_min_bar_10_am_11_am': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 10)]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 10)]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
-            'high_low_60_min_bar_11_am_12_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 11)]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 11)]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
-            'high_low_60_min_bar_12_pm_1_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 12)]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 12)]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
-            'high_low_60_min_bar_1_pm_2_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 13)]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 13)]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
-            'high_low_60_min_bar_2_pm_3_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 14)]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 14)]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
-            'high_low_60_min_bar_3_pm_4_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 15)]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & (ohlcv_data['datetime'].dt.hour == 15)]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
+            # 'high_low_60_min_bar_9_am_10_am': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 9) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 10) & (ohlcv_data['datetime'].dt.minute < 15))]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 9) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 10) & (ohlcv_data['datetime'].dt.minute < 15))]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
+            # 'high_low_60_min_bar_10_am_11_am': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 10) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 11) & (ohlcv_data['datetime'].dt.minute < 15))]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 10) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 11) & (ohlcv_data['datetime'].dt.minute < 15))]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
+            # 'high_low_60_min_bar_11_am_12_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 11) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 12) & (ohlcv_data['datetime'].dt.minute < 15))]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 11) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 12) & (ohlcv_data['datetime'].dt.minute < 15))]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
+            # 'high_low_60_min_bar_12_pm_1_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 12) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 13) & (ohlcv_data['datetime'].dt.minute < 15))]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 12) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 13) & (ohlcv_data['datetime'].dt.minute < 15))]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
+            # 'high_low_60_min_bar_1_pm_2_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 13) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 14) & (ohlcv_data['datetime'].dt.minute < 15))]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 13) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 14) & (ohlcv_data['datetime'].dt.minute < 15))]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
+            # 'high_low_60_min_bar_2_pm_3_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 14) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 15) & (ohlcv_data['datetime'].dt.minute < 15))]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 14) & (ohlcv_data['datetime'].dt.minute >= 15)) | ((ohlcv_data['datetime'].dt.hour == 15) & (ohlcv_data['datetime'].dt.minute < 15))]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
+            # 'high_low_60_min_bar_3_pm_4_pm': f"H: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 15) & (ohlcv_data['datetime'].dt.minute >= 15) & (ohlcv_data['datetime'].dt.minute <= 30))]['high_price'].max() if 'high_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}, L: {ohlcv_data[(ohlcv_data['datetime'].dt.date == ohlcv_data['datetime'].dt.date.max()) & ((ohlcv_data['datetime'].dt.hour == 15) & (ohlcv_data['datetime'].dt.minute >= 15) & (ohlcv_data['datetime'].dt.minute <= 30))]['low_price'].min() if 'low_price' in ohlcv_data.columns and hasattr(ohlcv_data['datetime'], 'dt') else 'N/A'}",
             'current_day_30_mins_top_with_date_and_time_of_the_bar': ohlcv_data.iloc[0]['high_price'] if 'high_price' in ohlcv_data.columns else None,
             'current_day_30_mins_bottom_with_date_and_time_of_the_bar': ohlcv_data.iloc[0]['low_price'] if 'low_price' in ohlcv_data.columns else None,
             'last_5_tops_in_30_mins_with_date_and_time_of_the_bar': ohlcv_data.head(5)['high_price'].max() if 'high_price' in ohlcv_data.columns else None,

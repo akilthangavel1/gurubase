@@ -19,7 +19,7 @@ def future_dynamic_data(request):
 async def fetch_latest_data(ticker_symbol, timeframe='1'):
     """Fetch the latest data for a given ticker symbol."""
     try:
-        # Use sync_to_async to wrap the database operation
+       
         data = await sync_to_async(_fetch_data_from_db)(ticker_symbol, timeframe)
         return data
     except Exception as e:
