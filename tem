@@ -28,7 +28,7 @@ WantedBy=multi-user.target
 
 
 server {
-    listen 80;
+    listen 80;x
     server_name 3.108.191.73 abunduswealth.com www.abunduswealth.com;
 
     location = /favicon.ico { access_log off; log_not_found off; }
