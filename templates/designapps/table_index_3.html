@@ -1,0 +1,262 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="bg-dark text-light min-vh-100 p-3">
+    <div class="mb-3">
+        <div class="row g-2">
+            <!-- Market Selector -->
+            <div class="col-md-3">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Select Market
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active" href="#">All Markets</a></li>
+                        <li><a class="dropdown-item" href="#">Technology</a></li>
+                        <li><a class="dropdown-item" href="#">Consumer Cyclical</a></li>
+                        <li><a class="dropdown-item" href="#">Healthcare</a></li>
+                        <li><a class="dropdown-item" href="#">Financial</a></li>
+                        <li><a class="dropdown-item" href="#">Energy</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Top Gainers</a></li>
+                        <li><a class="dropdown-item" href="#">Top Losers</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Time Period -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Time Period
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">1 Day</a></li>
+                        <li><a class="dropdown-item" href="#">1 Week</a></li>
+                        <li><a class="dropdown-item active" href="#">1 Month</a></li>
+                        <li><a class="dropdown-item" href="#">3 Months</a></li>
+                        <li><a class="dropdown-item" href="#">6 Months</a></li>
+                        <li><a class="dropdown-item" href="#">1 Year</a></li>
+                        <li><a class="dropdown-item" href="#">5 Years</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Sort By -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Sort By
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">Symbol</a></li>
+                        <li><a class="dropdown-item" href="#">Price (High to Low)</a></li>
+                        <li><a class="dropdown-item" href="#">Price (Low to High)</a></li>
+                        <li><a class="dropdown-item active" href="#">Change %</a></li>
+                        <li><a class="dropdown-item" href="#">Volume</a></li>
+                        <li><a class="dropdown-item" href="#">Market Cap</a></li>
+                        <li><a class="dropdown-item" href="#">P/E Ratio</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- View Type -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        View
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active" href="#">Table View</a></li>
+                        <li><a class="dropdown-item" href="#">Grid View</a></li>
+                        <li><a class="dropdown-item" href="#">Chart View</a></li>
+                        <li><a class="dropdown-item" href="#">Compact View</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Results Per Page -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Show
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">10 results</a></li>
+                        <li><a class="dropdown-item active" href="#">25 results</a></li>
+                        <li><a class="dropdown-item" href="#">50 results</a></li>
+                        <li><a class="dropdown-item" href="#">100 results</a></li>
+                        <li><a class="dropdown-item" href="#">All results</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Filter Button -->
+            <div class="col-md-1">
+                <button class="btn btn-success w-100" type="button" title="Apply Filters">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+    <table class="table table-dark table-bordered">
+        <thead>
+            <tr>
+                <th class="position-sticky start-0 bg-dark">Symbol</th>
+                <th>Date</th>
+                <th>Open</th>
+                <th>High</th>
+                <th>Low</th>
+                <th>Close</th>
+                <th>Volume</th>
+                <th>Change %</th>
+                <th>Prev Close</th>
+                <th>Market Cap</th>
+                <th>52W High</th>
+                <th>52W Low</th>
+                <th>P/E Ratio</th>
+                <th>Div Yield</th>
+                <th>Beta</th>
+                <th>EPS</th>
+                <th>Rev Growth</th>
+                <th>Sector</th>
+                <th>D/E Ratio</th>
+                <th>Profit Margin</th>
+                <th>Op Margin</th>
+                <th>ROE</th>
+                <th>FCF</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="position-sticky start-0 bg-dark">AAPL</td>
+                <td>2024-03-20</td>
+                <td>$175.50</td>
+                <td>$178.20</td>
+                <td>$174.80</td>
+                <td>$177.30</td>
+                <td>52,345,678</td>
+                <td>+1.03%</td>
+                <td>$175.50</td>
+                <td>$2.8T</td>
+                <td>$198.23</td>
+                <td>$124.17</td>
+                <td>28.5</td>
+                <td>0.51%</td>
+                <td>1.28</td>
+                <td>$6.21</td>
+                <td>+2.3%</td>
+                <td>Technology</td>
+                <td>2.85</td>
+                <td>25.3%</td>
+                <td>30.8%</td>
+                <td>160.9%</td>
+                <td>$110.5B</td>
+            </tr>
+            <tr>
+                <td class="position-sticky start-0 bg-dark">MSFT</td>
+                <td>2024-03-20</td>
+                <td>$415.25</td>
+                <td>$418.90</td>
+                <td>$414.50</td>
+                <td>$417.80</td>
+                <td>28,456,789</td>
+                <td>+0.61%</td>
+                <td>$414.25</td>
+                <td>$3.1T</td>
+                <td>$420.82</td>
+                <td>$213.43</td>
+                <td>35.2</td>
+                <td>0.72%</td>
+                <td>0.91</td>
+                <td>$11.87</td>
+                <td>+15.8%</td>
+                <td>Technology</td>
+                <td>0.42</td>
+                <td>36.7%</td>
+                <td>42.1%</td>
+                <td>39.1%</td>
+                <td>$65.2B</td>
+            </tr>
+            <tr>
+                <td class="position-sticky start-0 bg-dark">GOOGL</td>
+                <td>2024-03-20</td>
+                <td>$142.75</td>
+                <td>$144.30</td>
+                <td>$142.20</td>
+                <td>$143.90</td>
+                <td>35,678,912</td>
+                <td>+0.81%</td>
+                <td>$142.65</td>
+                <td>$1.8T</td>
+                <td>$152.10</td>
+                <td>$88.23</td>
+                <td>24.8</td>
+                <td>0.00%</td>
+                <td>1.05</td>
+                <td>$5.80</td>
+                <td>+13.5%</td>
+                <td>Technology</td>
+                <td>0.05</td>
+                <td>23.7%</td>
+                <td>28.4%</td>
+                <td>25.8%</td>
+                <td>$69.5B</td>
+            </tr>
+            <tr>
+                <td class="position-sticky start-0 bg-dark">AMZN</td>
+                <td>2024-03-20</td>
+                <td>$178.90</td>
+                <td>$180.45</td>
+                <td>$178.20</td>
+                <td>$179.95</td>
+                <td>42,567,890</td>
+                <td>+0.59%</td>
+                <td>$178.75</td>
+                <td>$1.9T</td>
+                <td>$189.77</td>
+                <td>$101.15</td>
+                <td>60.3</td>
+                <td>0.00%</td>
+                <td>1.14</td>
+                <td>$2.98</td>
+                <td>+14.0%</td>
+                <td>Consumer Cyclical</td>
+                <td>0.31</td>
+                <td>6.4%</td>
+                <td>7.8%</td>
+                <td>18.2%</td>
+                <td>$36.8B</td>
+            </tr>
+            <tr>
+                <td class="position-sticky start-0 bg-dark">META</td>
+                <td>2024-03-20</td>
+                <td>$485.30</td>
+                <td>$488.75</td>
+                <td>$484.50</td>
+                <td>$487.20</td>
+                <td>23,456,789</td>
+                <td>+0.39%</td>
+                <td>$485.10</td>
+                <td>$1.2T</td>
+                <td>$502.30</td>
+                <td>$88.09</td>
+                <td>32.7</td>
+                <td>0.00%</td>
+                <td>1.21</td>
+                <td>$14.89</td>
+                <td>+25.1%</td>
+                <td>Technology</td>
+                <td>0.12</td>
+                <td>33.2%</td>
+                <td>40.1%</td>
+                <td>28.5%</td>
+                <td>$43.2B</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

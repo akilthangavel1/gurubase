@@ -1,589 +1,193 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>Dark Theme - Large Responsive Table</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body {
+            margin: 0;
+            padding: 20px;
             background-color: #212529;
-            color: #e9ecef;
         }
 
-        .table {
-            color: #e9ecef;
+        .table-wrapper {
+            width: 100%;
+            height: 80vh;
+            overflow: auto;
+            border: 1px solid var(--bs-border-color);
+            border-radius: .5rem;
+            margin: 0 auto;
         }
 
-        .modal-content {
-            background-color: #343a40;
-            color: #e9ecef;
+        /* --- Minimal Custom CSS for Sticky Table --- */
+        /* This functionality is not available in Bootstrap by default */
+        
+        .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
 
-        .form-control,
-        .form-select,
-        .input-group-text {
-            background-color: #343a40;
-            border-color: #495057;
-            color: #e9ecef;
+        .table td:first-child,
+        .table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            /* A distinct background for the sticky column in dark mode */
+            background-color: #373b3e;
         }
 
-        .form-control:focus,
-        .form-select:focus {
-            background-color: #3b4148;
-            color: #e9ecef;
+        .table thead th:first-child {
+            z-index: 3; /* Must be on top of both header and first column */
         }
 
-        .badge.bg-light {
-            background-color: #343a40 !important;
-            color: #e9ecef !important;
+        .controls-container {
+            width: 100%;
+            margin: 0 auto 20px auto;
         }
-
-        .btn-light {
-            background-color: #343a40;
-            border-color: #495057;
-            color: #e9ecef;
-        }
-
-        .btn-outline-primary {
-            color: #8bb9fe;
-            border-color: #0d6efd;
-        }
-
-        .table-striped>tbody>tr:nth-of-type(odd)>* {
-            color: #e9ecef;
-        }
+        
     </style>
 </head>
-
 <body>
-    <div class="container mt-5">
-        <h2 class="mb-4 text-light">Table with 20 Headers</h2>
+<div class="controls-container">
 
-        <!-- Timeframe Selection -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <label class="input-group-text" for="timeframeSelect">Select Timeframe:</label>
-                    <select class="form-select" id="timeframeSelect">
-                        <option selected>Choose timeframe...</option>
-                        <option value="today">Today</option>
-                        <option value="yesterday">Yesterday</option>
-                        <option value="thisWeek">This Week</option>
-                        <option value="lastWeek">Last Week</option>
-                        <option value="thisMonth">This Month</option>
-                        <option value="lastMonth">Last Month</option>
-                        <option value="thisQuarter">This Quarter</option>
-                        <option value="lastQuarter">Last Quarter</option>
-                        <option value="thisYear">This Year</option>
-                        <option value="lastYear">Last Year</option>
-                        <option value="custom">Custom Range</option>
-                    </select>
-                    <button class="btn btn-primary" type="button">Apply</button>
-                    <button class="btn btn-secondary" type="button">Reset</button>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="btn-group float-end" role="group" aria-label="Table actions">
-                    <button type="button" class="btn btn-success">Export CSV</button>
-                    <button type="button" class="btn btn-info">Export Excel</button>
-                    <button type="button" class="btn btn-warning">Print</button>
-                    <button type="button" class="btn btn-dark">Refresh</button>
-                </div>
+    
+    <!-- Timeframe Selection -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <label class="input-group-text" for="timeframeSelect">Select Timeframe:</label>
+                <select class="form-select" id="timeframeSelect">
+                    <option selected>Choose timeframe...</option>
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="thisWeek">This Week</option>
+                    <option value="lastWeek">Last Week</option>
+                    <option value="thisMonth">This Month</option>
+                    <option value="lastMonth">Last Month</option>
+                    <option value="thisQuarter">This Quarter</option>
+                    <option value="lastQuarter">Last Quarter</option>
+                    <option value="thisYear">This Year</option>
+                    <option value="lastYear">Last Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <button class="btn btn-primary" type="button" id="submitBtn">Submit</button>
+                <button class="btn btn-secondary" type="button" id="resetBtn">Reset</button>
             </div>
         </div>
 
-        <!-- Additional Filter Options -->
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <div class="btn-group" role="group" aria-label="Filter options">
-                    <button type="button" class="btn btn-outline-primary">Filter</button>
-                    <button type="button" class="btn btn-outline-primary">Group By</button>
-                    <button type="button" class="btn btn-outline-primary">Sort</button>
-                    <button type="button" class="btn btn-outline-primary">Columns</button>
-                    <button type="button" class="btn btn-outline-primary">Save View</button>
-                </div>
+        <div class="col-md-6">
+            <div class="btn-group float-end" role="group" aria-label="Table actions">
+                <button type="button" class="btn btn-success">Export CSV</button>
+                <button type="button" class="btn btn-info">Export Excel</button>
+                <button type="button" class="btn btn-warning">Print</button>
+                <button type="button" class="btn btn-dark">Refresh</button>
             </div>
-        </div>
-
-        <!-- Last Updated Information -->
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-muted small">
-                        <span class="badge bg-dark text-light p-2">
-                            <i class="bi bi-clock"></i> Last Updated: <span id="lastUpdatedTime">April 12, 2023
-                                14:35:22</span>
-                        </span>
-                        <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2 text-info"
-                            id="refreshTimestamp">
-                            <i class="bi bi-arrow-clockwise"></i> Refresh
-                        </button>
-                    </div>
-                    <div>
-                        <span class="badge bg-primary">15 records</span>
-                        <span class="badge bg-secondary ms-1">Filtered: 0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped table-dark">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">Header 1</th>
-                        <th scope="col">Header 2</th>
-                        <th scope="col">Header 3</th>
-                        <th scope="col">Header 4</th>
-                        <th scope="col">Header 5</th>
-                        <th scope="col">Header 6</th>
-                        <th scope="col">Header 7 <button type="button" class="btn btn-sm btn-light"
-                                data-bs-toggle="modal" data-bs-target="#inputModal"><i
-                                    class="bi bi-plus-circle"></i></button></th>
-                        <th scope="col">Header 8</th>
-                        <th scope="col">Header 9</th>
-                        <th scope="col">Header 10</th>
-                        <th scope="col">Header 11</th>
-                        <th scope="col">Header 12</th>
-                        <th scope="col">Header 13</th>
-                        <th scope="col">Header 14</th>
-                        <th scope="col">Header 15</th>
-                        <th scope="col">Header 16</th>
-                        <th scope="col">Header 17</th>
-                        <th scope="col">Header 18</th>
-                        <th scope="col">Header 19</th>
-                        <th scope="col">Header 20</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Data 1-1</td>
-                        <td>Data 1-2</td>
-                        <td>Data 1-3</td>
-                        <td>Data 1-4</td>
-                        <td>Data 1-5</td>
-                        <td>Data 1-6</td>
-                        <td>Data 1-7</td>
-                        <td>Data 1-8</td>
-                        <td>Data 1-9</td>
-                        <td>Data 1-10</td>
-                        <td>Data 1-11</td>
-                        <td>Data 1-12</td>
-                        <td>Data 1-13</td>
-                        <td>Data 1-14</td>
-                        <td>Data 1-15</td>
-                        <td>Data 1-16</td>
-                        <td>Data 1-17</td>
-                        <td>Data 1-18</td>
-                        <td>Data 1-19</td>
-                        <td>Data 1-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 2-1</td>
-                        <td>Data 2-2</td>
-                        <td>Data 2-3</td>
-                        <td>Data 2-4</td>
-                        <td>Data 2-5</td>
-                        <td>Data 2-6</td>
-                        <td>Data 2-7</td>
-                        <td>Data 2-8</td>
-                        <td>Data 2-9</td>
-                        <td>Data 2-10</td>
-                        <td>Data 2-11</td>
-                        <td>Data 2-12</td>
-                        <td>Data 2-13</td>
-                        <td>Data 2-14</td>
-                        <td>Data 2-15</td>
-                        <td>Data 2-16</td>
-                        <td>Data 2-17</td>
-                        <td>Data 2-18</td>
-                        <td>Data 2-19</td>
-                        <td>Data 2-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 3-1</td>
-                        <td>Data 3-2</td>
-                        <td>Data 3-3</td>
-                        <td>Data 3-4</td>
-                        <td>Data 3-5</td>
-                        <td>Data 3-6</td>
-                        <td>Data 3-7</td>
-                        <td>Data 3-8</td>
-                        <td>Data 3-9</td>
-                        <td>Data 3-10</td>
-                        <td>Data 3-11</td>
-                        <td>Data 3-12</td>
-                        <td>Data 3-13</td>
-                        <td>Data 3-14</td>
-                        <td>Data 3-15</td>
-                        <td>Data 3-16</td>
-                        <td>Data 3-17</td>
-                        <td>Data 3-18</td>
-                        <td>Data 3-19</td>
-                        <td>Data 3-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 4-1</td>
-                        <td>Data 4-2</td>
-                        <td>Data 4-3</td>
-                        <td>Data 4-4</td>
-                        <td>Data 4-5</td>
-                        <td>Data 4-6</td>
-                        <td>Data 4-7</td>
-                        <td>Data 4-8</td>
-                        <td>Data 4-9</td>
-                        <td>Data 4-10</td>
-                        <td>Data 4-11</td>
-                        <td>Data 4-12</td>
-                        <td>Data 4-13</td>
-                        <td>Data 4-14</td>
-                        <td>Data 4-15</td>
-                        <td>Data 4-16</td>
-                        <td>Data 4-17</td>
-                        <td>Data 4-18</td>
-                        <td>Data 4-19</td>
-                        <td>Data 4-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 5-1</td>
-                        <td>Data 5-2</td>
-                        <td>Data 5-3</td>
-                        <td>Data 5-4</td>
-                        <td>Data 5-5</td>
-                        <td>Data 5-6</td>
-                        <td>Data 5-7</td>
-                        <td>Data 5-8</td>
-                        <td>Data 5-9</td>
-                        <td>Data 5-10</td>
-                        <td>Data 5-11</td>
-                        <td>Data 5-12</td>
-                        <td>Data 5-13</td>
-                        <td>Data 5-14</td>
-                        <td>Data 5-15</td>
-                        <td>Data 5-16</td>
-                        <td>Data 5-17</td>
-                        <td>Data 5-18</td>
-                        <td>Data 5-19</td>
-                        <td>Data 5-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 6-1</td>
-                        <td>Data 6-2</td>
-                        <td>Data 6-3</td>
-                        <td>Data 6-4</td>
-                        <td>Data 6-5</td>
-                        <td>Data 6-6</td>
-                        <td>Data 6-7</td>
-                        <td>Data 6-8</td>
-                        <td>Data 6-9</td>
-                        <td>Data 6-10</td>
-                        <td>Data 6-11</td>
-                        <td>Data 6-12</td>
-                        <td>Data 6-13</td>
-                        <td>Data 6-14</td>
-                        <td>Data 6-15</td>
-                        <td>Data 6-16</td>
-                        <td>Data 6-17</td>
-                        <td>Data 6-18</td>
-                        <td>Data 6-19</td>
-                        <td>Data 6-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 7-1</td>
-                        <td>Data 7-2</td>
-                        <td>Data 7-3</td>
-                        <td>Data 7-4</td>
-                        <td>Data 7-5</td>
-                        <td>Data 7-6</td>
-                        <td>Data 7-7</td>
-                        <td>Data 7-8</td>
-                        <td>Data 7-9</td>
-                        <td>Data 7-10</td>
-                        <td>Data 7-11</td>
-                        <td>Data 7-12</td>
-                        <td>Data 7-13</td>
-                        <td>Data 7-14</td>
-                        <td>Data 7-15</td>
-                        <td>Data 7-16</td>
-                        <td>Data 7-17</td>
-                        <td>Data 7-18</td>
-                        <td>Data 7-19</td>
-                        <td>Data 7-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 8-1</td>
-                        <td>Data 8-2</td>
-                        <td>Data 8-3</td>
-                        <td>Data 8-4</td>
-                        <td>Data 8-5</td>
-                        <td>Data 8-6</td>
-                        <td>Data 8-7</td>
-                        <td>Data 8-8</td>
-                        <td>Data 8-9</td>
-                        <td>Data 8-10</td>
-                        <td>Data 8-11</td>
-                        <td>Data 8-12</td>
-                        <td>Data 8-13</td>
-                        <td>Data 8-14</td>
-                        <td>Data 8-15</td>
-                        <td>Data 8-16</td>
-                        <td>Data 8-17</td>
-                        <td>Data 8-18</td>
-                        <td>Data 8-19</td>
-                        <td>Data 8-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 9-1</td>
-                        <td>Data 9-2</td>
-                        <td>Data 9-3</td>
-                        <td>Data 9-4</td>
-                        <td>Data 9-5</td>
-                        <td>Data 9-6</td>
-                        <td>Data 9-7</td>
-                        <td>Data 9-8</td>
-                        <td>Data 9-9</td>
-                        <td>Data 9-10</td>
-                        <td>Data 9-11</td>
-                        <td>Data 9-12</td>
-                        <td>Data 9-13</td>
-                        <td>Data 9-14</td>
-                        <td>Data 9-15</td>
-                        <td>Data 9-16</td>
-                        <td>Data 9-17</td>
-                        <td>Data 9-18</td>
-                        <td>Data 9-19</td>
-                        <td>Data 9-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 10-1</td>
-                        <td>Data 10-2</td>
-                        <td>Data 10-3</td>
-                        <td>Data 10-4</td>
-                        <td>Data 10-5</td>
-                        <td>Data 10-6</td>
-                        <td>Data 10-7</td>
-                        <td>Data 10-8</td>
-                        <td>Data 10-9</td>
-                        <td>Data 10-10</td>
-                        <td>Data 10-11</td>
-                        <td>Data 10-12</td>
-                        <td>Data 10-13</td>
-                        <td>Data 10-14</td>
-                        <td>Data 10-15</td>
-                        <td>Data 10-16</td>
-                        <td>Data 10-17</td>
-                        <td>Data 10-18</td>
-                        <td>Data 10-19</td>
-                        <td>Data 10-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 11-1</td>
-                        <td>Data 11-2</td>
-                        <td>Data 11-3</td>
-                        <td>Data 11-4</td>
-                        <td>Data 11-5</td>
-                        <td>Data 11-6</td>
-                        <td>Data 11-7</td>
-                        <td>Data 11-8</td>
-                        <td>Data 11-9</td>
-                        <td>Data 11-10</td>
-                        <td>Data 11-11</td>
-                        <td>Data 11-12</td>
-                        <td>Data 11-13</td>
-                        <td>Data 11-14</td>
-                        <td>Data 11-15</td>
-                        <td>Data 11-16</td>
-                        <td>Data 11-17</td>
-                        <td>Data 11-18</td>
-                        <td>Data 11-19</td>
-                        <td>Data 11-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 12-1</td>
-                        <td>Data 12-2</td>
-                        <td>Data 12-3</td>
-                        <td>Data 12-4</td>
-                        <td>Data 12-5</td>
-                        <td>Data 12-6</td>
-                        <td>Data 12-7</td>
-                        <td>Data 12-8</td>
-                        <td>Data 12-9</td>
-                        <td>Data 12-10</td>
-                        <td>Data 12-11</td>
-                        <td>Data 12-12</td>
-                        <td>Data 12-13</td>
-                        <td>Data 12-14</td>
-                        <td>Data 12-15</td>
-                        <td>Data 12-16</td>
-                        <td>Data 12-17</td>
-                        <td>Data 12-18</td>
-                        <td>Data 12-19</td>
-                        <td>Data 12-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 13-1</td>
-                        <td>Data 13-2</td>
-                        <td>Data 13-3</td>
-                        <td>Data 13-4</td>
-                        <td>Data 13-5</td>
-                        <td>Data 13-6</td>
-                        <td>Data 13-7</td>
-                        <td>Data 13-8</td>
-                        <td>Data 13-9</td>
-                        <td>Data 13-10</td>
-                        <td>Data 13-11</td>
-                        <td>Data 13-12</td>
-                        <td>Data 13-13</td>
-                        <td>Data 13-14</td>
-                        <td>Data 13-15</td>
-                        <td>Data 13-16</td>
-                        <td>Data 13-17</td>
-                        <td>Data 13-18</td>
-                        <td>Data 13-19</td>
-                        <td>Data 13-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 14-1</td>
-                        <td>Data 14-2</td>
-                        <td>Data 14-3</td>
-                        <td>Data 14-4</td>
-                        <td>Data 14-5</td>
-                        <td>Data 14-6</td>
-                        <td>Data 14-7</td>
-                        <td>Data 14-8</td>
-                        <td>Data 14-9</td>
-                        <td>Data 14-10</td>
-                        <td>Data 14-11</td>
-                        <td>Data 14-12</td>
-                        <td>Data 14-13</td>
-                        <td>Data 14-14</td>
-                        <td>Data 14-15</td>
-                        <td>Data 14-16</td>
-                        <td>Data 14-17</td>
-                        <td>Data 14-18</td>
-                        <td>Data 14-19</td>
-                        <td>Data 14-20</td>
-                    </tr>
-                    <tr>
-                        <td>Data 15-1</td>
-                        <td>Data 15-2</td>
-                        <td>Data 15-3</td>
-                        <td>Data 15-4</td>
-                        <td>Data 15-5</td>
-                        <td>Data 15-6</td>
-                        <td>Data 15-7</td>
-                        <td>Data 15-8</td>
-                        <td>Data 15-9</td>
-                        <td>Data 15-10</td>
-                        <td>Data 15-11</td>
-                        <td>Data 15-12</td>
-                        <td>Data 15-13</td>
-                        <td>Data 15-14</td>
-                        <td>Data 15-15</td>
-                        <td>Data 15-16</td>
-                        <td>Data 15-17</td>
-                        <td>Data 15-18</td>
-                        <td>Data 15-19</td>
-                        <td>Data 15-20</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </div>
+    
+    <!-- Additional Filter Options -->
 
-    <!-- Input Modal -->
-    <div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content bg-dark">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-light" id="inputModalLabel">Enter Text for Header 7</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+    
+    <!-- Last Updated Information -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="text-muted small">
+                    <span class="badge bg-dark text-light p-2">
+                        <i class="bi bi-clock"></i> Last Updated: <span id="lastUpdatedTime">December 15, 2024 10:30:15</span>
+                    </span>
+                    <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2 text-info" id="refreshTimestamp">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="headerInput" class="form-label text-light">Input Text</label>
-                        <input type="text" class="form-control bg-dark text-light border-secondary" id="headerInput"
-                            placeholder="Enter your text here">
-                    </div>
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveInput">Save changes</button>
+                <div>
+                    <span class="badge bg-primary">20 records</span>
+                    <span class="badge bg-secondary ms-1">Filtered: 0</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-        crossorigin="anonymous"></script>
+<div class="table-wrapper">
+    <table class="table table-striped table-bordered table-dark">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Phone</th>
+                <th>Location</th>
+                <th>Date Joined</th>
+                <th>Salary</th>
+                <th>Supervisor</th>
+                <th>Notes</th>
+                <th>Project</th>
+                <th>Office</th>
+                <th>Extension</th>
+                <th>Department Code</th>
+                <th>Email Verified</th>
+                <th>Last Login</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>Alice</td><td>alice@example.com</td><td>Admin</td><td>IT</td><td>Active</td><td>555-1234</td><td>New York</td><td>2022-01-15</td><td>$90,000</td><td>Mr. Smith</td><td>Team Lead</td><td>Alpha</td><td>HQ</td><td>101</td><td>IT</td><td>Yes</td><td>2024-06-01</td></tr>
+            <tr><td>2</td><td>Bob</td><td>bob@example.com</td><td>User</td><td>HR</td><td>Inactive</td><td>555-5678</td><td>Los Angeles</td><td>2021-11-23</td><td>$60,000</td><td>Ms. Lee</td><td>On leave</td><td>Beta</td><td>West</td><td>102</td><td>HR</td><td>Yes</td><td>2024-05-28</td></tr>
+            <tr><td>3</td><td>Charlie</td><td>charlie@example.com</td><td>Editor</td><td>Marketing</td><td>Active</td><td>555-8765</td><td>Chicago</td><td>2023-03-10</td><td>$70,000</td><td>Mr. Smith</td><td>Remote</td><td>Gamma</td><td>North</td><td>103</td><td>MK</td><td>No</td><td>2024-05-30</td></tr>
+            <tr><td>4</td><td>Diana</td><td>diana@example.com</td><td>Manager</td><td>Finance</td><td>Active</td><td>555-4321</td><td>Miami</td><td>2020-07-19</td><td>$110,000</td><td>Ms. Lee</td><td>Budget review</td><td>Delta</td><td>South</td><td>104</td><td>FN</td><td>Yes</td><td>2024-05-25</td></tr>
+            <tr><td>5</td><td>Edward</td><td>edward@example.com</td><td>Support</td><td>Customer Service</td><td>Inactive</td><td>555-2468</td><td>Seattle</td><td>2022-09-05</td><td>$55,000</td><td>Mr. Smith</td><td>Night shift</td><td>Epsilon</td><td>East</td><td>105</td><td>CS</td><td>No</td><td>2024-05-20</td></tr>
+            <tr><td>6</td><td>Fiona</td><td>fiona@example.com</td><td>Designer</td><td>Creative</td><td>Active</td><td>555-1357</td><td>Boston</td><td>2021-12-30</td><td>$68,000</td><td>Ms. Lee</td><td>Part-time</td><td>Zeta</td><td>HQ</td><td>106</td><td>CR</td><td>Yes</td><td>2024-06-01</td></tr>
+            <tr><td>7</td><td>George</td><td>george@example.com</td><td>Developer</td><td>Engineering</td><td>Active</td><td>555-9753</td><td>San Francisco</td><td>2023-04-22</td><td>$120,000</td><td>Mr. Smith</td><td>Full stack</td><td>Eta</td><td>West</td><td>107</td><td>EN</td><td>No</td><td>2024-05-28</td></tr>
+            <tr><td>8</td><td>Hannah</td><td>hannah@example.com</td><td>Analyst</td><td>Research</td><td>Inactive</td><td>555-8642</td><td>Denver</td><td>2020-10-11</td><td>$75,000</td><td>Ms. Lee</td><td>Contract</td><td>Theta</td><td>North</td><td>108</td><td>RS</td><td>Yes</td><td>2024-05-30</td></tr>
+            <tr><td>9</td><td>Ian</td><td>ian@example.com</td><td>Consultant</td><td>Advisory</td><td>Active</td><td>555-7531</td><td>Houston</td><td>2022-06-18</td><td>$95,000</td><td>Mr. Smith</td><td>External</td><td>Iota</td><td>South</td><td>109</td><td>AD</td><td>No</td><td>2024-05-25</td></tr>
+            <tr><td>10</td><td>Julia</td><td>julia@example.com</td><td>Intern</td><td>Training</td><td>Active</td><td>555-1597</td><td>Atlanta</td><td>2023-01-27</td><td>$40,000</td><td>Ms. Lee</td><td>Summer intern</td><td>Kappa</td><td>East</td><td>110</td><td>TR</td><td>Yes</td><td>2024-06-01</td></tr>
+            <tr><td>11</td><td>Kyle</td><td>kyle@example.com</td><td>QA</td><td>Testing</td><td>Active</td><td>555-3214</td><td>Phoenix</td><td>2021-05-14</td><td>$65,000</td><td>Mr. Smith</td><td>Automation</td><td>Lambda</td><td>HQ</td><td>111</td><td>QA</td><td>No</td><td>2024-05-28</td></tr>
+            <tr><td>12</td><td>Linda</td><td>linda@example.com</td><td>HR</td><td>HR</td><td>Inactive</td><td>555-6543</td><td>Dallas</td><td>2020-03-09</td><td>$72,000</td><td>Ms. Lee</td><td>Recruitment</td><td>Mu</td><td>West</td><td>112</td><td>HR</td><td>Yes</td><td>2024-05-30</td></tr>
+            <tr><td>13</td><td>Mike</td><td>mike@example.com</td><td>Support</td><td>Customer Service</td><td>Active</td><td>555-7890</td><td>Orlando</td><td>2022-08-21</td><td>$58,000</td><td>Mr. Smith</td><td>Evening shift</td><td>Nu</td><td>North</td><td>113</td><td>CS</td><td>No</td><td>2024-05-25</td></tr>
+            <tr><td>14</td><td>Nina</td><td>nina@example.com</td><td>Designer</td><td>Creative</td><td>Active</td><td>555-8520</td><td>Portland</td><td>2023-02-18</td><td>$69,000</td><td>Ms. Lee</td><td>Freelance</td><td>Xi</td><td>South</td><td>114</td><td>CR</td><td>Yes</td><td>2024-06-01</td></tr>
+            <tr><td>15</td><td>Oscar</td><td>oscar@example.com</td><td>Developer</td><td>Engineering</td><td>Inactive</td><td>555-9632</td><td>Las Vegas</td><td>2021-09-29</td><td>$115,000</td><td>Mr. Smith</td><td>Resigned</td><td>Omicron</td><td>East</td><td>115</td><td>EN</td><td>No</td><td>2024-05-28</td></tr>
+            <tr><td>16</td><td>Paula</td><td>paula@example.com</td><td>Accountant</td><td>Finance</td><td>Active</td><td>555-7412</td><td>San Diego</td><td>2022-04-12</td><td>$88,000</td><td>Ms. Lee</td><td>CPA</td><td>Psi</td><td>HQ</td><td>1601</td><td>FN</td><td>Yes</td><td>2024-06-01</td></tr>
+            <tr><td>17</td><td>Quinn</td><td>quinn@example.com</td><td>Engineer</td><td>Engineering</td><td>Active</td><td>555-2580</td><td>Detroit</td><td>2023-05-20</td><td>$105,000</td><td>Mr. Smith</td><td>Lead Dev</td><td>Rho</td><td>West</td><td>1701</td><td>EN</td><td>No</td><td>2024-05-28</td></tr>
+            <tr><td>18</td><td>Rita</td><td>rita@example.com</td><td>Researcher</td><td>Research</td><td>Inactive</td><td>555-3691</td><td>Minneapolis</td><td>2021-08-08</td><td>$77,000</td><td>Ms. Lee</td><td>Grant</td><td>Sigma</td><td>Branch</td><td>1801</td><td>RS</td><td>Yes</td><td>2024-05-30</td></tr>
+            <tr><td>19</td><td>Sam</td><td>sam@example.com</td><td>Support</td><td>Customer Service</td><td>Active</td><td>555-1478</td><td>Charlotte</td><td>2020-12-03</td><td>$59,000</td><td>Mr. Smith</td><td>Day shift</td><td>Tau</td><td>Remote</td><td>1901</td><td>CS</td><td>No</td><td>2024-05-25</td></tr>
+            <tr><td>20</td><td>Tina</td><td>tina@example.com</td><td>Designer</td><td>Creative</td><td>Inactive</td><td>555-3698</td><td>Philadelphia</td><td>2023-06-15</td><td>$73,000</td><td>Ms. Lee</td><td>Contractor</td><td>Upsilon</td><td>HQ</td><td>2001</td><td>CR</td><td>Yes</td><td>2024-05-20</td></tr>
+        </tbody>
+    </table>
+</div>
 
-    <script>
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const saveInputBtn = document.getElementById('saveInput');
-            const modalElement = document.getElementById('inputModal');
-            const plusButton = document.querySelector('[data-bs-target="#inputModal"]');
-
-            // Store which element opened the modal to return focus there when closed
-            let lastFocusedElement;
-
-            // Track modal open/close for focus management
-            modalElement.addEventListener('show.bs.modal', function () {
-                // Remember which element had focus before opening modal
-                lastFocusedElement = document.activeElement;
-            });
-
-            // When modal is hidden, return focus to the element that opened it
-            modalElement.addEventListener('hidden.bs.modal', function () {
-                // Return focus to the element that opened the modal
-                if (lastFocusedElement) {
-                    lastFocusedElement.focus();
-                } else {
-                    // Default to the plus button if we don't know what had focus
-                    plusButton.focus();
-                }
-            });
-
-            saveInputBtn.addEventListener('click', function () {
-                const inputValue = document.getElementById('headerInput').value;
-                // You can use this value as needed, e.g. update a cell in the table
-                console.log('Input value:', inputValue);
-
-                // Close the modal after saving
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                modal.hide();
-
-                // Ensure modal backdrop is removed
-                const modalBackdrops = document.querySelectorAll('.modal-backdrop');
-                modalBackdrops.forEach(backdrop => {
-                    backdrop.classList.remove('show');
-                    setTimeout(() => {
-                        backdrop.remove();
-                    }, 150);
-                });
-
-                // Make sure body doesn't retain modal classes
-                setTimeout(() => {
-                    document.body.classList.remove('modal-open');
-                    document.body.style.overflow = '';
-                    document.body.style.paddingRight = '';
-                }, 150);
-            });
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const timeframeSelect = document.getElementById('timeframeSelect');
+        const refreshBtn = document.getElementById('refreshTimestamp');
+        
+        submitBtn.addEventListener('click', function() {
+            const selectedTimeframe = timeframeSelect.value;
+            console.log('Selected timeframe:', selectedTimeframe);
+            // Add your filtering logic here
+            alert('Filtering data for: ' + selectedTimeframe);
         });
-    </script>
+        
+        resetBtn.addEventListener('click', function() {
+            timeframeSelect.value = 'Choose timeframe...';
+            console.log('Filters reset');
+            // Add your reset logic here
+        });
+        
+        refreshBtn.addEventListener('click', function() {
+            const now = new Date();
+            document.getElementById('lastUpdatedTime').textContent = now.toLocaleString();
+        });
+    });
+</script>
 </body>
-
 </html>

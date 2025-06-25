@@ -1,1133 +1,1138 @@
-{% extends 'dashboard/base.html' %}
+{% extends "dashboard/base.html" %}
 
-{% block title %}Dynamic Data - Futures - GuruBase{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    body {
-        background-color: #212529;
-        color: #e9ecef;
-    }
-
-    .table {
-        color: #e9ecef;
-    }
-
-    .modal-content {
-        background-color: #343a40;
-        color: #e9ecef;
-    }
-
-    .form-control,
-    .form-select,
-    .input-group-text {
-        background-color: #343a40;
-        border-color: #495057;
-        color: #e9ecef;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        background-color: #3b4148;
-        color: #e9ecef;
-    }
-
-    .badge.bg-light {
-        background-color: #343a40 !important;
-        color: #e9ecef !important;
-    }
-
-    .btn-light {
-        background-color: #343a40;
-        border-color: #495057;
-        color: #e9ecef;
-    }
-
-    .btn-outline-primary {
-        color: #8bb9fe;
-        border-color: #0d6efd;
-    }
-
-    .table-striped>tbody>tr:nth-of-type(odd)>* {
-        color: #e9ecef;
-    }
-    
-    /* Fix for navbar dropdowns appearing behind other elements */
-    .navbar-nav .dropdown-menu {
-        z-index: 1030 !important; /* Higher than default Bootstrap z-index */
-    }
-    
-    /* Ensure the navbar itself has proper z-index */
-    .navbar {
-        z-index: 1020 !important;
-    }
-
-    /* Drag and drop styles */
-    th.ui-sortable-helper {
-        display: table-cell;
-        background-color: #343a40 !important;
-        opacity: 0.8;
-        cursor: move;
-    }
-    
-    .column-draggable {
-        cursor: grab;
-    }
-    
-    .ui-sortable-placeholder {
-        visibility: visible !important;
-        background-color: #495057 !important;
-        border: 2px dashed #0d6efd;
-    }
-</style>{% endblock %}
 {% block content %}
-
-<div class="container mt-4">
-   
-
-    <!-- Timeframe Selection -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="input-group">
-                <label class="input-group-text" for="timeframeSelect">Select Timeframe:</label>
-                <select class="form-select" id="timeframe">
-                    <option value="1" selected>1 Minute</option>
-                    <option value="5">5 Minutes</option>
-                    <option value="10">10 Minutes</option>
-                    <option value="15">15 Minutes</option>
-                    <option value="30">30 Minutes</option>
-                    <option value="45">45 Minutes</option>
-                    <option value="60">1 Hour</option>
-                    <option value="120">2 Hours</option>
-                    <option value="240">4 Hours</option>
-                    <option value="1440">1 Day</option>
-                </select>
-                <button class="btn btn-primary" id="updateTimeframe">Apply</button>
-                <button class="btn btn-secondary" type="button">Reset</button>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="btn-group float-end" role="group" aria-label="Table actions">
-                <button type="button" class="btn btn-success">Export CSV</button>
-                <button type="button" class="btn btn-info">Export Excel</button>
-                <button type="button" class="btn btn-warning">Print</button>
-                <button type="button" class="btn btn-dark">Refresh</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Additional Filter Options -->
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="btn-group" role="group" aria-label="Filter options">
-                <button type="button" class="btn btn-outline-primary">Filter</button>
-                <button type="button" class="btn btn-outline-primary">Group By</button>
-                <button type="button" class="btn btn-outline-primary">Sort</button>
-                <button type="button" class="btn btn-outline-primary">Columns</button>
-                <button type="button" class="btn btn-outline-primary">Save View</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Last Updated Information -->
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="text-muted small">
-                    <span class="badge bg-dark text-light p-2">
-                        <i class="bi bi-clock"></i> Last Updated: <span id="lastUpdatedTime">April 12, 2023
-                            14:35:22</span>
-                    </span>
-                    <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2 text-info" id="refreshTimestamp">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
+<div class="bg-dark text-light min-vh-100 p-3">
+    <div class="mb-3">
+        <div class="row g-2">
+            <!-- Market Selector -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Select Market
                     </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active" href="#">All Markets</a></li>
+                        <li><a class="dropdown-item" href="#">Technology</a></li>
+                        <li><a class="dropdown-item" href="#">Consumer Cyclical</a></li>
+                        <li><a class="dropdown-item" href="#">Healthcare</a></li>
+                        <li><a class="dropdown-item" href="#">Financial</a></li>
+                        <li><a class="dropdown-item" href="#">Energy</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Top Gainers</a></li>
+                        <li><a class="dropdown-item" href="#">Top Losers</a></li>
+                    </ul>
                 </div>
-                <div>
-                    <span class="badge bg-primary" id="recordCount">15 records</span>
-                    <span class="badge bg-secondary ms-1">Filtered: 0</span>
+            </div>
+            
+            <!-- Time Period -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Time Period
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">1 Day</a></li>
+                        <li><a class="dropdown-item" href="#">1 Week</a></li>
+                        <li><a class="dropdown-item active" href="#">1 Month</a></li>
+                        <li><a class="dropdown-item" href="#">3 Months</a></li>
+                        <li><a class="dropdown-item" href="#">6 Months</a></li>
+                        <li><a class="dropdown-item" href="#">1 Year</a></li>
+                        <li><a class="dropdown-item" href="#">5 Years</a></li>
+                    </ul>
                 </div>
+            </div>
+            
+            <!-- Sort By -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Sort By
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">Symbol</a></li>
+                        <li><a class="dropdown-item" href="#">Price (High to Low)</a></li>
+                        <li><a class="dropdown-item" href="#">Price (Low to High)</a></li>
+                        <li><a class="dropdown-item active" href="#">Change %</a></li>
+                        <li><a class="dropdown-item" href="#">Volume</a></li>
+                        <li><a class="dropdown-item" href="#">Market Cap</a></li>
+                        <li><a class="dropdown-item" href="#">P/E Ratio</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- View Type -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        View
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active" href="#">Table View</a></li>
+                        <li><a class="dropdown-item" href="#">Grid View</a></li>
+                        <li><a class="dropdown-item" href="#">Chart View</a></li>
+                        <li><a class="dropdown-item" href="#">Compact View</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Results Per Page -->
+            <div class="col-md-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Show
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">10 results</a></li>
+                        <li><a class="dropdown-item active" href="#">25 results</a></li>
+                        <li><a class="dropdown-item" href="#">50 results</a></li>
+                        <li><a class="dropdown-item" href="#">100 results</a></li>
+                        <li><a class="dropdown-item" href="#">All results</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Column Visibility Button -->
+            <div class="col-md-1">
+                <button class="btn btn-outline-info w-100" type="button" data-bs-toggle="modal" data-bs-target="#columnVisibilityModal" title="Manage Columns">
+                    <i class="fas fa-columns"></i>
+                </button>
+            </div>
+            
+            <!-- Filter Button -->
+            <div class="col-md-1">
+                <button class="btn btn-success w-100" type="button" title="Apply Filters">
+                    <i class="fas fa-filter"></i>
+                </button>
             </div>
         </div>
     </div>
-
+    
     <div class="table-responsive">
-        <div class="alert alert-info mb-2" id="drag-drop-hint" style="display: none;">
-            <i class="bi bi-info-circle"></i> Tip: Drag and drop column headers to reorder columns
-        </div>
-        <table class="table table-bordered table-striped table-dark" id="dynamicDataTable">
-            <thead class="table-dark">
-                <tr id="header-row-1">
-                    <th rowspan="2">Ticker</th>
-                    <th colspan="4" class="column-group">Current Candle</th>
-                    <th colspan="4" class="column-group">Previous Candle</th>
-                    <th colspan="3" class="column-group">ATP Values</th>
-                    <th colspan="3" class="column-group">Swing Highs</th>
-                    <th colspan="3" class="column-group">Swing Lows</th>
-                    <th rowspan="2" class="column-draggable" data-col-index="18">Bias</th>
-                    <th colspan="12" class="column-group">Current Day Data</th>
-                    <th colspan="10" class="column-group">Weekly/Monthly Data</th>
-                    <th colspan="10" class="column-group">Indicators</th>
-                </tr>
-                <tr id="header-row-2">
-                    <th class="column-draggable" data-col-index="1">Open</th>
-                    <th class="column-draggable" data-col-index="2">High</th>
-                    <th class="column-draggable" data-col-index="3">Low</th>
-                    <th class="column-draggable" data-col-index="4">Close</th>
-                    <th class="column-draggable" data-col-index="5">Open</th>
-                    <th class="column-draggable" data-col-index="6">High</th>
-                    <th class="column-draggable" data-col-index="7">Low</th>
-                    <th class="column-draggable" data-col-index="8">Close</th>
-                    <th class="column-draggable" data-col-index="9">Current</th>
-                    <th class="column-draggable" data-col-index="10">Previous</th>
-                    <th class="column-draggable" data-col-index="11">Last 3</th>
-                    <th class="column-draggable" data-col-index="12">1</th>
-                    <th class="column-draggable" data-col-index="13">2</th>
-                    <th class="column-draggable" data-col-index="14">3</th>
-                    <th class="column-draggable" data-col-index="15">1</th>
-                    <th class="column-draggable" data-col-index="16">2</th>
-                    <th class="column-draggable" data-col-index="17">3</th>
-                    <!-- Current Day Data -->
-                    <th class="column-draggable" data-col-index="19">30m Top</th>
-                    <th class="column-draggable" data-col-index="20">30m Bottom</th>
-                    <th class="column-draggable" data-col-index="21">Last 5 Tops</th>
-                    <th class="column-draggable" data-col-index="22">Last 5 Bottoms</th>
-                    <th class="column-draggable" data-col-index="23">Day Top Latest</th>
-                    <th class="column-draggable" data-col-index="24">Day Bottom Latest</th>
-                    <th class="column-draggable" data-col-index="25">9:15-10:15 H/L</th>
-                    <th class="column-draggable" data-col-index="26">10:15-11:15 H/L</th>
-                    <th class="column-draggable" data-col-index="27">11:15-12:15 H/L</th>
-                    <th class="column-draggable" data-col-index="28">12:15-1:15 H/L</th>
-                    <th class="column-draggable" data-col-index="29">1:15-2:15 H/L</th>
-                    <th class="column-draggable" data-col-index="30">2:15-3:15 H/L</th>
-                    <th class="column-draggable" data-col-index="31">3 PM - 4 PM H/L</th>
-                    <!-- Weekly/Monthly Data -->
-                    <th class="column-draggable" data-col-index="32">Week Top 1</th>
-                    <th class="column-draggable" data-col-index="33">Week Top 2</th>
-                    <th class="column-draggable" data-col-index="34">Week Bottom 1</th>
-                    <th class="column-draggable" data-col-index="35">Week Bottom 2</th>
-                    <th class="column-draggable" data-col-index="36">Month Top 1</th>
-                    <th class="column-draggable" data-col-index="37">Month Top 2</th>
-                    <th class="column-draggable" data-col-index="38">Month Bottom 1</th>
-                    <th class="column-draggable" data-col-index="39">Month Bottom 2</th>
-                    <th class="column-draggable" data-col-index="40">Expiry Week VWAP</th>
-                    <th class="column-draggable" data-col-index="41">Rollover Week H/L Vol</th>
-                    <!-- Technical Indicators -->
-                    <th class="column-draggable" data-col-index="42">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span>EMA</span>
-                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="EMA" data-input-id="emaValue">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </div>
-                    </th>
-                    <th class="column-draggable" data-col-index="43">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span>SMA</span>
-                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="SMA" data-input-id="smaValue">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </div>
-                    </th>
-                    <th class="column-draggable" data-col-index="44">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span>HMA</span>
-                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="HMA" data-input-id="hmaValue">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </div>
-                    </th>
-                    <th class="column-draggable" data-col-index="45">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span>MACD</span>
-                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#inputModal" data-indicator="MACD" data-input-id="macdValue">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </div>
-                    </th>
-                    <th class="column-draggable" data-col-index="46">Signal Line</th>
-                    <th class="column-draggable" data-col-index="47">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span>SuperTrend</span>
-                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#supertrendModal">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </div>
-                    </th>
-                    <th class="column-draggable" data-col-index="48">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span>Keltner Upper</span>
-                            <button type="button" class="btn btn-sm btn-light ms-1" data-bs-toggle="modal" data-bs-target="#keltnerModal">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </div>
-                    </th>
-                    <th class="column-draggable" data-col-index="49">Keltner Middle</th>
-                    <th class="column-draggable" data-col-index="50">Keltner Lower</th>
-                    <th class="column-draggable" data-col-index="51">Pivot</th>
+        <table class="table table-dark table-bordered" id="indicatorTable">
+            <thead>
+                <tr>
+                    <th class="position-sticky start-0 bg-dark" data-column="0">Symbol</th>
+                    <th draggable="true" data-column="1" class="draggable-header">EMA <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure EMA">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(1)">×</button></th>
+                    <th draggable="true" data-column="2" class="draggable-header">SMA <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure SMA">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(2)">×</button></th>
+                    <th draggable="true" data-column="3" class="draggable-header">HMA <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure HMA">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(3)">×</button></th>
+                    <th draggable="true" data-column="4" class="draggable-header">MACD <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure MACD">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(4)">×</button></th>
+                    <th draggable="true" data-column="5" class="draggable-header">Signal Line <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(5)">×</button></th>
+                    <th draggable="true" data-column="6" class="draggable-header">Supertrend <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Supertrend">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(6)">×</button></th>
+                    <th draggable="true" data-column="7" class="draggable-header">AO <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Awesome Oscillator">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(7)">×</button></th>
+                    <th draggable="true" data-column="8" class="draggable-header">Keltner Upper <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Keltner Channels">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(8)">×</button></th>
+                    <th draggable="true" data-column="9" class="draggable-header">Keltner Middle <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Keltner Channels">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(9)">×</button></th>
+                    <th draggable="true" data-column="10" class="draggable-header">Keltner Lower <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Keltner Channels">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(10)">×</button></th>
+                    <th draggable="true" data-column="11" class="draggable-header">Pivot <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(11)">×</button></th>
+                    <th draggable="true" data-column="12" class="draggable-header">R1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(12)">×</button></th>
+                    <th draggable="true" data-column="13" class="draggable-header">S1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(13)">×</button></th>
+                    <th draggable="true" data-column="14" class="draggable-header">R2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(14)">×</button></th>
+                    <th draggable="true" data-column="15" class="draggable-header">S2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(15)">×</button></th>
+                    <th draggable="true" data-column="16" class="draggable-header">R3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(16)">×</button></th>
+                    <th draggable="true" data-column="17" class="draggable-header">S3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(17)">×</button></th>
+                    <th draggable="true" data-column="18" class="draggable-header">Camarilla R1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(18)">×</button></th>
+                    <th draggable="true" data-column="19" class="draggable-header">Camarilla R2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(19)">×</button></th>
+                    <th draggable="true" data-column="20" class="draggable-header">Camarilla R3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(20)">×</button></th>
+                    <th draggable="true" data-column="21" class="draggable-header">Camarilla R4 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(21)">×</button></th>
+                    <th draggable="true" data-column="22" class="draggable-header">Camarilla S1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(22)">×</button></th>
+                    <th draggable="true" data-column="23" class="draggable-header">Camarilla S2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(23)">×</button></th>
+                    <th draggable="true" data-column="24" class="draggable-header">Camarilla S3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(24)">×</button></th>
+                    <th draggable="true" data-column="25" class="draggable-header">Camarilla S4 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(25)">×</button></th>
+                    <th draggable="true" data-column="26" class="draggable-header">Bias <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(26)">×</button></th>
                 </tr>
             </thead>
-            <tbody>
-               
-               
-               
+            <tbody id="tableBody">
+                <tr>
+                    <td colspan="27" class="text-center">
+                        <div class="spinner-border text-light" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-2">Connecting to live data stream...</div>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
-    <div id="loading-indicator">
-        Loading data...
+
+    <!-- Status Information -->
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <small class="text-muted">
+                <i class="fas fa-signal"></i> Live Data Status: <span id="connectionStatus" class="text-warning">Connecting...</span>
+            </small>
+        </div>
+        <div class="col-md-6 text-end">
+            <small class="text-muted">
+                Last Updated: <span id="lastUpdated">-</span>
+            </small>
+        </div>
     </div>
-</div>
 
-<!-- Hidden fields to store indicator values -->
-<div style="display: none;">
-    <input type="number" id="emaValue" value="10">
-    <input type="number" id="smaValue" value="10">
-    <input type="number" id="hmaValue" value="10">
-    <input type="text" id="macdValue" value="26,12,9">
-    <input type="number" id="supertrendLength" value="14">
-    <input type="number" id="supertrendMultiplier" value="3">
-    <input type="number" id="keltnerEmaLength" value="20">
-    <input type="number" id="keltnerAtrLength" value="14">
-    <input type="number" id="keltnerMultiplier" value="2">
-</div>
-
-<!-- Input Modal for simple indicators -->
-<div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title text-light" id="inputModalLabel">Indicator Value</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="headerInput" class="form-label text-light" id="modalFieldLabel">Indicator Value</label>
-                    <input type="text" class="form-control bg-dark text-light border-secondary" id="headerInput"
-                        placeholder="Enter your value here">
+    <!-- Indicator Configuration Modal -->
+    <div class="modal fade" id="indicatorModal" tabindex="-1" aria-labelledby="indicatorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="indicatorModalLabel">Configure Indicator</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-footer border-secondary">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveInput">Update</button>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="indicatorValue" class="form-label text-light" id="indicatorLabel">Value</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="indicatorValue" placeholder="Enter value">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveIndicator">Update</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Supertrend Modal -->
-<div class="modal fade" id="supertrendModal" tabindex="-1" aria-labelledby="supertrendModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title text-light" id="supertrendModalLabel">Supertrend Settings</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="supertrendLengthInput" class="form-label text-light">Length</label>
-                    <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendLengthInput"
-                        placeholder="Enter length value" value="14">
+    <!-- MACD Configuration Modal -->
+    <div class="modal fade" id="macdModal" tabindex="-1" aria-labelledby="macdModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="macdModalLabel">Configure MACD</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-3">
-                    <label for="supertrendMultiplierInput" class="form-label text-light">Multiplier</label>
-                    <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendMultiplierInput"
-                        placeholder="Enter multiplier value" value="3">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="macdFast" class="form-label text-light">Fast Period</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="macdFast" value="12">
+                    </div>
+                    <div class="mb-3">
+                        <label for="macdSlow" class="form-label text-light">Slow Period</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="macdSlow" value="26">
+                    </div>
+                    <div class="mb-3">
+                        <label for="macdSignal" class="form-label text-light">Signal Period</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="macdSignal" value="9">
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer border-secondary">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveSupertrendInput">Update Supertrend</button>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveMacd">Update MACD</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Keltner Channels Modal -->
-<div class="modal fade" id="keltnerModal" tabindex="-1" aria-labelledby="keltnerModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title text-light" id="keltnerModalLabel">Keltner Channels Settings</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="keltnerEmaLengthInput" class="form-label text-light">EMA Length</label>
-                    <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerEmaLengthInput"
-                        placeholder="Enter EMA length value" value="20">
+    <!-- Supertrend Configuration Modal -->
+    <div class="modal fade" id="supertrendModal" tabindex="-1" aria-labelledby="supertrendModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="supertrendModalLabel">Configure Supertrend</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-3">
-                    <label for="keltnerAtrLengthInput" class="form-label text-light">ATR Length</label>
-                    <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerAtrLengthInput"
-                        placeholder="Enter ATR length value" value="14">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="supertrendLength" class="form-label text-light">Length</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendLength" value="14">
+                    </div>
+                    <div class="mb-3">
+                        <label for="supertrendMultiplier" class="form-label text-light">Multiplier</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="supertrendMultiplier" value="3" step="0.1">
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="keltnerMultiplierInput" class="form-label text-light">Multiplier</label>
-                    <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerMultiplierInput"
-                        placeholder="Enter multiplier value" value="2">
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveSupertrend">Update Supertrend</button>
                 </div>
-            </div>
-            <div class="modal-footer border-secondary">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-warning" id="resetKeltnerDefaults">Reset to Defaults</button>
-                <button type="button" class="btn btn-primary" id="saveKeltnerInput">Update Keltner Channels</button>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Keltner Channels Configuration Modal -->
+    <div class="modal fade" id="keltnerModal" tabindex="-1" aria-labelledby="keltnerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="keltnerModalLabel">Configure Keltner Channels</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="keltnerEmaLength" class="form-label text-light">EMA Length</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerEmaLength" value="20">
+                    </div>
+                    <div class="mb-3">
+                        <label for="keltnerAtrLength" class="form-label text-light">ATR Length</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerAtrLength" value="14">
+                    </div>
+                    <div class="mb-3">
+                        <label for="keltnerMultiplier" class="form-label text-light">Multiplier</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="keltnerMultiplier" value="2" step="0.1">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="resetKeltner">Reset Defaults</button>
+                    <button type="button" class="btn btn-primary" id="saveKeltner">Update Keltner</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const timeframeSelect = document.getElementById('timeframe');
-        const updateButton = document.getElementById('updateTimeframe');
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const tableContainer = document.querySelector('table').parentElement;
-        const lastUpdatedTime = document.getElementById('lastUpdatedTime');
-        const recordCount = document.getElementById('recordCount');
+    <!-- Column Visibility Modal -->
+    <div class="modal fade" id="columnVisibilityModal" tabindex="-1" aria-labelledby="columnVisibilityModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light" id="columnVisibilityModalLabel">
+                        <i class="fas fa-columns me-2"></i>Manage Column Visibility
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-light mb-3">Technical Indicators</h6>
+                            <div id="technicalColumns" class="column-group">
+                                <!-- Technical indicator checkboxes will be added here -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-light mb-3">Support & Resistance</h6>
+                            <div id="pivotColumns" class="column-group">
+                                <!-- Pivot and resistance/support checkboxes will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="border-secondary">
+                    <div class="row">
+                        <div class="col-12">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Use the checkboxes to show/hide columns. You can also click the "×" button on any column header to hide it quickly.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-warning" id="showAllColumns">Show All</button>
+                    <button type="button" class="btn btn-outline-danger" id="hideAllOptional">Hide All Optional</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        let eventSource;    
-        let staticEventSource;
-        let indicatorEventSource;
-        
-        // Data storage
-        let dynamicData = [];
-        let staticData = {};
-        let indicatorData = {};
-        
-        // Column order tracking - initialize with default order
-        let columnOrder = Array.from({length: 51}, (_, i) => i);
-        
-        // Current indicator being configured
-        let currentIndicator = 'EMA';
-        let currentInputId = 'emaValue';
-
-        // Function for initializing column drag and drop
-        function initializeColumnDragDrop() {
-            // console.log("Initializing column drag and drop");
-            
-            // Load saved column order from localStorage if exists
-            const savedOrder = localStorage.getItem('columnOrder');
-            if (savedOrder) {
-                try {
-                    columnOrder = JSON.parse(savedOrder);
-                    // If the saved order doesn't include new columns, add them
-                    if (columnOrder.length < 51) {
-                        const maxIndex = Math.max(...columnOrder);
-                        // Add missing indices
-                        for (let i = maxIndex + 1; i < 51; i++) {
-                            columnOrder.push(i);
-                        }
-                        // console.log("Extended saved column order with new columns:", columnOrder);
-                    }
-                    
-                    // Apply saved order to header immediately after loading
-                    // Use setTimeout to ensure DOM is fully loaded
-                    setTimeout(() => {
-                        applyColumnOrderToHeader();
-                    }, 100);
-                } catch (e) {
-                    console.error("Error loading saved column order:", e);
-                    localStorage.removeItem('columnOrder');
-                }
-            }
-            
-            // Make the second header row sortable
-            $("#header-row-2").sortable({
-                items: "th.column-draggable",
-                axis: "x",
-                cursor: "move",
-                opacity: 0.7,
-                tolerance: "pointer",
-                helper: function(e, ui) {
-                    // Fix the helper's width
-                    ui.width(ui.width());
-                    return ui;
-                },
-                start: function(event, ui) {
-                    ui.item.data('start_pos', ui.item.index());
-                    // console.log("Drag started from position:", ui.item.data('start_pos'));
-                },
-                stop: function(event, ui) {
-                    const startPos = ui.item.data('start_pos'); // 0-indexed position within draggable headers BEFORE move
-                    const endPos = ui.item.index();           // 0-indexed position within draggable headers AFTER move
-
-                    if (startPos === endPos) return; // No change
-
-                    // Get the actual data-col-index values from the current visual order of draggable headers
-                    const draggableHeaderCells = $("#header-row-2 th.column-draggable");
-                    const newDraggableOrder = [];
-                    draggableHeaderCells.each(function() {
-                        newDraggableOrder.push(parseInt($(this).attr('data-col-index')));
-                    });
-                    
-                    // Reconstruct the full columnOrder:
-                    // Ticker (original index 0) is always first.
-                    // Make sure all new columns are included as well
-                    const newOrder = [0, ...newDraggableOrder];
-                    
-                    // Ensure all column indices are included (up to 50)
-                    for (let i = 0; i < 51; i++) {
-                        if (!newOrder.includes(i)) {
-                            newOrder.push(i);
-                        }
-                    }
-                    
-                    columnOrder = newOrder;
-                    
-                    // console.log("New column order (with all columns):", columnOrder);
-                    
-                    // Apply to data rows
-                    rebuildTableData();
-                    
-                    // Save to localStorage
-                    localStorage.setItem('columnOrder', JSON.stringify(columnOrder));
-                }
-            }).disableSelection();
-        }
-
-        // Apply column order to header - separate function to be called on load
-        function applyColumnOrderToHeader() {
-            // Skip first value (Ticker column) as it's not draggable
-            const headerOrder = columnOrder.slice(1);
-            
-            // Get all draggable header cells
-            const headerCells = $("#header-row-2 th.column-draggable").toArray();
-            if (headerCells.length === 0) return;
-            
-            const headerRow = headerCells[0].parentNode;
-            
-            // Create a map of data-col-index to header cell
-            const headerMap = {};
-            headerCells.forEach(cell => {
-                const index = parseInt(cell.getAttribute('data-col-index'));
-                headerMap[index] = cell;
-            });
-            
-            // Remove cells from DOM
-            headerCells.forEach(cell => cell.remove());
-            
-            // Add them back in the correct order
-            headerOrder.forEach(index => {
-                if (headerMap[index]) {
-                    headerRow.appendChild(headerMap[index]);
-                }
-            });
-        }
-
-        // Complete rebuild of table data based on column order
-        function rebuildTableData() {
-            const table = document.getElementById('dynamicDataTable');
-            if (!table) return;
-            
-            const tbody = table.querySelector('tbody');
-            if (!tbody) return;
-            
-            const rows = Array.from(tbody.getElementsByTagName('tr'));
-            // console.log("Rebuilding", rows.length, "rows based on columnOrder:", columnOrder);
-            
-            rows.forEach(row => {
-                // Create a map of original column index to cell content
-                const cellMap = {};
-                const allCells = Array.from(row.cells);
-                
-                allCells.forEach(cell => {
-                    // For bias column, textContent will be "BULLISH", "BEARISH", or "NEUTRAL"
-                    const origIndex = parseInt(cell.getAttribute('data-original-col-index'));
-                    cellMap[origIndex] = cell.textContent; 
-                });
-                
-                // Clear the row
-                while (row.firstChild) {
-                    row.removeChild(row.firstChild);
-                }
-                
-                // Rebuild the row in the correct order
-                columnOrder.forEach(origIndex => {
-                    const cell = document.createElement('td');
-                    cell.setAttribute('data-original-col-index', origIndex);
-                    const rawValueFromCell = cellMap[origIndex];
-
-                    if (origIndex === 18) { // Bias column specific rendering
-                        const biasString = rawValueFromCell || 'NEUTRAL'; // Ensure we have a string
-
-                        // Apply styling consistent with the onmessage handler
-                        if (biasString === 'BULLISH') {
-                            cell.innerHTML = `<strong>${biasString}</strong>`;
-                            cell.classList.add('text-success');
-                        } else if (biasString === 'BEARISH') {
-                            cell.innerHTML = `<strong>${biasString}</strong>`;
-                            cell.classList.add('text-danger');
-                        } else { // Includes 'NEUTRAL'
-                            cell.textContent = biasString; // NEUTRAL is not bolded, per onmessage logic
-                            cell.classList.add('text-warning');
-                        }
-                    } else {
-                        // For all other columns, just set textContent
-                        cell.textContent = rawValueFromCell || '-';
-                    }
-                    row.appendChild(cell);
-                });
-            });
-            
-            // console.log("Table rebuilding complete");
-        }
-
-        // Initialize column drag and drop once jQuery is fully loaded
-        if (typeof jQuery !== 'undefined' && typeof $.ui !== 'undefined') {
-            initializeColumnDragDrop();
-        } else {
-            console.error("jQuery or jQuery UI not loaded properly");
-            // Try to load jQuery and jQuery UI again
-            const jq = document.createElement('script');
-            jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
-            document.head.appendChild(jq);
-            
-            jq.onload = function() {
-                const jqui = document.createElement('script');
-                jqui.src = "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js";
-                document.head.appendChild(jqui);
-                
-                jqui.onload = function() {
-                    initializeColumnDragDrop();
-                };
-            };
-        }
-
-        // Initialize modal event handlers
-        const inputModal = document.getElementById('inputModal');
-        if (inputModal) {
-            inputModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                currentIndicator = button.getAttribute('data-indicator');
-                currentInputId = button.getAttribute('data-input-id');
-                
-                // Update modal title and labels
-                document.getElementById('inputModalLabel').textContent = `${currentIndicator} Value`;
-                document.getElementById('modalFieldLabel').textContent = `${currentIndicator} Value`;
-                
-                // Pre-fill with current value if it exists
-                const currentValue = document.getElementById(currentInputId).value || '';
-                document.getElementById('headerInput').value = currentValue;
-            });
+    <style>
+        .draggable-header {
+            cursor: grab;
+            user-select: none;
+            position: relative;
         }
         
-        // Handle Keltner Channels modal open
-        const keltnerModal = document.getElementById('keltnerModal');
-        if (keltnerModal) {
-            keltnerModal.addEventListener('show.bs.modal', function(event) {
-                // Pre-fill with current values
-                const currentEmaLength = document.getElementById('keltnerEmaLength').value || '20';
-                const currentAtrLength = document.getElementById('keltnerAtrLength').value || '14';
-                const currentMultiplier = document.getElementById('keltnerMultiplier').value || '2';
-                
-                document.getElementById('keltnerEmaLengthInput').value = currentEmaLength;
-                document.getElementById('keltnerAtrLengthInput').value = currentAtrLength;
-                document.getElementById('keltnerMultiplierInput').value = currentMultiplier;
-                
-                // console.log('Opening Keltner modal with values:', currentEmaLength, currentAtrLength, currentMultiplier);
-            });
+        .draggable-header:active {
+            cursor: grabbing;
         }
         
-        // Handle Supertrend modal open
-        const supertrendModal = document.getElementById('supertrendModal');
-        if (supertrendModal) {
-            supertrendModal.addEventListener('show.bs.modal', function(event) {
-                // Pre-fill with current values
-                const currentLength = document.getElementById('supertrendLength').value || '14';
-                const currentMultiplier = document.getElementById('supertrendMultiplier').value || '3';
-                
-                document.getElementById('supertrendLengthInput').value = currentLength;
-                document.getElementById('supertrendMultiplierInput').value = currentMultiplier;
-                
-                // console.log('Opening Supertrend modal with values:', currentLength, currentMultiplier);
-            });
+        .draggable-header:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        .drag-over {
+            background-color: rgba(0, 123, 255, 0.4) !important;
+            border-left: 4px solid #007bff !important;
+            border-right: 4px solid #007bff !important;
+            transition: all 0.2s ease;
+        }
+        
+        .dragging {
+            opacity: 0.6;
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            transform: rotate(3deg);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        
+        /* Add a grab handle indicator */
+        .draggable-header::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 12px;
+            letter-spacing: -2px;
+        }
+        
+        .draggable-header:hover::before {
+            color: rgba(255, 255, 255, 0.6);
         }
 
-        // Add event listener for the generic "Update" button in the modal
-        const saveInputButton = document.getElementById('saveInput');
-        if (saveInputButton) {
-            saveInputButton.addEventListener('click', function() {
-                // Get the indicator value from the modal input
-                const indicatorValue = document.getElementById('headerInput').value || 0;
-                
-                // Update the corresponding input field
-                document.getElementById(currentInputId).value = indicatorValue;
-                
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('inputModal'));
-                if (modal) modal.hide();
-                
-                refreshIndicatorData();
-            });
+        /* Column visibility modal styles */
+        .column-group {
+            max-height: 300px;
+            overflow-y: auto;
         }
-
-        // Add event listener for the Supertrend "Update" button
-        const saveSupertrendButton = document.getElementById('saveSupertrendInput');
-        if (saveSupertrendButton) {
-            saveSupertrendButton.addEventListener('click', function() {
-                // Get the Supertrend values from the modal inputs
-                const supertrendLength = document.getElementById('supertrendLengthInput').value || 14;
-                const supertrendMultiplier = document.getElementById('supertrendMultiplierInput').value || 3;
-                
-                // Update the corresponding input fields
-                document.getElementById('supertrendLength').value = supertrendLength;
-                document.getElementById('supertrendMultiplier').value = supertrendMultiplier;
-                
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('supertrendModal'));
-                if (modal) modal.hide();
-                
-                refreshIndicatorData();
-            });
+        
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
         }
-
-        // Add event listener for the Keltner Channels "Update" button
-        const saveKeltnerButton = document.getElementById('saveKeltnerInput');
-        if (saveKeltnerButton) {
-            saveKeltnerButton.addEventListener('click', function() {
-                // Get the Keltner values from the modal inputs
-                const keltnerEmaLength = document.getElementById('keltnerEmaLengthInput').value || 20;
-                const keltnerAtrLength = document.getElementById('keltnerAtrLengthInput').value || 14;
-                const keltnerMultiplier = document.getElementById('keltnerMultiplierInput').value || 2;
-                
-                // Update the corresponding input fields
-                document.getElementById('keltnerEmaLength').value = keltnerEmaLength;
-                document.getElementById('keltnerAtrLength').value = keltnerAtrLength;
-                document.getElementById('keltnerMultiplier').value = keltnerMultiplier;
-                
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('keltnerModal'));
-                if (modal) modal.hide();
-                
-                refreshIndicatorData();
-            });
+        
+        .form-check-input:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
-
-        // Reset Keltner defaults when button is clicked
-        const resetKeltnerButton = document.getElementById('resetKeltnerDefaults');
-        if (resetKeltnerButton) {
-            resetKeltnerButton.addEventListener('click', function() {
-                // Set default values
-                document.getElementById('keltnerEmaLengthInput').value = 20;
-                document.getElementById('keltnerAtrLengthInput').value = 14;
-                document.getElementById('keltnerMultiplierInput').value = 2;
-                
-                // console.log('Keltner values reset to defaults');
-            });
+        
+        .form-check-label {
+            cursor: pointer;
         }
+        
+        .form-check {
+            padding-left: 1.5em;
+        }
+    </style>
 
-        // Initially hide the table until data loads
-        tableContainer.style.display = 'none';
+    <script>
+        let eventSource;
+        let isConnected = false;
+        const tableBody = document.getElementById('tableBody');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const lastUpdated = document.getElementById('lastUpdated');
+        let disconnectTimeout;
+        const DISCONNECT_DELAY = 5000; // 5 seconds
+
+        // Current indicator configurations
+        let currentConfig = {
+            timeframe: '1',
+            ema: '10',
+            sma: '10', 
+            hma: '10',
+            macd: '26,12,9',
+            supertrendLength: '14',
+            supertrendMultiplier: '3',
+            keltnerEmaLength: '20',
+            keltnerAtrLength: '14',
+            keltnerMultiplier: '2'
+        };
+
+        let currentIndicator = '';
+        let currentIndicatorType = '';
+        let draggedColumn = null;
+        let columnOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
+        
+        // Column visibility state - all visible by default
+        let columnVisibility = {
+            0: true,  // Symbol - always visible
+            1: true,  // EMA
+            2: true,  // SMA
+            3: true,  // HMA
+            4: true,  // MACD
+            5: true,  // Signal Line
+            6: true,  // Supertrend
+            7: true,  // AO
+            8: true,  // Keltner Upper
+            9: true,  // Keltner Middle
+            10: true, // Keltner Lower
+            11: true, // Pivot
+            12: true, // R1
+            13: true, // S1
+            14: true, // R2
+            15: true, // S2
+            16: true, // R3
+            17: true, // S3
+            18: true, // Camarilla R1
+            19: true, // Camarilla R2
+            20: true, // Camarilla R3
+            21: true, // Camarilla R4
+            22: true, // Camarilla S1
+            23: true, // Camarilla S2
+            24: true, // Camarilla S3
+            25: true, // Camarilla S4
+            26: true  // Bias
+        };
+        
+        // Define the original data field mapping
+        const dataFieldMapping = {
+            0: 'ticker_symbol',
+            1: 'ema',
+            2: 'sma', 
+            3: 'hma',
+            4: 'macd',
+            5: 'signal_line',
+            6: 'supertrend',
+            7: 'ao',
+            8: 'keltner_upper',
+            9: 'keltner_middle',
+            10: 'keltner_lower',
+            11: 'pivot',
+            12: 'r1',
+            13: 's1',
+            14: 'r2',
+            15: 's2',
+            16: 'r3',
+            17: 's3',
+            18: 'camarilla_r1',
+            19: 'camarilla_r2',
+            20: 'camarilla_r3',
+            21: 'camarilla_r4',
+            22: 'camarilla_s1',
+            23: 'camarilla_s2',
+            24: 'camarilla_s3',
+            25: 'camarilla_s4',
+            26: 'bias'
+        };
+
+        // Column names for display
+        const columnNames = {
+            0: 'Symbol',
+            1: 'EMA',
+            2: 'SMA',
+            3: 'HMA',
+            4: 'MACD',
+            5: 'Signal Line',
+            6: 'Supertrend',
+            7: 'AO',
+            8: 'Keltner Upper',
+            9: 'Keltner Middle',
+            10: 'Keltner Lower',
+            11: 'Pivot',
+            12: 'R1',
+            13: 'S1',
+            14: 'R2',
+            15: 'S2',
+            16: 'R3',
+            17: 'S3',
+            18: 'Camarilla R1',
+            19: 'Camarilla R2',
+            20: 'Camarilla R3',
+            21: 'Camarilla R4',
+            22: 'Camarilla S1',
+            23: 'Camarilla S2',
+            24: 'Camarilla S3',
+            25: 'Camarilla S4',
+            26: 'Bias'
+        };
+
+        function updateConnectionStatus(status, text) {
+            connectionStatus.textContent = text;
+            connectionStatus.className = status === 'connected' ? 'text-success' : 
+                                        status === 'error' ? 'text-danger' : 'text-warning';
+        }
 
         function updateLastUpdatedTime() {
             const now = new Date();
-            lastUpdatedTime.textContent = now.toLocaleString();
+            lastUpdated.textContent = now.toLocaleTimeString();
         }
 
-        // Function to refresh indicator data with current settings
-        function refreshIndicatorData() {
-            // Get all indicator values
-            const ema = document.getElementById('emaValue').value || 10;
-            const sma = document.getElementById('smaValue').value || 10;
-            const hma = document.getElementById('hmaValue').value || 10;
-            const macd = document.getElementById('macdValue').value || '26,12,9';
-            const supertrendLength = document.getElementById('supertrendLength').value || 14;
-            const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
-            const keltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
-            const keltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
-            const keltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
-            
-            // Recreate indicator EventSource with new values
-            indicatorEventSource = createIndicatorEventSource();
-        }
-
-        function createIndicatorEventSource() {
-            if (indicatorEventSource) {
-                // console.log('Closing existing Indicator EventSource');
-                indicatorEventSource.close();
-            }
-
-            // console.log('Creating new Indicator EventSource');
-            // Add parameters for indicators
-            const ema = document.getElementById('emaValue').value || 10;
-            const sma = document.getElementById('smaValue').value || 10;
-            const hma = document.getElementById('hmaValue').value || 10;
-            const macd = document.getElementById('macdValue').value || '26,12,9';
-            const supertrendLength = document.getElementById('supertrendLength').value || 14;
-            const supertrendMultiplier = document.getElementById('supertrendMultiplier').value || 3;
-            const keltnerEmaLength = document.getElementById('keltnerEmaLength').value || 20;
-            const keltnerAtrLength = document.getElementById('keltnerAtrLength').value || 14;
-            const keltnerMultiplier = document.getElementById('keltnerMultiplier').value || 2;
-            
-            /*
-            console.log('Indicator values:');
-            console.log('- EMA:', ema);
-            console.log('- SMA:', sma);
-            console.log('- HMA:', hma);
-            console.log('- MACD:', macd);
-            console.log('- Supertrend Length:', supertrendLength);
-            console.log('- Supertrend Multiplier:', supertrendMultiplier);
-            console.log('- Keltner EMA Length:', keltnerEmaLength);
-            console.log('- Keltner ATR Length:', keltnerAtrLength);
-            console.log('- Keltner Multiplier:', keltnerMultiplier);
-            */
-            
-            const indicatorParams = new URLSearchParams({
-                timeframe: timeframeSelect.value,
-                ema: ema,
-                sma: sma,
-                hma: hma,
-                macd: macd,  // Already in the right order (SLOW,FAST,SIGNAL)
-                supertrendLength: supertrendLength,
-                supertrendMultiplier: supertrendMultiplier,
-                keltnerEmaLength: keltnerEmaLength,
-                keltnerAtrLength: keltnerAtrLength,
-                keltnerMultiplier: keltnerMultiplier
+        // Event handlers for + buttons
+        function setupIndicatorButtons() {
+            // Add event listeners to all + buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.textContent === '+' && e.target.tagName === 'BUTTON') {
+                    e.stopPropagation(); // Prevent any parent event handling
+                    
+                    const th = e.target.closest('th');
+                    const indicatorName = th.textContent.replace('+', '').trim();
+                    
+                    // Handle different indicators
+                    if (indicatorName === 'EMA') {
+                        openIndicatorModal('EMA', 'ema', currentConfig.ema);
+                    } else if (indicatorName === 'SMA') {
+                        openIndicatorModal('SMA', 'sma', currentConfig.sma);
+                    } else if (indicatorName === 'HMA') {
+                        openIndicatorModal('HMA', 'hma', currentConfig.hma);
+                    } else if (indicatorName === 'MACD') {
+                        openMacdModal();
+                    } else if (indicatorName === 'Supertrend') {
+                        openSupertrendModal();
+                    } else if (indicatorName.includes('Keltner')) {
+                        openKeltnerModal();
+                    } else {
+                        // For other indicators, show general modal
+                        openIndicatorModal(indicatorName, 'general', '');
+                    }
+                }
             });
             
-            const newIndicatorEventSource = new EventSource(`{% url "stream_indicator_data" %}?${indicatorParams.toString()}`);
-
-            newIndicatorEventSource.onopen = () => {/* console.log('Indicator EventSource connection opened') */};
-
-            newIndicatorEventSource.onerror = (error) => {
-                console.error('Indicator EventSource error:', error);
-            };
-
-            newIndicatorEventSource.onmessage = function (event) {
-                const data = JSON.parse(event.data);
-                // console.log('Received indicator data:', data);
-                
-                // Handle error messages
-                if (data.error) {
-                    console.error('Error in indicator data:', data.error);
-                    return;
-                }
-                
-                if (data.message) {
-                    console.warn('Message from indicator stream:', data.message);
-                    return;
-                }
-                
-                // Store indicator data by ticker for later merging
-                data.forEach(item => {
-                    try {
-                        if (!item || !item.ticker_symbol) {
-                            console.warn('Invalid indicator data item:', item);
-                            return;
-                        }
-                        
-                        if (!indicatorData[item.ticker_symbol]) {
-                            indicatorData[item.ticker_symbol] = {};
-                        }
-                        
-                        // Check for MACD_26_12_9 field errors
-                        if (item.macd === undefined) {
-                            console.warn(`MACD indicator missing for ${item.ticker_symbol}, using fallback`);
-                            item.macd = 0; // Use fallback value
-                        }
-                        
-                        // Update with new data, preserving old data
-                        indicatorData[item.ticker_symbol] = {...indicatorData[item.ticker_symbol], ...item};
-                    } catch (e) {
-                        console.error(`Error processing indicator data for item:`, e, item);
+            // Prevent dragging when clicking on + buttons
+            document.addEventListener('mousedown', function(e) {
+                if (e.target.textContent === '+' && e.target.tagName === 'BUTTON') {
+                    const th = e.target.closest('th');
+                    if (th) {
+                        th.setAttribute('draggable', 'false');
                     }
-                });
-                
-                // If dynamic data is already available, merge and update table
-                if (dynamicData.length > 0) {
-                    updateTableWithMergedData();
                 }
-            };
-            return newIndicatorEventSource;
-        }
-
-        function createStaticEventSource() {
-            if (staticEventSource) {
-                console.log('Closing existing Static EventSource');
-                staticEventSource.close();
-            }
-
-            console.log('Creating new Static EventSource');
-            const newStaticEventSource = new EventSource(`{% url "sse_static_future_data" %}`);
-
-            newStaticEventSource.onopen = () => console.log('Static EventSource connection opened');
-
-            newStaticEventSource.onerror = (error) => {
-                console.error('Static EventSource error:', error);
-            };
-
-            newStaticEventSource.onmessage = function (event) {
-                const data = JSON.parse(event.data);
-                console.log('Received static data:', data);
-                
-                // Store static data by ticker for later merging
-                data.forEach(item => {
-                    staticData[item.ticker_symbol] = item;
-                });
-                
-                // If dynamic data is already available, merge and update table
-                if (dynamicData.length > 0) {
-                    updateTableWithMergedData();
-                }
-            };
-            return newStaticEventSource;
-        }
-
-        function createDynamicEventSource(timeframe) {
-            if (eventSource) {
-                // console.log('Closing existing EventSource');
-                eventSource.close();
-            }
-
-            // Show loading indicator
-            loadingIndicator.style.display = 'block';
-            tableContainer.style.display = 'none';
-
-            // console.log('Creating new EventSource with timeframe:', timeframe);
-            const newEventSource = new EventSource(`{% url "stream_dynamic_data" %}?timeframe=${timeframe}`);
-
-            newEventSource.onopen = () => {/* console.log('EventSource connection opened with timeframe:', timeframe) */};
-
-            newEventSource.onerror = (error) => {
-                console.error('EventSource error:', error);
-                loadingIndicator.innerHTML = 'Error connecting to the server. Please try again later.';
-            };
-
-            newEventSource.onmessage = function (event) {
-                // Hide loading indicator and show table
-                loadingIndicator.style.display = 'none';
-                tableContainer.style.display = 'block';
-
-                const data = JSON.parse(event.data);
-
-                if (data.message) {
-                    loadingIndicator.innerHTML = data.message;
-                    loadingIndicator.style.display = 'block';
-                    tableContainer.style.display = 'none';
-                } else {
-                    updateLastUpdatedTime();
-                    // Store the dynamic data
-                    dynamicData = data;
-                    recordCount.textContent = `${data.length} records`;
-
-                    // Update the table with merged data
-                    updateTableWithMergedData();
-                }
-            };
-            return newEventSource;
-        }
-
-        // For compatibility with existing code that may call this function
-        function createEventSource(timeframe) {
-            return createDynamicEventSource(timeframe);
-        }
-        
-        // Function to update the table with merged data from all sources
-        function updateTableWithMergedData() {
-            const tableBody = document.querySelector('#dynamicDataTable tbody');
+            });
             
-            if (!tableBody) {
-                console.error("Table body not found");
+            document.addEventListener('mouseup', function(e) {
+                // Re-enable dragging for all headers
+                const headers = document.querySelectorAll('.draggable-header');
+                headers.forEach(header => {
+                    header.setAttribute('draggable', 'true');
+                });
+            });
+        }
+
+        function openIndicatorModal(name, type, value) {
+            currentIndicator = name;
+            currentIndicatorType = type;
+            document.getElementById('indicatorModalLabel').textContent = `Configure ${name}`;
+            document.getElementById('indicatorLabel').textContent = `${name} Period`;
+            document.getElementById('indicatorValue').value = value;
+            new bootstrap.Modal(document.getElementById('indicatorModal')).show();
+        }
+
+        function openMacdModal() {
+            const parts = currentConfig.macd.split(',');
+            document.getElementById('macdSlow').value = parts[0] || '26';
+            document.getElementById('macdFast').value = parts[1] || '12';
+            document.getElementById('macdSignal').value = parts[2] || '9';
+            new bootstrap.Modal(document.getElementById('macdModal')).show();
+        }
+
+        function openSupertrendModal() {
+            document.getElementById('supertrendLength').value = currentConfig.supertrendLength;
+            document.getElementById('supertrendMultiplier').value = currentConfig.supertrendMultiplier;
+            new bootstrap.Modal(document.getElementById('supertrendModal')).show();
+        }
+
+        function openKeltnerModal() {
+            document.getElementById('keltnerEmaLength').value = currentConfig.keltnerEmaLength;
+            document.getElementById('keltnerAtrLength').value = currentConfig.keltnerAtrLength;
+            document.getElementById('keltnerMultiplier').value = currentConfig.keltnerMultiplier;
+            new bootstrap.Modal(document.getElementById('keltnerModal')).show();
+        }
+
+        // Save button handlers
+        function setupModalSaveHandlers() {
+            // General indicator save
+            document.getElementById('saveIndicator').addEventListener('click', function() {
+                const value = document.getElementById('indicatorValue').value;
+                if (currentIndicatorType && value) {
+                    currentConfig[currentIndicatorType] = value;
+                    console.log(`Updated ${currentIndicator} to ${value}`);
+                    reconnectWithNewConfig();
+                }
+                bootstrap.Modal.getInstance(document.getElementById('indicatorModal')).hide();
+            });
+
+            // MACD save
+            document.getElementById('saveMacd').addEventListener('click', function() {
+                const slow = document.getElementById('macdSlow').value;
+                const fast = document.getElementById('macdFast').value;
+                const signal = document.getElementById('macdSignal').value;
+                currentConfig.macd = `${slow},${fast},${signal}`;
+                console.log(`Updated MACD to ${currentConfig.macd}`);
+                reconnectWithNewConfig();
+                bootstrap.Modal.getInstance(document.getElementById('macdModal')).hide();
+            });
+
+            // Supertrend save
+            document.getElementById('saveSupertrend').addEventListener('click', function() {
+                currentConfig.supertrendLength = document.getElementById('supertrendLength').value;
+                currentConfig.supertrendMultiplier = document.getElementById('supertrendMultiplier').value;
+                console.log(`Updated Supertrend to Length: ${currentConfig.supertrendLength}, Multiplier: ${currentConfig.supertrendMultiplier}`);
+                reconnectWithNewConfig();
+                bootstrap.Modal.getInstance(document.getElementById('supertrendModal')).hide();
+            });
+
+            // Keltner save
+            document.getElementById('saveKeltner').addEventListener('click', function() {
+                currentConfig.keltnerEmaLength = document.getElementById('keltnerEmaLength').value;
+                currentConfig.keltnerAtrLength = document.getElementById('keltnerAtrLength').value;
+                currentConfig.keltnerMultiplier = document.getElementById('keltnerMultiplier').value;
+                console.log(`Updated Keltner to EMA: ${currentConfig.keltnerEmaLength}, ATR: ${currentConfig.keltnerAtrLength}, Multiplier: ${currentConfig.keltnerMultiplier}`);
+                reconnectWithNewConfig();
+                bootstrap.Modal.getInstance(document.getElementById('keltnerModal')).hide();
+            });
+
+            // Keltner reset
+            document.getElementById('resetKeltner').addEventListener('click', function() {
+                document.getElementById('keltnerEmaLength').value = '20';
+                document.getElementById('keltnerAtrLength').value = '14';
+                document.getElementById('keltnerMultiplier').value = '2';
+            });
+        }
+
+        function reconnectWithNewConfig() {
+            console.log('Reconnecting with new configuration:', currentConfig);
+            createEventSource();
+        }
+
+        // Drag and Drop Functions
+        function setupDragAndDrop() {
+            const headers = document.querySelectorAll('.draggable-header');
+            
+            headers.forEach(header => {
+                // Remove existing listeners to prevent duplicates
+                header.removeEventListener('dragstart', handleDragStart);
+                header.removeEventListener('dragover', handleDragOver);
+                header.removeEventListener('dragenter', handleDragEnter);
+                header.removeEventListener('dragleave', handleDragLeave);
+                header.removeEventListener('drop', handleDrop);
+                header.removeEventListener('dragend', handleDragEnd);
+                
+                // Add event listeners
+                header.addEventListener('dragstart', handleDragStart);
+                header.addEventListener('dragover', handleDragOver);
+                header.addEventListener('dragenter', handleDragEnter);
+                header.addEventListener('dragleave', handleDragLeave);
+                header.addEventListener('drop', handleDrop);
+                header.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            // Find the th element even if the target is a child element (like + button)
+            const th = e.target.closest('th');
+            if (!th) return;
+            
+            draggedColumn = parseInt(th.getAttribute('data-column'));
+            th.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', th.outerHTML);
+            
+            console.log('Drag started for column:', draggedColumn);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            const th = e.target.closest('th');
+            if (!th) return;
+            
+            const targetColumn = parseInt(th.getAttribute('data-column'));
+            if (targetColumn !== 0 && targetColumn !== draggedColumn) { // Don't allow dropping on Symbol column
+                th.classList.add('drag-over');
+                console.log('Drag enter on column:', targetColumn);
+            }
+        }
+
+        function handleDragLeave(e) {
+            const th = e.target.closest('th');
+            if (th) {
+                th.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const th = e.target.closest('th');
+            if (!th) return false;
+            
+            const targetColumn = parseInt(th.getAttribute('data-column'));
+            
+            // Don't allow dropping on Symbol column (index 0)
+            if (targetColumn === 0 || draggedColumn === 0) {
+                console.log('Drop not allowed on Symbol column');
+                return false;
+            }
+            
+            if (draggedColumn !== targetColumn) {
+                console.log('Dropping column', draggedColumn, 'onto', targetColumn);
+                
+                // Find the actual position indices in the DOM
+                const headerRow = document.querySelector('thead tr');
+                const headers = Array.from(headerRow.children);
+                
+                let fromIndex = -1;
+                let toIndex = -1;
+                
+                headers.forEach((header, index) => {
+                    const colIndex = parseInt(header.getAttribute('data-column'));
+                    if (colIndex === draggedColumn) fromIndex = index;
+                    if (colIndex === targetColumn) toIndex = index;
+                });
+                
+                if (fromIndex !== -1 && toIndex !== -1) {
+                    reorderColumns(fromIndex, toIndex);
+                }
+            }
+            
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            const headers = document.querySelectorAll('th');
+            headers.forEach(header => {
+                header.classList.remove('dragging', 'drag-over');
+            });
+            draggedColumn = null;
+            console.log('Drag ended');
+        }
+
+        function reorderColumns(fromIndex, toIndex) {
+            const table = document.getElementById('indicatorTable');
+            const headerRow = table.querySelector('thead tr');
+            const headers = Array.from(headerRow.children);
+            
+            // Get the original data-column values before moving
+            const fromOriginalColumn = parseInt(headers[fromIndex].getAttribute('data-column'));
+            const toOriginalColumn = parseInt(headers[toIndex].getAttribute('data-column'));
+            
+            // Move header
+            const draggedHeader = headers[fromIndex];
+            const targetHeader = headers[toIndex];
+            
+            if (fromIndex < toIndex) {
+                headerRow.insertBefore(draggedHeader, targetHeader.nextSibling);
+            } else {
+                headerRow.insertBefore(draggedHeader, targetHeader);
+            }
+            
+            // Move data cells in all rows
+            const dataRows = table.querySelectorAll('tbody tr');
+            dataRows.forEach(row => {
+                const cells = Array.from(row.children);
+                const draggedCell = cells[fromIndex];
+                const targetCell = cells[toIndex];
+                
+                if (draggedCell && targetCell) {
+                    if (fromIndex < toIndex) {
+                        row.insertBefore(draggedCell, targetCell.nextSibling);
+                    } else {
+                        row.insertBefore(draggedCell, targetCell);
+                    }
+                }
+            });
+            
+            // Update column order tracking - track the original data-column values
+            const newColumnOrder = [];
+            const updatedHeaders = Array.from(headerRow.children);
+            updatedHeaders.forEach(header => {
+                newColumnOrder.push(parseInt(header.getAttribute('data-column')));
+            });
+            columnOrder = newColumnOrder;
+            
+            // Update data-column attributes to match new positions
+            updateColumnAttributes();
+            
+            console.log('Columns reordered. New order:', columnOrder);
+        }
+
+        function updateColumnAttributes() {
+            // Re-setup drag and drop for updated elements
+            setupDragAndDrop();
+            
+            console.log('Column attributes updated and drag-drop re-initialized');
+        }
+
+        // Column Visibility Functions
+        function hideColumn(columnIndex) {
+            if (columnIndex === 0) {
+                alert('Cannot hide the Symbol column');
                 return;
             }
             
-            while (tableBody.firstChild) {
-                tableBody.removeChild(tableBody.firstChild);
-            }
-            
-            // Merge dynamic and static data
-            dynamicData.forEach(ticker => {
-                        const row = document.createElement('tr');
-                        
-                        // Create an array to hold all cell data in original position
-                        const cellsData = [];
-                        
-                        // Ticker cell (index 0)
-                        cellsData[0] = ticker.ticker_symbol;
-                        
-                        // Current candle data (indices 1-4)
-                        cellsData[1] = ticker.current_candle_open;
-                        cellsData[2] = ticker.current_candle_high;
-                        cellsData[3] = ticker.current_candle_low;
-                        cellsData[4] = ticker.current_candle_close;
-                        
-                        // Previous candle data (indices 5-8)
-                        cellsData[5] = ticker.previous_candle_open;
-                        cellsData[6] = ticker.previous_candle_high;
-                        cellsData[7] = ticker.previous_candle_low;
-                        cellsData[8] = ticker.previous_candle_close;
-                        
-                        // ATP values (indices 9-11)
-                        cellsData[9] = ticker.current_candle_atp;
-                        cellsData[10] = ticker.previous_candle_atp;
-                        cellsData[11] = ticker.last_3_candles_atp;
-                        
-                        // Swing highs (indices 12-14)
-                        cellsData[12] = ticker.prev_swing_high_1;
-                        cellsData[13] = ticker.prev_swing_high_2;
-                        cellsData[14] = ticker.prev_swing_high_3;
-                        
-                        // Swing lows (indices 15-17)
-                        cellsData[15] = ticker.prev_swing_low_1;
-                        cellsData[16] = ticker.prev_swing_low_2;
-                        cellsData[17] = ticker.prev_swing_low_3;
-                        
-                        // Bias (index 18)
-                        cellsData[18] = ticker.bias || 'NEUTRAL';
-                        
-                // Get ticker symbol for lookup
-                const tickerSymbol = ticker.ticker_symbol;
-                
-                // Add static data if available for this ticker
-                if (staticData[tickerSymbol]) {
-                    const sd = staticData[tickerSymbol];
-                    
-                    // Current Day Data (indices 19-31)
-                    cellsData[19] = sd.current_day_30_mins_top_with_date_and_time_of_the_bar;
-                    cellsData[20] = sd.current_day_30_mins_bottom_with_date_and_time_of_the_bar;
-                    cellsData[21] = sd.last_5_tops_in_30_mins_with_date_and_time_of_the_bar;
-                    cellsData[22] = sd.last_5_bottoms_in_30_mins_with_date_and_time_of_the_bar;
-                    cellsData[23] = sd.day_top_latest_1_with_date;
-                    cellsData[24] = sd.day_bottom_latest_1_with_date;
-                    cellsData[25] = sd.high_low_60_min_bar_9_am_10_am;
-                    cellsData[26] = sd.high_low_60_min_bar_10_am_11_am;
-                    cellsData[27] = sd.high_low_60_min_bar_11_am_12_pm;
-                    cellsData[28] = sd.high_low_60_min_bar_12_pm_1_pm;
-                    cellsData[29] = sd.high_low_60_min_bar_1_pm_2_pm;
-                    cellsData[30] = sd.high_low_60_min_bar_2_pm_3_pm;
-                    cellsData[31] = sd.high_low_60_min_bar_3_pm_4_pm;
-                    
-                    // Weekly/Monthly Data (indices 32-41)
-                    cellsData[32] = sd.week_top_latest_1_with_date;
-                    cellsData[33] = sd.week_top_previous_1_with_date;
-                    cellsData[34] = sd.week_bottom_latest_1_with_date;
-                    cellsData[35] = sd.week_bottom_previous_1_with_date;
-                    cellsData[36] = sd.month_top_1_with_date;
-                    cellsData[37] = sd.month_top_2_with_date;
-                    cellsData[38] = sd.month_bottom_1_with_date;
-                    cellsData[39] = sd.month_bottom_2_with_date;
-                    cellsData[40] = sd.expiry_week_vwap;
-                    cellsData[41] = sd.roll_over_week_high_low_volume_bar;
-                    
-                    // Override bias if available in static data
-                    if (sd.bias) {
-                        cellsData[18] = sd.bias;
-                    }
-                }
-                
-                // Add indicator data if available for this ticker
-                if (indicatorData[tickerSymbol]) {
-                    const id = indicatorData[tickerSymbol];
-                    // console.log(`Processing indicator data for ${tickerSymbol}:`, id);
-                    
-                    // Override bias if defined in indicator data
-                    if (id.bias) {
-                        cellsData[18] = id.bias;
-                    }
-                    
-                    // Technical Indicators (indices 42-51)
-                    cellsData[42] = id.ema;
-                    cellsData[43] = id.sma;
-                    cellsData[44] = id.hma;
-                    cellsData[45] = id.macd;
-                    cellsData[46] = id.signal_line;
-                    cellsData[47] = id.supertrend;
-                    cellsData[48] = id.keltner_upper;
-                    cellsData[49] = id.keltner_middle;
-                    cellsData[50] = id.keltner_lower;
-                    cellsData[51] = id.pivot;
-                }
-                
-                // Debug output to verify bias data
-                // console.log(`Ticker ${tickerSymbol} bias: ${cellsData[18]}`);
-                
-                // Add cells to the row in the correct order based on the current column order
-                columnOrder.forEach((originalIndex, displayIndex) => {
-                    if (originalIndex !== undefined && originalIndex < cellsData.length) {
-                        const value = cellsData[originalIndex];
-                        const cell = document.createElement('td');
-                        cell.setAttribute('data-original-col-index', originalIndex);
-                        
-                        // Special formatting for bias column
-                        if (originalIndex === 18) {
-                            const biasValue = value || 'NEUTRAL';
-                            cell.textContent = biasValue;
-                            
-                            // Add visual indicators based on bias
-                            if (biasValue === 'BULLISH') {
-                                cell.classList.add('text-success');
-                                cell.innerHTML = `<strong>${biasValue}</strong>`;
-                            } else if (biasValue === 'BEARISH') {
-                                cell.classList.add('text-danger');
-                                cell.innerHTML = `<strong>${biasValue}</strong>`;
-                            } else {
-                                cell.classList.add('text-warning');
-                                cell.textContent = biasValue;
-                            }
-                        } 
-                        // Special formatting for SuperTrend
-                        else if (originalIndex === 44 && value) {
-                            // SuperTrend values are often "Bullish" or "Bearish"
-                            if (value === "Bullish") {
-                                cell.classList.add('text-success');
-                                cell.innerHTML = `<strong>${value}</strong>`;
-                            } else if (value === "Bearish") {
-                                cell.classList.add('text-danger');
-                                cell.innerHTML = `<strong>${value}</strong>`;
-                            } else {
-                                cell.textContent = value;
-                            }
-                        }
-                        else if (typeof value === 'number') {
-                            // Format numbers with 2 decimal places
-                            cell.textContent = Number.isFinite(value) ? value.toFixed(2) : '-';
-                                } else {
-                                    cell.textContent = value || '-';
-                                }
-                                row.appendChild(cell);
-                            }
-                });
-                        
-                        tableBody.appendChild(row);
-                    });
+            columnVisibility[columnIndex] = false;
+            updateTableVisibility();
+            updateColumnVisibilityModal();
+            console.log('Hidden column:', columnIndex);
         }
 
-        // Initialize all EventSources
-        eventSource = createDynamicEventSource(timeframeSelect.value);
-        staticEventSource = createStaticEventSource();
-        indicatorEventSource = createIndicatorEventSource();
+        function showColumn(columnIndex) {
+            columnVisibility[columnIndex] = true;
+            updateTableVisibility();
+            updateColumnVisibilityModal();
+            console.log('Shown column:', columnIndex);
+        }
 
-        // Update EventSource when timeframe changes
-        updateButton.addEventListener('click', function () {
-            const selectedTimeframe = timeframeSelect.value;
-            eventSource = createDynamicEventSource(selectedTimeframe);
-            
-            // Also refresh the indicator data with the new timeframe
-            refreshIndicatorData();
-            
-            // No need to refresh static source as it doesn't depend on timeframe
-        });
+        function updateTableVisibility() {
+            // Hide/show header columns
+            const headers = document.querySelectorAll('thead th');
+            headers.forEach(header => {
+                const columnIndex = parseInt(header.getAttribute('data-column'));
+                if (columnVisibility[columnIndex]) {
+                    header.style.display = '';
+                } else {
+                    header.style.display = 'none';
+                }
+            });
 
-        // Add a refresh button handler that maintains column order
-        const refreshButton = document.querySelector('button.btn-dark');
-        if (refreshButton) {
-            refreshButton.addEventListener('click', function() {
-                // Refresh all event sources
-                eventSource = createDynamicEventSource(timeframeSelect.value);
-                staticEventSource = createStaticEventSource();
-                refreshIndicatorData();
+            // Clear the table body - next SSE data update will recreate with correct columns
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="${Object.values(columnVisibility).filter(visible => visible).length}" class="text-center">
+                        <div class="spinner-border text-light spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-2">Updating column layout...</div>
+                    </td>
+                </tr>
+            `;
+            
+            console.log('Column visibility updated, waiting for next data update');
+        }
+
+        function setupColumnVisibilityModal() {
+            const technicalColumns = document.getElementById('technicalColumns');
+            const pivotColumns = document.getElementById('pivotColumns');
+            
+            // Clear existing content
+            technicalColumns.innerHTML = '';
+            pivotColumns.innerHTML = '';
+            
+            // Technical indicators (1-10)
+            const technicalIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            technicalIndices.forEach(index => {
+                const checkbox = createColumnCheckbox(index);
+                technicalColumns.appendChild(checkbox);
+            });
+            
+            // Pivot points and support/resistance (11-26)
+            const pivotIndices = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
+            pivotIndices.forEach(index => {
+                const checkbox = createColumnCheckbox(index);
+                pivotColumns.appendChild(checkbox);
+            });
+            
+            // Setup modal buttons
+            document.getElementById('showAllColumns').addEventListener('click', showAllColumns);
+            document.getElementById('hideAllOptional').addEventListener('click', hideAllOptionalColumns);
+        }
+
+        function createColumnCheckbox(columnIndex) {
+            const div = document.createElement('div');
+            div.className = 'form-check mb-2';
+            
+            const checkbox = document.createElement('input');
+            checkbox.className = 'form-check-input';
+            checkbox.type = 'checkbox';
+            checkbox.id = `column-${columnIndex}`;
+            checkbox.checked = columnVisibility[columnIndex];
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    showColumn(columnIndex);
+                } else {
+                    hideColumn(columnIndex);
+                }
+            });
+            
+            const label = document.createElement('label');
+            label.className = 'form-check-label text-light';
+            label.setAttribute('for', `column-${columnIndex}`);
+            label.textContent = columnNames[columnIndex];
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            
+            return div;
+        }
+
+        function updateColumnVisibilityModal() {
+            Object.keys(columnVisibility).forEach(columnIndex => {
+                const checkbox = document.getElementById(`column-${columnIndex}`);
+                if (checkbox) {
+                    checkbox.checked = columnVisibility[columnIndex];
+                }
             });
         }
-    });
-</script>
+
+        function showAllColumns() {
+            Object.keys(columnVisibility).forEach(index => {
+                columnVisibility[index] = true;
+            });
+            updateTableVisibility();
+            updateColumnVisibilityModal();
+            console.log('All columns shown');
+        }
+
+        function hideAllOptionalColumns() {
+            // Hide all except Symbol (0), EMA (1), SMA (2), MACD (4), Supertrend (6)
+            const essentialColumns = [0, 1, 2, 4, 6];
+            Object.keys(columnVisibility).forEach(index => {
+                columnVisibility[index] = essentialColumns.includes(parseInt(index));
+            });
+            updateTableVisibility();
+            updateColumnVisibilityModal();
+            console.log('Hidden all optional columns');
+        }
+
+        // Make hideColumn available globally for onclick handlers
+        window.hideColumn = hideColumn;
+
+        function createEventSource() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // Set status to connecting as soon as we try to connect
+            updateConnectionStatus('connecting', 'Connecting...');
+
+            // Clear any previous disconnect timer
+            if (disconnectTimeout) clearTimeout(disconnectTimeout);
+
+            const queryParams = new URLSearchParams({
+                data_types: 'indicators',
+                timeframe: currentConfig.timeframe,
+                ema: currentConfig.ema,
+                sma: currentConfig.sma,
+                hma: currentConfig.hma,
+                macd: currentConfig.macd,
+                supertrendLength: currentConfig.supertrendLength,
+                supertrendMultiplier: currentConfig.supertrendMultiplier,
+                keltnerEmaLength: currentConfig.keltnerEmaLength,
+                keltnerAtrLength: currentConfig.keltnerAtrLength,
+                keltnerMultiplier: currentConfig.keltnerMultiplier
+            });
+
+            console.log('Connecting to unified SSE stream with parameters:', queryParams.toString());
+            eventSource = new EventSource(`{% url "unified_sse_stream" %}?${queryParams.toString()}`);
+
+            eventSource.onopen = function() {
+                console.log('SSE connection opened');
+                isConnected = true;
+                updateConnectionStatus('connected', 'Connected');
+            };
+
+            eventSource.onerror = function(error) {
+                console.error('SSE connection error:', error);
+                isConnected = false;
+                updateConnectionStatus('connecting', 'Connecting...');
+                // Auto-reconnect after 5 seconds
+                setTimeout(() => {
+                    if (!isConnected) {
+                        console.log('Attempting to reconnect...');
+                        createEventSource();
+                    }
+                }, 5000);
+            };
+
+            eventSource.onmessage = function(event) {
+                try {
+                    const response = JSON.parse(event.data);
+                    console.log('Received unified stream response:', response);
+                    
+                    // Handle different message types from unified stream
+                    if (response.type === 'indicators') {
+                        console.log('Processing indicators data:', response.data);
+                        console.log('Processing time:', response.processing_time, 'seconds');
+                        updateTable(response.data);
+                        updateLastUpdatedTime();
+                        // On every message, reset disconnect timer
+                        if (disconnectTimeout) clearTimeout(disconnectTimeout);
+                        updateConnectionStatus('connected', 'Connected');
+                        disconnectTimeout = setTimeout(function() {
+                            updateConnectionStatus('error', 'Disconnected');
+                        }, DISCONNECT_DELAY);
+                    } else if (response.type === 'error') {
+                        console.error('Error from unified stream:', response.error);
+                        updateConnectionStatus('error', `Error: ${response.error}`);
+                    } else {
+                        console.log('Received other data type:', response.type);
+                        // Ignore other data types (dynamic, static) since we only requested indicators
+                    }
+                } catch (error) {
+                    console.error('Error parsing unified SSE data:', error);
+                }
+            };
+        }
+
+                function updateTable(data) {
+            // Clear existing rows
+            tableBody.innerHTML = '';
+
+            // Count visible columns for colspan
+            const visibleColumnCount = Object.values(columnVisibility).filter(visible => visible).length;
+
+            if (data.message) {
+                tableBody.innerHTML = `<tr><td colspan="${visibleColumnCount}" class="text-center text-warning">${data.message}</td></tr>`;
+                return;
+            }
+
+            if (!Array.isArray(data) || data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="${visibleColumnCount}" class="text-center text-muted">No data available</td></tr>`;
+                return;
+            }
+
+            data.forEach(ticker => {
+                const row = document.createElement('tr');
+                
+                // Get all headers and filter for visible ones
+                const headers = document.querySelectorAll('thead th');
+                const visibleHeaders = Array.from(headers).filter(header => {
+                    const columnIndex = parseInt(header.getAttribute('data-column'));
+                    return columnVisibility[columnIndex];
+                });
+                
+                visibleHeaders.forEach((header, position) => {
+                    const originalColumnIndex = parseInt(header.getAttribute('data-column'));
+                    const fieldName = dataFieldMapping[originalColumnIndex];
+                    const cell = document.createElement('td');
+                    
+                    // Handle Symbol column (always first visually but may be at different data-column)
+                    if (originalColumnIndex === 0) {
+                        cell.className = 'position-sticky start-0 bg-dark fw-bold';
+                        cell.textContent = ticker[fieldName] || '-';
+                    } else {
+                        const value = ticker[fieldName];
+                        
+                        if (typeof value === 'number') {
+                            cell.textContent = value.toFixed(2);
+                            
+                            // Add color coding based on field name, not index
+                            if (fieldName === 'signal_line') {
+                                cell.className = value > 0 ? 'text-success' : 'text-danger';
+                            } else if (fieldName === 'ao') {
+                                cell.className = value > 0 ? 'text-success' : 'text-danger';
+                            }
+                        } else {
+                            cell.textContent = value || '-';
+                            
+                            // Special handling for bias column
+                            if (fieldName === 'bias') {
+                                if (value === 'BULLISH') {
+                                    cell.className = 'text-success fw-bold';
+                                } else if (value === 'BEARISH') {
+                                    cell.className = 'text-danger fw-bold';
+                                } else {
+                                    cell.className = 'text-warning';
+                                }
+                            }
+                        }
+                    }
+                    
+                    row.appendChild(cell);
+                });
+
+                tableBody.appendChild(row);
+            });
+            
+            console.log(`Table updated with ${visibleColumnCount} visible columns`);
+        }
+
+        // Initialize connection when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setupIndicatorButtons();
+            setupModalSaveHandlers();
+            setupDragAndDrop();
+            setupColumnVisibilityModal();
+            createEventSource();
+        });
+
+        // Handle page visibility changes to manage connection
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('Page hidden, maintaining connection');
+            } else {
+                console.log('Page visible');
+                if (!isConnected) {
+                    createEventSource();
+                }
+            }
+        });
+
+        // Clean up connection when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</div>
 {% endblock %}

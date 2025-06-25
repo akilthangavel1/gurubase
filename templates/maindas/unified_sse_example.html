@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified SSE Stream Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .data-section { 
+            border: 1px solid #ccc; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px; 
+        }
+        .dynamic { background-color: #e8f5e8; }
+        .static { background-color: #e8f0ff; }
+        .indicators { background-color: #fff5e8; }
+        .error { background-color: #ffe8e8; }
+        .timestamp { color: #666; font-size: 0.9em; }
+        .controls { margin-bottom: 20px; }
+        .controls label { margin-right: 10px; }
+        .controls input, .controls select { margin-right: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Unified SSE Stream Example</h1>
+    
+    <div class="controls">
+        <label>
+            Data Types:
+            <select id="dataTypes" multiple>
+                <option value="dynamic" selected>Dynamic Data</option>
+                <option value="static" selected>Static Data</option>
+                <option value="indicators" selected>Indicators</option>
+            </select>
+        </label>
+        
+        <label>
+            Timeframe:
+            <select id="timeframe">
+                <option value="1" selected>1 minute</option>
+                <option value="5">5 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="240">4 hours</option>
+                <option value="1440">Daily</option>
+            </select>
+        </label>
+        
+        <label>
+            EMA Length:
+            <input type="number" id="ema" value="10" min="1" max="200">
+        </label>
+        
+        <label>
+            SMA Length:
+            <input type="number" id="sma" value="10" min="1" max="200">
+        </label>
+        
+        <button id="startBtn" onclick="startStream()">Start Stream</button>
+        <button id="stopBtn" onclick="stopStream()" disabled>Stop Stream</button>
+    </div>
+    
+    <div id="connectionStatus">Disconnected</div>
+    
+    <div id="dynamicData" class="data-section dynamic" style="display: none;">
+        <h3>Dynamic Data</h3>
+        <div id="dynamicContent">No data yet...</div>
+        <div class="timestamp" id="dynamicTimestamp"></div>
+    </div>
+    
+    <div id="staticData" class="data-section static" style="display: none;">
+        <h3>Static Data</h3>
+        <div id="staticContent">No data yet...</div>
+        <div class="timestamp" id="staticTimestamp"></div>
+    </div>
+    
+    <div id="indicatorsData" class="data-section indicators" style="display: none;">
+        <h3>Indicators Data</h3>
+        <div id="indicatorsContent">No data yet...</div>
+        <div class="timestamp" id="indicatorsTimestamp"></div>
+    </div>
+    
+    <div id="errorData" class="data-section error" style="display: none;">
+        <h3>Errors</h3>
+        <div id="errorContent"></div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        
+        function startStream() {
+            // Get selected data types
+            const dataTypesSelect = document.getElementById('dataTypes');
+            const selectedTypes = Array.from(dataTypesSelect.selectedOptions).map(option => option.value);
+            
+            if (selectedTypes.length === 0) {
+                alert('Please select at least one data type');
+                return;
+            }
+            
+            // Get other parameters
+            const timeframe = document.getElementById('timeframe').value;
+            const ema = document.getElementById('ema').value;
+            const sma = document.getElementById('sma').value;
+            
+            // Build URL with parameters
+            const params = new URLSearchParams({
+                data_types: selectedTypes.join(','),
+                timeframe: timeframe,
+                ema: ema,
+                sma: sma
+            });
+            
+            const url = `/maindas/unified-stream/?${params.toString()}`;
+            
+            // Close existing connection
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            // Create new EventSource
+            eventSource = new EventSource(url);
+            
+            eventSource.onopen = function(event) {
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').style.color = 'green';
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+            };
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleData(data);
+                } catch (e) {
+                    console.error('Error parsing SSE data:', e);
+                }
+            };
+            
+            eventSource.onerror = function(event) {
+                document.getElementById('connectionStatus').textContent = 'Connection Error';
+                document.getElementById('connectionStatus').style.color = 'red';
+                console.error('SSE error:', event);
+            };
+        }
+        
+        function stopStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            
+            document.getElementById('connectionStatus').textContent = 'Disconnected';
+            document.getElementById('connectionStatus').style.color = 'black';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        }
+        
+        function handleData(data) {
+            const { type, data: payload, timestamp, processing_time } = data;
+            
+            if (type === 'error') {
+                showError(data);
+                return;
+            }
+            
+            switch (type) {
+                case 'dynamic':
+                    showDynamicData(payload, timestamp, processing_time);
+                    break;
+                case 'static':
+                    showStaticData(payload, timestamp, processing_time);
+                    break;
+                case 'indicators':
+                    showIndicatorsData(payload, timestamp, processing_time);
+                    break;
+            }
+        }
+        
+        function showDynamicData(data, timestamp, processingTime) {
+            const section = document.getElementById('dynamicData');
+            const content = document.getElementById('dynamicContent');
+            const timestampElement = document.getElementById('dynamicTimestamp');
+            
+            section.style.display = 'block';
+            
+            if (data && data.length > 0) {
+                content.innerHTML = `
+                    <strong>Records:</strong> ${data.length}<br>
+                    <strong>Sample ticker:</strong> ${data[0].ticker_symbol}<br>
+                    <strong>Current close:</strong> ${data[0].current_candle_close}<br>
+                    <strong>ATP:</strong> ${data[0].current_candle_atp}<br>
+                    <strong>Bias:</strong> ${data[0].bias}
+                `;
+            } else {
+                content.innerHTML = 'No dynamic data available';
+            }
+            
+            timestampElement.textContent = `Last updated: ${new Date(timestamp * 1000).toLocaleTimeString()} (${processingTime.toFixed(3)}s)`;
+        }
+        
+        function showStaticData(data, timestamp, processingTime) {
+            const section = document.getElementById('staticData');
+            const content = document.getElementById('staticContent');
+            const timestampElement = document.getElementById('staticTimestamp');
+            
+            section.style.display = 'block';
+            
+            if (data && data.length > 0) {
+                content.innerHTML = `
+                    <strong>Records:</strong> ${data.length}<br>
+                    <strong>Sample ticker:</strong> ${data[0].ticker_symbol}<br>
+                    <strong>Daily high:</strong> ${data[0].daily_high_latest}<br>
+                    <strong>Daily low:</strong> ${data[0].daily_low_latest}<br>
+                    <strong>Daily close:</strong> ${data[0].daily_close_latest}
+                `;
+            } else {
+                content.innerHTML = 'No static data available';
+            }
+            
+            timestampElement.textContent = `Last updated: ${new Date(timestamp * 1000).toLocaleTimeString()} (${processingTime.toFixed(3)}s)`;
+        }
+        
+        function showIndicatorsData(data, timestamp, processingTime) {
+            const section = document.getElementById('indicatorsData');
+            const content = document.getElementById('indicatorsContent');
+            const timestampElement = document.getElementById('indicatorsTimestamp');
+            
+            section.style.display = 'block';
+            
+            if (data && data.length > 0) {
+                content.innerHTML = `
+                    <strong>Records:</strong> ${data.length}<br>
+                    <strong>Sample ticker:</strong> ${data[0].ticker_symbol}<br>
+                    <strong>EMA:</strong> ${data[0].ema ? data[0].ema.toFixed(2) : 'N/A'}<br>
+                    <strong>SMA:</strong> ${data[0].sma ? data[0].sma.toFixed(2) : 'N/A'}<br>
+                    <strong>MACD:</strong> ${data[0].macd ? data[0].macd.toFixed(4) : 'N/A'}<br>
+                    <strong>Supertrend:</strong> ${data[0].supertrend ? data[0].supertrend.toFixed(2) : 'N/A'}
+                `;
+            } else {
+                content.innerHTML = 'No indicators data available';
+            }
+            
+            timestampElement.textContent = `Last updated: ${new Date(timestamp * 1000).toLocaleTimeString()} (${processingTime.toFixed(3)}s)`;
+        }
+        
+        function showError(errorData) {
+            const section = document.getElementById('errorData');
+            const content = document.getElementById('errorContent');
+            
+            section.style.display = 'block';
+            content.innerHTML = `
+                <strong>Error:</strong> ${errorData.error}<br>
+                ${errorData.data_type ? `<strong>Data Type:</strong> ${errorData.data_type}<br>` : ''}
+                <strong>Time:</strong> ${new Date().toLocaleTimeString()}
+            `;
+        }
+        
+        // Auto-start on page load for demo
+        window.onload = function() {
+            // Small delay to ensure DOM is ready
+            setTimeout(startStream, 500);
+        };
+        
+        // Clean up on page unload
+        window.onbeforeunload = function() {
+            stopStream();
+        };
+    </script>
+</body>
+</html> 

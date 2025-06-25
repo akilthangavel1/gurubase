@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <meta charset="utf-8">
@@ -20,7 +20,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body class="bg-dark text-light">
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'home' %}"><i class="fas fa-chart-line me-2"></i>AbundusWealth</a>
