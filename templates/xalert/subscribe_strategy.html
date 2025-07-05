@@ -1,0 +1,108 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Subscribe to Strategy{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-plus"></i> Subscribe to Trading Strategy</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="strategy" class="form-label">Select Strategy</label>
+                                    <select class="form-select" name="strategy" id="strategy" required>
+                                        <option value="">Choose a strategy...</option>
+                                        {% for strategy in strategies %}
+                                        <option value="{{ strategy.id }}" data-description="{{ strategy.description }}" 
+                                                data-type="{{ strategy.get_strategy_type_display }}"
+                                                data-periods="MA{{ strategy.short_period }}/{{ strategy.long_period }}">
+                                            {{ strategy.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ticker" class="form-label">Select Ticker (Optional)</label>
+                                    <select class="form-select" name="ticker" id="ticker">
+                                        <option value="">All Tickers</option>
+                                        {% for ticker in tickers %}
+                                        <option value="{{ ticker.id }}">{{ ticker.ticker_symbol|upper }} - {{ ticker.ticker_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">Leave empty to receive alerts for all tickers</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Strategy Information Panel -->
+                        <div id="strategyInfo" class="alert alert-info" style="display: none;">
+                            <h6><i class="fas fa-info-circle"></i> Strategy Information</h6>
+                            <div id="strategyDetails"></div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-info-circle"></i> How Strategy Alerts Work:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Automated Analysis:</strong> Our system continuously monitors market data and executes strategies</li>
+                                <li><strong>Real-time Alerts:</strong> Get notified immediately when strategy conditions are met</li>
+                                <li><strong>Ticker Selection:</strong> Choose specific tickers or subscribe to all for broader coverage</li>
+                                <li><strong>Strategy Types:</strong> 
+                                    <ul>
+                                        <li><strong>MA Crossover:</strong> Alerts when short MA crosses above/below long MA</li>
+                                        <li><strong>MA Breakout:</strong> Alerts when price breaks above/below both moving averages</li>
+                                        <li><strong>MA Support:</strong> Alerts when price bounces off moving average support/resistance</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'xalert:strategy_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-bell"></i> Subscribe to Strategy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('strategy').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const strategyInfo = document.getElementById('strategyInfo');
+    const strategyDetails = document.getElementById('strategyDetails');
+    
+    if (selectedOption.value) {
+        const description = selectedOption.getAttribute('data-description');
+        const type = selectedOption.getAttribute('data-type');
+        const periods = selectedOption.getAttribute('data-periods');
+        
+        strategyDetails.innerHTML = `
+            <p><strong>Type:</strong> ${type}</p>
+            <p><strong>Moving Averages:</strong> ${periods}</p>
+            <p><strong>Description:</strong> ${description}</p>
+        `;
+        strategyInfo.style.display = 'block';
+    } else {
+        strategyInfo.style.display = 'none';
+    }
+});
+</script>
+{% endblock %} 

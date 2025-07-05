@@ -1,0 +1,166 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ ticker.ticker_symbol|upper }} Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-chart-line"></i> {{ ticker.ticker_symbol|upper }} - Moving Average Analysis</h2>
+                <div>
+                    <a href="{% url 'xalert:create_alert' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Create Alert for {{ ticker.ticker_symbol|upper }}
+                    </a>
+                    <a href="{% url 'xalert:alert_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticker Information -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Ticker Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Symbol:</strong> {{ ticker.ticker_symbol|upper }}</p>
+                            <p><strong>Name:</strong> {{ ticker.ticker_name }}</p>
+                            <p><strong>Sector:</strong> {{ ticker.ticker_sector }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Market Cap:</strong> {{ ticker.ticker_market_cap }}</p>
+                            <p><strong>Sub Sector:</strong> {{ ticker.ticker_sub_sector|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="fas fa-signal"></i> Recent Signals</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_signals %}
+                        {% for signal in recent_signals %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" 
+                             style="background-color: {% if signal.ma_crossover_signal == 'BUY' %}#d4edda{% elif signal.ma_crossover_signal == 'SELL' %}#f8d7da{% else %}#e2e3e5{% endif %};">
+                            <div>
+                                <small class="d-block">{{ signal.date|date:"M d, H:i" }}</small>
+                                <small class="text-muted">₹{{ signal.close_price }}</small>
+                            </div>
+                            <span class="badge {% if signal.ma_crossover_signal == 'BUY' %}bg-success{% elif signal.ma_crossover_signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ signal.ma_crossover_signal }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No recent signals</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Data -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-area"></i> Moving Average Analysis (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    {% if analysis_data %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Close Price</th>
+                                        <th>MA 20</th>
+                                        <th>MA 50</th>
+                                        <th>Signal</th>
+                                        <th>Position</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in analysis_data %}
+                                    <tr class="{% if data.signal == 'BUY' %}table-success{% elif data.signal == 'SELL' %}table-danger{% endif %}">
+                                        <td>{{ data.datetime|date:"M d, Y" }}</td>
+                                        <td>₹{{ data.close_price|floatformat:2 }}</td>
+                                        <td>
+                                            {% if data.ma_20 %}
+                                                ₹{{ data.ma_20|floatformat:2 }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.ma_50 %}
+                                                ₹{{ data.ma_50|floatformat:2 }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.signal == 'BUY' %}
+                                                <span class="badge bg-success">{{ data.signal }}</span>
+                                            {% elif data.signal == 'SELL' %}
+                                                <span class="badge bg-danger">{{ data.signal }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ data.signal }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.ma_20 and data.ma_50 %}
+                                                {% if data.ma_20 > data.ma_50 %}
+                                                    <span class="badge bg-success">Bullish</span>
+                                                {% elif data.ma_20 < data.ma_50 %}
+                                                    <span class="badge bg-danger">Bearish</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Neutral</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <h6><i class="fas fa-info-circle"></i> Analysis Legend:</h6>
+                            <ul class="mb-0">
+                                <li><strong>BUY Signal:</strong> MA20 crosses above MA50 (Golden Cross)</li>
+                                <li><strong>SELL Signal:</strong> MA20 crosses below MA50 (Death Cross)</li>
+                                <li><strong>Bullish Position:</strong> MA20 > MA50 (Uptrend)</li>
+                                <li><strong>Bearish Position:</strong> MA20 < MA50 (Downtrend)</li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                            <h5>No Analysis Data Available</h5>
+                            <p class="text-muted">
+                                Insufficient historical data to calculate moving averages for {{ ticker.ticker_symbol|upper }}.
+                                <br>At least 50 days of data is required for proper analysis.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

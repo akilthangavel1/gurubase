@@ -1,0 +1,147 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Alert History{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-history"></i> Alert History</h2>
+                <a href="{% url 'xalert:alert_dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> Triggered Alerts</h5>
+                    {% if history %}
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="markAllAsRead()">
+                            <i class="fas fa-check-double"></i> Mark All as Read
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if history %}
+                        <form method="post" id="markReadForm">
+                            {% csrf_token %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                            </th>
+                                            <th>Ticker</th>
+                                            <th>Signal</th>
+                                            <th>Price</th>
+                                            <th>MA Values</th>
+                                            <th>Triggered</th>
+                                            <th>Message</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in history %}
+                                        <tr class="{% if not item.is_read %}table-warning{% endif %}">
+                                            <td>
+                                                <input type="checkbox" name="mark_read" value="{{ item.id }}" class="alert-checkbox">
+                                            </td>
+                                            <td>
+                                                <strong>{{ item.ticker.ticker_symbol|upper }}</strong><br>
+                                                <small class="text-muted">{{ item.ticker.ticker_name }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if item.signal_type == 'BUY' %}bg-success{% elif item.signal_type == 'SELL' %}bg-danger{% else %}bg-info{% endif %}">
+                                                    {{ item.signal_type }}
+                                                </span>
+                                            </td>
+                                            <td>₹{{ item.trigger_price }}</td>
+                                            <td>
+                                                {% if item.ma_short_value and item.ma_long_value %}
+                                                    <small>
+                                                        MA20: ₹{{ item.ma_short_value|floatformat:2 }}<br>
+                                                        MA50: ₹{{ item.ma_long_value|floatformat:2 }}
+                                                    </small>
+                                                {% else %}
+                                                    <small class="text-muted">N/A</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ item.trigger_date|date:"M d, Y H:i" }}<br>
+                                                <small class="text-muted">{{ item.trigger_date|timesince }} ago</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ item.message }}</small>
+                                            </td>
+                                            <td>
+                                                {% if item.is_read %}
+                                                    <span class="badge bg-secondary">Read</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Unread</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Mark Selected as Read
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <h5>No Alert History</h5>
+                            <p class="text-muted">No alerts have been triggered yet.</p>
+                            <a href="{% url 'xalert:create_alert' %}" class="btn btn-primary">Create Your First Alert</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const alertCheckboxes = document.querySelectorAll('.alert-checkbox');
+    
+    alertCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
+
+function markAllAsRead() {
+    // Select all unread alerts
+    const unreadCheckboxes = document.querySelectorAll('tr:not(.table-warning) .alert-checkbox');
+    const allUnreadCheckboxes = Array.from(document.querySelectorAll('.alert-checkbox')).filter(cb => {
+        return cb.closest('tr').classList.contains('table-warning');
+    });
+    
+    allUnreadCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    
+    if (allUnreadCheckboxes.length > 0) {
+        document.getElementById('markReadForm').submit();
+    } else {
+        alert('No unread alerts to mark as read.');
+    }
+}
+</script>
+{% endblock %} 

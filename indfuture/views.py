@@ -14,6 +14,34 @@ import pandas_ta as ta
 
 logger = logging.getLogger(__name__)
 
+def calculate_custom_macd(prices, fast_period=12, slow_period=26, signal_period=9):
+    """
+    Custom MACD calculation function
+    
+    Args:
+        prices: Series of closing prices
+        fast_period: Fast EMA period (default: 12)
+        slow_period: Slow EMA period (default: 26)
+        signal_period: Signal line EMA period (default: 9)
+    
+    Returns:
+        tuple: (macd_line, signal_line, histogram)
+    """
+    # Calculate EMAs
+    ema_fast = prices.ewm(span=fast_period).mean()
+    ema_slow = prices.ewm(span=slow_period).mean()
+    
+    # MACD Line = Fast EMA - Slow EMA
+    macd_line = ema_fast - ema_slow
+    
+    # Signal Line = EMA of MACD Line
+    signal_line = macd_line.ewm(span=signal_period).mean()
+    
+    # Histogram = MACD Line - Signal Line
+    histogram = macd_line - signal_line
+    
+    return macd_line, signal_line, histogram
+
 
 def indicator_future(request):
     logger.info("Rendering indicator_future template")
@@ -46,14 +74,18 @@ def calculate_indicators(data, daily_data=None, ema_length=10, sma_length=10, hm
     # Calculate SMA
     df['sma'] = ta.sma(df['close'], length=sma_length)
     
-    # Calculate HMA
+
     df['hma'] = ta.hma(df['close'], length=hma_length)
 
-    macd = ta.macd(df['close'], fast=macd_fast, slow=macd_slow, signal=macd_signal)
-    macd_inside_parm = "MACD_"+str(macd_slow)+"_"+ str(macd_fast) +"_"+ str(macd_signal)
-    df['macd'] = macd[macd_inside_parm]
-    macd_signal_inside_parm = "MACDs_"+str(macd_slow)+"_"+ str(macd_fast) +"_"+ str(macd_signal)
-    df['signal_line'] = macd[macd_signal_inside_parm]
+
+    macd_line, signal_line, histogram = calculate_custom_macd(
+        df['close'], 
+        fast_period=macd_fast, 
+        slow_period=macd_slow, 
+        signal_period=macd_signal
+    )
+    df['macd'] = macd_line
+    df['signal_line'] = signal_line
 
     # Calculate Supertrend
     supertrend = ta.supertrend(df['high'], df['low'], df['close'], length=supertrend_length, multiplier=supertrend_multiplier)

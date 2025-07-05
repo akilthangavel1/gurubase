@@ -15,6 +15,35 @@ import pandas_ta as ta
 logger = logging.getLogger(__name__)
 
 
+def calculate_custom_macd(prices, fast_period=12, slow_period=26, signal_period=9):
+    """
+    Custom MACD calculation function
+    
+    Args:
+        prices: Series of closing prices
+        fast_period: Fast EMA period (default: 12)
+        slow_period: Slow EMA period (default: 26)
+        signal_period: Signal line EMA period (default: 9)
+    
+    Returns:
+        tuple: (macd_line, signal_line, histogram)
+    """
+    # Calculate EMAs
+    ema_fast = prices.ewm(span=fast_period).mean()
+    ema_slow = prices.ewm(span=slow_period).mean()
+    
+    # MACD Line = Fast EMA - Slow EMA
+    macd_line = ema_fast - ema_slow
+    
+    # Signal Line = EMA of MACD Line
+    signal_line = macd_line.ewm(span=signal_period).mean()
+    
+    # Histogram = MACD Line - Signal Line
+    histogram = macd_line - signal_line
+    
+    return macd_line, signal_line, histogram
+
+
 def indicator_future(request):
     logger.info("Rendering indicator_future template")
     return render(request, 'indfuture/indicator_future.html')
@@ -49,11 +78,15 @@ def calculate_indicators(data, daily_data=None, ema_length=10, sma_length=10, hm
     # Calculate HMA
     df['hma'] = ta.hma(df['close'], length=hma_length)
 
-    macd = ta.macd(df['close'], fast=macd_fast, slow=macd_slow, signal=macd_signal)
-    macd_inside_parm = "MACD_"+str(macd_slow)+"_"+ str(macd_fast) +"_"+ str(macd_signal)
-    df['macd'] = macd[macd_inside_parm]
-    macd_signal_inside_parm = "MACDs_"+str(macd_slow)+"_"+ str(macd_fast) +"_"+ str(macd_signal)
-    df['signal_line'] = macd[macd_signal_inside_parm]
+    # Calculate MACD using custom function
+    macd_line, signal_line, histogram = calculate_custom_macd(
+        df['close'], 
+        fast_period=macd_fast, 
+        slow_period=macd_slow, 
+        signal_period=macd_signal
+    )
+    df['macd'] = macd_line
+    df['signal_line'] = signal_line
 
     # Calculate Supertrend
     supertrend = ta.supertrend(df['high'], df['low'], df['close'], length=supertrend_length, multiplier=supertrend_multiplier)
@@ -273,6 +306,78 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                 ORDER BY interval_start DESC
                 LIMIT 500
             """
+        elif timeframe == '10':
+            # For 10-minute timeframe, aligned to market hours starting at 9:15
+            query = f"""
+                WITH market_aligned_10min AS (
+                    SELECT 
+                        -- Special handling for the last 5-minute candle (3:25-3:30)
+                        CASE
+                            -- If time is between 3:25 PM and 3:30 PM, create a special interval
+                            WHEN (EXTRACT(HOUR FROM datetime) = 15 AND EXTRACT(MINUTE FROM datetime) >= 25) 
+                                THEN date_trunc('day', datetime) + INTERVAL '15 hours 25 minutes'
+                            -- Otherwise use the standard 10-minute intervals from 9:15
+                            ELSE
+                                CASE
+                                    -- Calculate the reference time (9:15 AM on the same day)
+                                    WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                        THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                    ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                END +
+                                -- Calculate how many 10-minute intervals have passed since 9:15
+                                INTERVAL '10 minutes' * 
+                                FLOOR(
+                                    EXTRACT(EPOCH FROM (datetime - 
+                                        CASE
+                                            WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                                THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                            ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                        END
+                                    )) / 600  -- 600 seconds = 10 minutes
+                                )
+                        END AS interval_start,
+                        FIRST_VALUE(open_price) OVER w AS open_price,
+                        MAX(high_price) OVER w AS high_price,
+                        MIN(low_price) OVER w AS low_price,
+                        LAST_VALUE(close_price) OVER w AS close_price,
+                        SUM(volume) OVER w AS volume
+                    FROM "{table_name}"
+                    WINDOW w AS (
+                        PARTITION BY 
+                        CASE
+                            -- If time is between 3:25 PM and 3:30 PM, create a special interval
+                            WHEN (EXTRACT(HOUR FROM datetime) = 15 AND EXTRACT(MINUTE FROM datetime) >= 25) 
+                                THEN date_trunc('day', datetime) + INTERVAL '15 hours 25 minutes'
+                            -- Otherwise use the standard 10-minute intervals from 9:15
+                            ELSE
+                                CASE
+                                    -- Calculate the reference time (9:15 AM on the same day)
+                                    WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                        THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                    ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                END +
+                                -- Calculate how many 10-minute intervals have passed since 9:15
+                                INTERVAL '10 minutes' * 
+                                FLOOR(
+                                    EXTRACT(EPOCH FROM (datetime - 
+                                        CASE
+                                            WHEN EXTRACT(HOUR FROM datetime) < 9 OR (EXTRACT(HOUR FROM datetime) = 9 AND EXTRACT(MINUTE FROM datetime) < 15)
+                                                THEN date_trunc('day', datetime - INTERVAL '1 day') + INTERVAL '9 hours 15 minutes'
+                                            ELSE date_trunc('day', datetime) + INTERVAL '9 hours 15 minutes'
+                                        END
+                                    )) / 600
+                                )
+                        END
+                        ORDER BY datetime
+                        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                    )
+                )
+                SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
+                       close_price, volume
+                FROM market_aligned_10min
+                ORDER BY interval_start DESC
+                LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
+            """
         elif timeframe == '15':
             query = f"""
                 WITH fifteen_min_groups AS (
@@ -322,6 +427,32 @@ def _fetch_data_from_db(ticker_symbol, timeframe='1', ema='10', sma='10', hma='1
                 FROM thirty_min_groups
                 ORDER BY interval_start DESC
                 LIMIT 500
+            """
+        elif timeframe == '45':
+            # For 45-minute timeframe
+            query = f"""
+                WITH forty_five_min_groups AS (
+                    SELECT 
+                        date_trunc('hour', datetime) + 
+                        INTERVAL '45 min' * (date_part('minute', datetime)::integer / 45) AS interval_start,
+                        FIRST_VALUE(open_price) OVER w AS open_price,
+                        MAX(high_price) OVER w AS high_price,
+                        MIN(low_price) OVER w AS low_price,
+                        LAST_VALUE(close_price) OVER w AS close_price,
+                        SUM(volume) OVER w AS volume
+                    FROM "{table_name}"
+                    WINDOW w AS (
+                        PARTITION BY date_trunc('hour', datetime) + 
+                        INTERVAL '45 min' * (date_part('minute', datetime)::integer / 45)
+                        ORDER BY datetime
+                        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                    )
+                )
+                SELECT DISTINCT interval_start as datetime, open_price, high_price, low_price, 
+                       close_price, volume
+                FROM forty_five_min_groups
+                ORDER BY interval_start DESC
+                LIMIT 3  -- Fetch the last 3 records for calculating ATP and swings
             """
         elif timeframe == '60':
             query = f"""

@@ -1,0 +1,120 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Create Alert{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-plus"></i> Create Moving Average Alert</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ticker" class="form-label">Select Ticker</label>
+                                    <select class="form-select" name="ticker" id="ticker" required>
+                                        <option value="">Choose a ticker...</option>
+                                        {% for ticker in tickers %}
+                                        <option value="{{ ticker.id }}">{{ ticker.ticker_symbol|upper }} - {{ ticker.ticker_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="alert_type" class="form-label">Alert Type</label>
+                                    <select class="form-select" name="alert_type" id="alert_type" required>
+                                        <option value="MA_CROSSOVER">Moving Average Crossover</option>
+                                        <option value="MA_ABOVE">Price Above Moving Average</option>
+                                        <option value="MA_BELOW">Price Below Moving Average</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ma_short_period" class="form-label">Short Moving Average Period</label>
+                                    <input type="number" class="form-control" name="ma_short_period" id="ma_short_period" 
+                                           value="20" min="1" max="200" required>
+                                    <div class="form-text">Typically 20 days</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ma_long_period" class="form-label">Long Moving Average Period</label>
+                                    <input type="number" class="form-control" name="ma_long_period" id="ma_long_period" 
+                                           value="50" min="1" max="200" required>
+                                    <div class="form-text">Typically 50 days</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="target_price_section" style="display: none;">
+                            <label for="target_price" class="form-label">Target Price (Optional)</label>
+                            <input type="number" class="form-control" name="target_price" id="target_price" 
+                                   step="0.01" min="0">
+                            <div class="form-text">For price-based alerts, specify the target price</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> Alert Types Explained:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Moving Average Crossover:</strong> Triggers when the short MA crosses above (buy signal) or below (sell signal) the long MA</li>
+                                <li><strong>Price Above MA:</strong> Triggers when the current price is above the short moving average</li>
+                                <li><strong>Price Below MA:</strong> Triggers when the current price is below the short moving average</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'xalert:alert_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create Alert
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('alert_type').addEventListener('change', function() {
+    const targetPriceSection = document.getElementById('target_price_section');
+    const alertType = this.value;
+    
+    if (alertType === 'MA_ABOVE' || alertType === 'MA_BELOW') {
+        targetPriceSection.style.display = 'block';
+    } else {
+        targetPriceSection.style.display = 'none';
+    }
+});
+
+// Validate MA periods
+document.getElementById('ma_short_period').addEventListener('change', validatePeriods);
+document.getElementById('ma_long_period').addEventListener('change', validatePeriods);
+
+function validatePeriods() {
+    const shortPeriod = parseInt(document.getElementById('ma_short_period').value);
+    const longPeriod = parseInt(document.getElementById('ma_long_period').value);
+    
+    if (shortPeriod >= longPeriod) {
+        alert('Short period must be less than long period');
+        document.getElementById('ma_short_period').focus();
+    }
+}
+</script>
+{% endblock %} 

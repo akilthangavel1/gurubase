@@ -1,0 +1,147 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Stock Heatmap - NIFTY500 - Gurubase{% endblock %}
+
+{% block extra_css %}
+<style>
+    .heatmap-controls { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .heatmap-controls .btn { font-weight: 600; }
+    #heatmap-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0px; width: 100%; margin: 0 auto; }
+    .sector-section { background: rgba(45, 45, 45, 0.5); border-radius: 0px; padding: 10px; }
+    @media (max-width: 1400px) { #heatmap-container { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 1000px) { #heatmap-container { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { #heatmap-container { grid-template-columns: 1fr; } }
+    .sector-header { display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .sector-header h4 { margin: 0; color: #00c6ff; font-weight: 700; }
+    .sector-grid { display: flex; flex-wrap: wrap; gap: 0px; }
+    .stock-square { width: calc(33.33% - 2px); height: 60px; border-radius: 0px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 0.75rem; color: #fff; transition: transform 0.1s ease-in-out; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; }
+    .stock-square:hover { transform: scale(1.06); }
+    .stock-square .symbol { font-weight: 700; }
+    .stock-square .change { font-size: 0.7rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Market Heat Map - 360° Market View</h4>
+        <small class="text-muted" id="last-updated"></small>
+    </div>
+
+    <div class="heatmap-controls">
+        <div class="btn-group" role="group" aria-label="Heatmap Type">
+            <button type="button" class="btn btn-outline-primary heatmap-type-btn active" data-type="stocks">Stock Heatmap</button>
+            <button type="button" class="btn btn-outline-primary heatmap-type-btn" data-type="futures">Future Heatmap</button>
+            <button type="button" class="btn btn-outline-primary heatmap-type-btn" data-type="strategy">Strategy Heatmap</button>
+        </div>
+        <div class="btn-group" role="group" aria-label="Timeframe">
+            <button type="button" class="btn btn-outline-light timeframe-btn active" data-frame="daily">1D</button>
+            <button type="button" class="btn btn-outline-light timeframe-btn" data-frame="weekly">5D</button>
+            <button type="button" class="btn btn-outline-light timeframe-btn" data-frame="monthly">1M</button>
+        </div>
+        <select class="form-select w-auto" id="index-select">
+            <option value="nifty500">NIFTY 500</option>
+            <option value="nifty100">NIFTY 100</option>
+            <option value="nifty50">NIFTY 50</option>
+        </select>
+    </div>
+
+    <div id="heatmap-container"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const heatmapContainer = document.getElementById('heatmap-container');
+        const timeframeButtons = document.querySelectorAll('.timeframe-btn');
+        const heatmapTypeButtons = document.querySelectorAll('.heatmap-type-btn');
+        const indexSelect = document.getElementById('index-select');
+        const lastUpdated = document.getElementById('last-updated');
+        let selectedFrame = 'daily';
+        let selectedType = 'stocks';
+        const dataUrlBase = "{% url 'heatmap_data' %}";
+
+        heatmapTypeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                heatmapTypeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedType = btn.getAttribute('data-type');
+                loadHeatmap();
+            });
+        });
+
+        timeframeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                timeframeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedFrame = btn.getAttribute('data-frame');
+                loadHeatmap();
+            });
+        });
+
+        indexSelect.addEventListener('change', loadHeatmap);
+
+        function getColorForChange(change) {
+            if (change === null || isNaN(change)) return '#4a5568';
+            
+            if (change >= 2) return '#22c55e';      // Strong green
+            if (change >= 1) return '#4ade80';     // Medium green  
+            if (change >= 0.1) return '#9edfb6';   // Light green
+            if (change >= -0.1) return '#6b7280';  // Neutral gray
+            if (change >= -1) return '#f87171';    // Light red
+            if (change >= -2) return '#ef4444';    // Medium red
+            return '#dc2626';                      // Strong red
+        }
+
+        function loadHeatmap() {
+            heatmapContainer.innerHTML = '<div class="text-center my-5">Loading...</div>';
+            fetch(`${dataUrlBase}?index=${indexSelect.value}&type=${selectedType}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) throw new Error(data.error || 'Failed to fetch');
+                    renderHeatmap(data.data);
+                    const now = new Date();
+                    lastUpdated.textContent = 'As on ' + now.toLocaleString();
+                })
+                .catch(err => {
+                    heatmapContainer.innerHTML = `<div class="alert alert-danger">Error loading data: ${err.message}</div>`;
+                });
+        }
+
+        function renderHeatmap(sectorData) {
+            heatmapContainer.innerHTML = '';
+            Object.keys(sectorData).sort((a, b) => sectorData[b].length - sectorData[a].length).forEach(sector => {
+                const sectorSection = document.createElement('div');
+                sectorSection.className = 'sector-section';
+
+                const header = document.createElement('div');
+                header.className = 'sector-header';
+                header.innerHTML = `<h4>${sector}</h4>`;
+                sectorSection.appendChild(header);
+
+                const grid = document.createElement('div');
+                grid.className = 'sector-grid';
+
+                sectorData[sector].forEach(stock => {
+                    const square = document.createElement('div');
+                    square.className = 'stock-square';
+                    const changeVal = stock[`${selectedFrame}_change`];
+                    square.style.backgroundColor = getColorForChange(changeVal);
+                    square.innerHTML = `
+                        <span class="symbol">${stock.ticker_symbol}</span>
+                        <span class="change">${changeVal ? changeVal.toFixed(2) : '0.00'}%</span>
+                    `;
+                    square.title = `${stock.ticker_name} (${stock.ticker_symbol})\nPrice: ₹${stock.current_price}\nChange: ${changeVal ? changeVal.toFixed(2) : '0.00'}%`;
+                    grid.appendChild(square);
+                });
+
+                sectorSection.appendChild(grid);
+                heatmapContainer.appendChild(sectorSection);
+            });
+        }
+
+        loadHeatmap();
+    });
+</script>
+{% endblock %} 

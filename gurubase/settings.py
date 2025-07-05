@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'indfuture',
     'staticfuture',
     'maindas',
+    'xheat',
+    'xalert',
 ]
 
 MIDDLEWARE = [

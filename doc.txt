@@ -1,0 +1,277 @@
+# GURUBASE - Comprehensive Project Documentation
+
+## Overview
+GuruBase is a comprehensive financial trading platform built with Django that provides real-time stock and futures market data, technical analysis, trading indicators, and blog functionality. The platform integrates with the Fyers API for live trading data and includes advanced features like WebSocket streaming, background task processing, and social authentication.
+
+## Technologies Used
+
+### Backend Framework & Core Technologies
+- **Django 5.1.5** - Main web framework
+- **Python 3.x** - Programming language
+- **PostgreSQL** - Primary database (gurubase database, user: akil)
+- **Redis** - Message broker for Celery and caching
+- **Celery 5.4.0** - Distributed task queue for background processing
+- **Django Channels 4.2.0** - WebSocket support for real-time data
+- **ASGI** - Asynchronous Server Gateway Interface
+
+### Financial Data & Trading APIs
+- **Fyers API v3 (3.1.4)** - Live market data and trading functionality
+- **pandas 2.2.3** - Data manipulation and analysis
+- **pandas_ta 0.3.14b0** - Technical analysis indicators
+- **numpy 2.2.2** - Numerical computations
+
+### Authentication & Social Features
+- **Django Social Auth (social-auth-app-django 5.4.2)** - Social authentication
+- **Google OAuth2** - Google login integration
+- **PyJWT 2.10.1** - JSON Web Token handling
+
+### Frontend Technologies
+- **HTML5/CSS3** - Frontend markup and styling
+- **JavaScript** - Frontend interactivity
+- **Bootstrap** (implied from templates) - UI framework
+- **Server-Sent Events (SSE)** - Real-time data streaming
+
+### Data Processing & Analysis
+- **OpenpyXL 3.1.5** - Excel file handling
+- **Pillow 11.1.0** - Image processing
+- **python-dateutil 2.9.0** - Date/time utilities
+
+### Development & Deployment
+- **python-dotenv 1.0.1** - Environment variable management
+- **psycopg2-binary 2.9.10** - PostgreSQL adapter
+- **uvicorn 0.34.0** - ASGI server
+- **websocket-client 1.6.1** - WebSocket client
+
+### AWS Integration
+- **boto3 1.36.6** - AWS SDK
+- **aws-lambda-powertools 1.25.5** - AWS Lambda utilities
+- **aws-xray-sdk 2.14.0** - AWS X-Ray tracing
+
+## Database Structure
+
+### Primary Database: PostgreSQL (gurubase)
+- **Host**: localhost
+- **Port**: 5432
+- **User**: akil
+- **Database Name**: gurubase
+
+### Dynamic Table Creation System
+The platform automatically creates tables for each ticker symbol:
+
+1. **`<ticker_symbol>_historical_data`** - Historical OHLC data
+   - Fields: datetime, open_price, high_price, low_price, close_price, volume
+
+2. **`<ticker_symbol>_websocket_data`** - Real-time WebSocket data
+   - Fields: timestamp, ltp (last traded price)
+
+3. **`<ticker_symbol>_future_historical_data`** - Futures historical data
+   - Fields: datetime, open_price, high_price, low_price, close_price, volume
+
+4. **`<ticker_symbol>_future_websocket_data`** - Futures real-time data
+   - Fields: timestamp, ltp
+
+5. **`<ticker_symbol>_future_daily_historical_data`** - Daily futures data
+   - Fields: datetime, open_price, high_price, low_price, close_price, volume
+
+### Core Models
+- **TickerBase** - Master ticker information with sector/market cap classification
+- **AccessToken** - Fyers API access token storage
+- **Blog Models** - Category, Post, Comment for blog functionality
+
+## URL Structure & Routing
+
+### Main Application URLs (/)
+- `/` - Dashboard home page
+- `/admin/` - Django admin interface
+- `/social-auth/` - Social authentication endpoints
+
+### Dashboard App URLs (/)
+- `/features/` - Platform features page
+- `/live-stocks/` - Live stock data view
+- `/login/` - User login
+- `/register/` - User registration
+- `/portfolio/` - User portfolio
+- `/trending-stocks/` - Trending stocks analysis
+- `/stocks/` - Stock data management
+- `/futures/` - Futures trading interface
+- `/futures/scanner/` - Futures scanner tool
+- `/futures/scanner/sse/` - Server-sent events for futures
+- `/historical-data/` - Historical data viewer
+- `/historical-data/<ticker_symbol>/` - Specific ticker historical data
+- `/future-daily-data/` - Daily futures data
+- `/future-daily-data/<ticker_symbol>/` - Specific ticker daily data
+- `/tickers/` - Ticker management (CRUD operations)
+- `/live-data/` - Real-time data streaming
+- `/data-management/` - Data management tools
+- `/future-technical-indicators/` - Technical indicators dashboard
+- `/future-alerts/` - Trading alerts system
+- `/api/stocks/stream/` - SSE endpoint for stocks
+- `/api/future-dynamic-data/` - SSE endpoint for futures
+
+### Blog URLs (/blog/)
+- `/blog/` - Blog post listing
+- `/blog/post/create/` - Create new blog post
+- `/blog/post/<slug>/` - Individual blog post
+- `/blog/category/create/` - Create blog category
+
+### Options Trading URLs (/options/)
+- `/options/` - Options trading interface
+- `/options/option-chain/` - Option chain data
+
+### Futures Trading URLs (/future/)
+- `/future/` - Dynamic futures data
+
+### Technical Indicators URLs (/indfuture/)
+- `/indfuture/` - Futures technical indicators
+
+### Static Futures URLs (/staticfuture/)
+- `/staticfuture/` - Static futures analysis
+
+### Design Apps URLs (/designapps/)
+- `/designapps/` - Design templates and layouts
+
+### Main Dashboard URLs (/maindas/)
+- `/maindas/` - Main dashboard interface
+- `/maindas/stream-dynamic-data/` - Dynamic data streaming
+- `/maindas/sse-static-data/` - Static data SSE
+- `/maindas/stream_indicator_data/` - Indicator data streaming
+- `/maindas/unified-stream/` - Unified SSE endpoint
+- `/maindas/unified-example/` - SSE example page
+
+## Core Functionalities
+
+### 1. Real-Time Market Data
+- **Live Stock Streaming**: Real-time price updates using Server-Sent Events
+- **Futures Data**: Live futures contract data with 5-minute intervals
+- **WebSocket Integration**: Real-time price feeds through Django Channels
+- **Data Caching**: Redis-based caching for performance optimization
+
+### 2. Technical Analysis & Indicators
+#### Moving Averages
+- **EMA (Exponential Moving Average)** - Configurable periods
+- **SMA (Simple Moving Average)** - Configurable periods  
+- **HMA (Hull Moving Average)** - Advanced trend indicator
+
+#### Oscillators & Momentum
+- **MACD (Moving Average Convergence Divergence)** - Custom implementation
+- **Awesome Oscillator** - Bill Williams indicator
+- **Supertrend** - Trend following indicator with configurable multiplier
+
+#### Support & Resistance
+- **Classic Pivot Points** - Daily pivot calculations
+- **Camarilla Pivot Points** - Intraday support/resistance levels
+- **Keltner Channels** - Volatility-based channels
+- **Swing Highs/Lows** - Automatic swing point detection
+
+#### Market Analysis
+- **Bias Calculation** - Bullish/Bearish/Neutral market sentiment
+- **Strategy Alerts** - Automated trading signal generation
+- **Multi-timeframe Analysis** - 1min, 5min, 15min, 1hour, daily
+
+### 3. Trading Features
+- **Future Scanner** - Real-time futures screening with filters
+- **Options Chain** - Live options data and analysis
+- **Portfolio Management** - Trade tracking and P&L analysis
+- **Alert System** - Strategy-based notifications
+- **Historical Backtesting** - Strategy performance analysis
+
+### 4. Data Management
+#### Automated Data Collection
+- **Celery Background Tasks** - Scheduled data updates every 5 minutes during market hours (9 AM - 3 PM, Monday-Friday)
+- **Historical Data Import** - Bulk import functionality
+- **Ticker Management** - CRUD operations for symbols
+- **Data Validation** - Automatic data cleaning and validation
+
+#### Database Operations
+- **Dynamic Table Creation** - Automatic table generation per ticker
+- **Bulk Data Processing** - Efficient data insertion with conflict resolution
+- **Data Export** - Excel/CSV export functionality
+
+### 5. User Management & Authentication
+- **Django Authentication** - Traditional username/password
+- **Google OAuth2** - Social login integration
+- **User Profiles** - Personalized dashboards
+- **Session Management** - Secure session handling
+
+### 6. Blog & Content Management
+- **Blog System** - Full-featured blogging platform
+- **Category Management** - Hierarchical content organization
+- **Comment System** - User engagement features
+- **SEO Optimization** - Slug-based URLs and meta tags
+
+### 7. Real-Time Communication
+#### Server-Sent Events (SSE)
+- **Multi-Stream Support** - Dynamic, static, and indicator data streams
+- **Unified SSE Endpoint** - Single endpoint for multiple data types
+- **Custom Event Types** - Flexible event-driven architecture
+- **Connection Management** - Automatic reconnection and error handling
+
+#### WebSocket Features
+- **Live Price Updates** - Real-time market data
+- **Multi-Client Support** - Broadcast to multiple users
+- **Event-Driven Updates** - Push notifications for alerts
+
+### 8. Advanced Analytics
+#### Market Screening
+- **Custom Filters** - Price, volume, volatility filters
+- **Sector Analysis** - Industry-wise performance
+- **Market Cap Classification** - Large/Mid/Small cap categorization
+
+#### Performance Monitoring
+- **Real-Time Metrics** - Live performance indicators
+- **Historical Analysis** - Trend analysis and pattern recognition
+- **Risk Management** - Position sizing and risk metrics
+
+## API Integrations
+
+### Fyers API Configuration
+- **Client ID**: MMKQTWNJH3-100
+- **API Version**: v3
+- **Endpoints Used**:
+  - Market data quotes
+  - Historical data
+  - Real-time streaming
+  - Authentication tokens
+
+### Data Formats
+- **OHLCV Data**: Open, High, Low, Close, Volume format
+- **JSON API Responses**: RESTful API communication
+- **Real-time Streams**: WebSocket and SSE protocols
+
+## Background Processing
+
+### Celery Task Queue
+- **Broker**: Redis (localhost:6379/0)
+- **Timezone**: Asia/Kolkata
+- **Scheduled Tasks**:
+  - Historical data updates every 5 minutes during market hours
+  - Data validation and cleanup tasks
+  - Alert generation and notification dispatch
+
+### Task Management
+- **Beat Scheduler** - Cron-based task scheduling
+- **Worker Processes** - Distributed task execution
+- **Task Monitoring** - Status tracking and error handling
+
+## Security Features
+- **CSRF Protection** - Cross-site request forgery prevention
+- **XSS Protection** - Cross-site scripting mitigation
+- **HTTPS Support** - SSL/TLS encryption (production)
+- **Session Security** - Secure cookie handling
+- **Input Validation** - Data sanitization and validation
+
+## Performance Optimizations
+- **Database Indexing** - Optimized query performance
+- **Connection Pooling** - Efficient database connections
+- **Caching Strategy** - Redis-based data caching
+- **Async Processing** - Non-blocking I/O operations
+- **Data Compression** - Efficient data transmission
+
+## Development & Deployment
+- **Environment Management** - .env based configuration
+- **Static Files** - Collectstatic for production
+- **Media Handling** - File upload and storage
+- **Logging System** - Comprehensive error tracking
+- **Debug Mode** - Development debugging features
+
+This platform represents a comprehensive trading and analysis solution with enterprise-grade features for real-time market data processing, technical analysis, and user management.

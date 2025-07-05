@@ -250,7 +250,7 @@ h1 {
 
 .nifty-header {
     background-color: #2d2d2d;
-    color: #2196F3;
+    color: #28a745;
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
@@ -268,13 +268,13 @@ h1 {
     font-size: 1.5rem;
     font-weight: bold;
     margin: 0;
-    color: #2196F3;
+    color: #28a745;
 }
 
 .nifty-left .nifty-value {
     font-size: 2rem;
     font-weight: bold;
-    color: #64b5f6;
+    color: #4caf50;
     margin-top: 10px;
 }
 
@@ -301,7 +301,7 @@ h1 {
 .nifty-right .btn-filter {
     padding: 10px 20px;
     border-radius: 5px;
-    background-color: #0d6efd;
+    background-color: #28a745;
     color: white;
     font-weight: bold;
     border: none;
@@ -310,7 +310,7 @@ h1 {
 }
 
 .nifty-right .btn-filter:hover {
-    background-color: #084298;
+    background-color: #1e7e34;
 }
 
 .table-container {

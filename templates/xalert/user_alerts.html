@@ -1,0 +1,209 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Your Strategy Alerts{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-exclamation-circle"></i> Your Strategy Alerts</h2>
+                <div>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'xalert:user_alerts' %}" class="btn btn-outline-primary {% if not request.GET.read %}active{% endif %}">All</a>
+                        <a href="{% url 'xalert:user_alerts' %}?read=unread" class="btn btn-outline-warning {% if request.GET.read == 'unread' %}active{% endif %}">Unread</a>
+                        <a href="{% url 'xalert:user_alerts' %}?read=read" class="btn btn-outline-secondary {% if request.GET.read == 'read' %}active{% endif %}">Read</a>
+                    </div>
+                    <a href="{% url 'xalert:strategy_dashboard' %}" class="btn btn-primary ms-2">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> Strategy Alerts</h5>
+                    {% if alerts %}
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="markAllAsRead()">
+                            <i class="fas fa-check-double"></i> Mark All as Read
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="selectAll()">
+                            <i class="fas fa-check-square"></i> Select All
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if alerts %}
+                        <form method="post" id="markReadForm">
+                            {% csrf_token %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th width="50">
+                                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                            </th>
+                                            <th>Ticker</th>
+                                            <th>Strategy</th>
+                                            <th>Signal</th>
+                                            <th>Price</th>
+                                            <th>MA Values</th>
+                                            <th>Received</th>
+                                            <th>Message</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for alert in alerts %}
+                                        <tr class="{% if not alert.is_read %}table-warning{% endif %}">
+                                            <td>
+                                                <input type="checkbox" name="mark_read" value="{{ alert.id }}" class="alert-checkbox">
+                                            </td>
+                                            <td>
+                                                <strong>{{ alert.signal.ticker.ticker_symbol|upper }}</strong><br>
+                                                <small class="text-muted">{{ alert.signal.ticker.ticker_name|truncatechars:30 }}</small>
+                                            </td>
+                                            <td>
+                                                <strong>{{ alert.signal.strategy.name }}</strong><br>
+                                                <small class="text-muted">{{ alert.signal.strategy.get_strategy_type_display }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if alert.signal.signal_type == 'BUY' %}bg-success{% elif alert.signal.signal_type == 'SELL' %}bg-danger{% else %}bg-info{% endif %} fs-6">
+                                                    {{ alert.signal.signal_type }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <strong>₹{{ alert.signal.trigger_price }}</strong>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    MA{{ alert.signal.strategy.short_period }}: ₹{{ alert.signal.short_ma_value|floatformat:2 }}<br>
+                                                    MA{{ alert.signal.strategy.long_period }}: ₹{{ alert.signal.long_ma_value|floatformat:2 }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                {{ alert.sent_at|date:"M d, Y H:i" }}<br>
+                                                <small class="text-muted">{{ alert.sent_at|timesince }} ago</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ alert.message|truncatechars:60 }}</small>
+                                            </td>
+                                            <td>
+                                                {% if alert.is_read %}
+                                                    <span class="badge bg-secondary">Read</span>
+                                                    {% if alert.read_at %}
+                                                        <small class="d-block text-muted">{{ alert.read_at|date:"M d, H:i" }}</small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">Unread</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check"></i> Mark Selected as Read
+                                    </button>
+                                </div>
+                                <div>
+                                    <small class="text-muted">
+                                        Showing {{ alerts.count }} alert(s)
+                                        {% if request.GET.read == 'unread' %}
+                                            (Unread only)
+                                        {% elif request.GET.read == 'read' %}
+                                            (Read only)
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <h5>No Alerts</h5>
+                            {% if request.GET.read == 'unread' %}
+                                <p class="text-muted">No unread alerts at the moment.</p>
+                                <a href="{% url 'xalert:user_alerts' %}" class="btn btn-outline-primary">View All Alerts</a>
+                            {% elif request.GET.read == 'read' %}
+                                <p class="text-muted">No read alerts found.</p>
+                                <a href="{% url 'xalert:user_alerts' %}" class="btn btn-outline-primary">View All Alerts</a>
+                            {% else %}
+                                <p class="text-muted">You haven't received any strategy alerts yet.</p>
+                                <a href="{% url 'xalert:subscribe_strategy' %}" class="btn btn-primary">Subscribe to Strategies</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const alertCheckboxes = document.querySelectorAll('.alert-checkbox');
+    
+    alertCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
+
+function selectAll() {
+    const alertCheckboxes = document.querySelectorAll('.alert-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    alertCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+}
+
+function markAllAsRead() {
+    // Select all unread alerts
+    const unreadRows = document.querySelectorAll('tr.table-warning');
+    const alertCheckboxes = [];
+    
+    unreadRows.forEach(row => {
+        const checkbox = row.querySelector('.alert-checkbox');
+        if (checkbox) {
+            checkbox.checked = true;
+            alertCheckboxes.push(checkbox);
+        }
+    });
+    
+    if (alertCheckboxes.length > 0) {
+        document.getElementById('markReadForm').submit();
+    } else {
+        alert('No unread alerts to mark as read.');
+    }
+}
+
+// Auto-select checkboxes when clicking on table rows
+document.querySelectorAll('tbody tr').forEach(row => {
+    row.addEventListener('click', function(e) {
+        // Don't trigger if clicking on checkbox or links
+        if (e.target.type === 'checkbox' || e.target.tagName === 'A') {
+            return;
+        }
+        
+        const checkbox = this.querySelector('.alert-checkbox');
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+        }
+    });
+});
+</script>
+{% endblock %} 

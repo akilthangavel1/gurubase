@@ -13,7 +13,7 @@
                     <ul class="dropdown-menu dropdown-menu-dark">
                         <li><a class="dropdown-item active" href="#">All Markets</a></li>
                         <li><a class="dropdown-item" href="#">Technology</a></li>
-                        <li><a class="dropdown-item" href="#">Consumer Cyclical</a></li>
+                        <li><a class="dropdown-item" href="#">Consumer Cyclical</a></li>x
                         <li><a class="dropdown-item" href="#">Healthcare</a></li>
                         <li><a class="dropdown-item" href="#">Financial</a></li>
                         <li><a class="dropdown-item" href="#">Energy</a></li>
@@ -27,17 +27,20 @@
             <!-- Time Period -->
             <div class="col-md-2">
                 <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Time Period
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="timeframeButton">
+                        1 Minute
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-dark">
-                        <li><a class="dropdown-item" href="#">1 Day</a></li>
-                        <li><a class="dropdown-item" href="#">1 Week</a></li>
-                        <li><a class="dropdown-item active" href="#">1 Month</a></li>
-                        <li><a class="dropdown-item" href="#">3 Months</a></li>
-                        <li><a class="dropdown-item" href="#">6 Months</a></li>
-                        <li><a class="dropdown-item" href="#">1 Year</a></li>
-                        <li><a class="dropdown-item" href="#">5 Years</a></li>
+                    <ul class="dropdown-menu dropdown-menu-dark" id="timeframeDropdown">
+                        <li><a class="dropdown-item timeframe-option active" href="#" data-timeframe="1" data-display="1 Minute">1 Minute</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="5" data-display="5 Minutes">5 Minutes</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="10" data-display="10 Minutes">10 Minutes</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="15" data-display="15 Minutes">15 Minutes</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="30" data-display="30 Minutes">30 Minutes</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="45" data-display="45 Minutes">45 Minutes</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="60" data-display="1 Hour">1 Hour</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="120" data-display="2 Hours">2 Hours</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="240" data-display="4 Hours">4 Hours</a></li>
+                        <li><a class="dropdown-item timeframe-option" href="#" data-timeframe="1440" data-display="1 Day">1 Day</a></li>
                     </ul>
                 </div>
             </div>
@@ -110,39 +113,13 @@
     <div class="table-responsive">
         <table class="table table-dark table-bordered" id="indicatorTable">
             <thead>
-                <tr>
-                    <th class="position-sticky start-0 bg-dark" data-column="0">Symbol</th>
-                    <th draggable="true" data-column="1" class="draggable-header">EMA <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure EMA">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(1)">×</button></th>
-                    <th draggable="true" data-column="2" class="draggable-header">SMA <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure SMA">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(2)">×</button></th>
-                    <th draggable="true" data-column="3" class="draggable-header">HMA <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure HMA">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(3)">×</button></th>
-                    <th draggable="true" data-column="4" class="draggable-header">MACD <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure MACD">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(4)">×</button></th>
-                    <th draggable="true" data-column="5" class="draggable-header">Signal Line <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(5)">×</button></th>
-                    <th draggable="true" data-column="6" class="draggable-header">Supertrend <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Supertrend">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(6)">×</button></th>
-                    <th draggable="true" data-column="7" class="draggable-header">AO <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Awesome Oscillator">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(7)">×</button></th>
-                    <th draggable="true" data-column="8" class="draggable-header">Keltner Upper <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Keltner Channels">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(8)">×</button></th>
-                    <th draggable="true" data-column="9" class="draggable-header">Keltner Middle <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Keltner Channels">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(9)">×</button></th>
-                    <th draggable="true" data-column="10" class="draggable-header">Keltner Lower <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure Keltner Channels">+</button><button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(10)">×</button></th>
-                    <th draggable="true" data-column="11" class="draggable-header">Pivot <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(11)">×</button></th>
-                    <th draggable="true" data-column="12" class="draggable-header">R1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(12)">×</button></th>
-                    <th draggable="true" data-column="13" class="draggable-header">S1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(13)">×</button></th>
-                    <th draggable="true" data-column="14" class="draggable-header">R2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(14)">×</button></th>
-                    <th draggable="true" data-column="15" class="draggable-header">S2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(15)">×</button></th>
-                    <th draggable="true" data-column="16" class="draggable-header">R3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(16)">×</button></th>
-                    <th draggable="true" data-column="17" class="draggable-header">S3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(17)">×</button></th>
-                    <th draggable="true" data-column="18" class="draggable-header">Camarilla R1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(18)">×</button></th>
-                    <th draggable="true" data-column="19" class="draggable-header">Camarilla R2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(19)">×</button></th>
-                    <th draggable="true" data-column="20" class="draggable-header">Camarilla R3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(20)">×</button></th>
-                    <th draggable="true" data-column="21" class="draggable-header">Camarilla R4 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(21)">×</button></th>
-                    <th draggable="true" data-column="22" class="draggable-header">Camarilla S1 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(22)">×</button></th>
-                    <th draggable="true" data-column="23" class="draggable-header">Camarilla S2 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(23)">×</button></th>
-                    <th draggable="true" data-column="24" class="draggable-header">Camarilla S3 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(24)">×</button></th>
-                    <th draggable="true" data-column="25" class="draggable-header">Camarilla S4 <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(25)">×</button></th>
-                    <th draggable="true" data-column="26" class="draggable-header">Bias <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(26)">×</button></th>
+                <tr id="tableHeader">
+                    <!-- Table headers will be dynamically generated -->
                 </tr>
             </thead>
             <tbody id="tableBody">
                 <tr>
-                    <td colspan="27" class="text-center">
+                    <td colspan="1" class="text-center">
                         <div class="spinner-border text-light" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -289,15 +266,15 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="text-light mb-3">Technical Indicators</h6>
+                            <h6 class="text-light mb-3">Dynamic & Technical Indicators</h6>
                             <div id="technicalColumns" class="column-group">
-                                <!-- Technical indicator checkboxes will be added here -->
+                                <!-- Technical indicator and dynamic data checkboxes will be added here -->
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="text-light mb-3">Support & Resistance</h6>
+                            <h6 class="text-light mb-3">Static Data & Historical Analysis</h6>
                             <div id="pivotColumns" class="column-group">
-                                <!-- Pivot and resistance/support checkboxes will be added here -->
+                                <!-- Static data, support/resistance, and historical analysis checkboxes will be added here -->
                             </div>
                         </div>
                     </div>
@@ -306,7 +283,7 @@
                         <div class="col-12">
                             <small class="text-muted">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Use the checkboxes to show/hide columns. You can also click the "×" button on any column header to hide it quickly.
+                                Comprehensive data includes dynamic OHLC data, technical indicators, hourly/daily/weekly/monthly analysis, swing points, support/resistance levels, and statistical aggregates. Use checkboxes to show/hide columns or click "×" on column headers for quick hiding.
                             </small>
                         </div>
                     </div>
@@ -417,99 +394,299 @@
         let currentIndicator = '';
         let currentIndicatorType = '';
         let draggedColumn = null;
-        let columnOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
         
-        // Column visibility state - all visible by default
-        let columnVisibility = {
-            0: true,  // Symbol - always visible
-            1: true,  // EMA
-            2: true,  // SMA
-            3: true,  // HMA
-            4: true,  // MACD
-            5: true,  // Signal Line
-            6: true,  // Supertrend
-            7: true,  // AO
-            8: true,  // Keltner Upper
-            9: true,  // Keltner Middle
-            10: true, // Keltner Lower
-            11: true, // Pivot
-            12: true, // R1
-            13: true, // S1
-            14: true, // R2
-            15: true, // S2
-            16: true, // R3
-            17: true, // S3
-            18: true, // Camarilla R1
-            19: true, // Camarilla R2
-            20: true, // Camarilla R3
-            21: true, // Camarilla R4
-            22: true, // Camarilla S1
-            23: true, // Camarilla S2
-            24: true, // Camarilla S3
-            25: true, // Camarilla S4
-            26: true  // Bias
+        // Store data from different streams
+        let latestData = {
+            dynamic: {},
+            static: {},
+            indicators: {}
         };
         
-        // Define the original data field mapping
-        const dataFieldMapping = {
-            0: 'ticker_symbol',
-            1: 'ema',
-            2: 'sma', 
-            3: 'hma',
-            4: 'macd',
-            5: 'signal_line',
-            6: 'supertrend',
-            7: 'ao',
-            8: 'keltner_upper',
-            9: 'keltner_middle',
-            10: 'keltner_lower',
-            11: 'pivot',
-            12: 'r1',
-            13: 's1',
-            14: 'r2',
-            15: 's2',
-            16: 'r3',
-            17: 's3',
-            18: 'camarilla_r1',
-            19: 'camarilla_r2',
-            20: 'camarilla_r3',
-            21: 'camarilla_r4',
-            22: 'camarilla_s1',
-            23: 'camarilla_s2',
-            24: 'camarilla_s3',
-            25: 'camarilla_s4',
-            26: 'bias'
-        };
+        // Combined data for display
+        let combinedData = [];
+        
+        // Column visibility state - start with essential columns visible
+        let columnVisibility = {};
+        
+        // Track current column order (will be updated by drag and drop)
+        let currentColumnOrder = [];
+        
+        // Initialize column visibility - show essential columns by default
+        function initializeColumnVisibility() {
+            // Essential columns that should be visible by default
+            const essentialColumns = [
+                'ticker_symbol', 'current_candle_close', 'bias', 'ema', 'sma', 'macd', 'supertrend',
+                'pivot', 'r1', 's1'
+            ];
+            
+            Object.keys(allAvailableFields).forEach((fieldName, index) => {
+                columnVisibility[index] = essentialColumns.includes(fieldName);
+            });
+            
+            // Initialize column order to match the original field names order
+            currentColumnOrder = [...fieldNames];
+        }
 
-        // Column names for display
-        const columnNames = {
-            0: 'Symbol',
-            1: 'EMA',
-            2: 'SMA',
-            3: 'HMA',
-            4: 'MACD',
-            5: 'Signal Line',
-            6: 'Supertrend',
-            7: 'AO',
-            8: 'Keltner Upper',
-            9: 'Keltner Middle',
-            10: 'Keltner Lower',
-            11: 'Pivot',
-            12: 'R1',
-            13: 'S1',
-            14: 'R2',
-            15: 'S2',
-            16: 'R3',
-            17: 'S3',
-            18: 'Camarilla R1',
-            19: 'Camarilla R2',
-            20: 'Camarilla R3',
-            21: 'Camarilla R4',
-            22: 'Camarilla S1',
-            23: 'Camarilla S2',
-            24: 'Camarilla S3',
-            25: 'Camarilla S4',
-            26: 'Bias'
+        // Generate table headers dynamically based on current column order
+        function generateTableHeaders() {
+            const headerRow = document.getElementById('tableHeader');
+            headerRow.innerHTML = '';
+            
+            currentColumnOrder.forEach((fieldName, visualIndex) => {
+                const originalIndex = fieldNameToIndex[fieldName];
+                const th = document.createElement('th');
+                th.setAttribute('data-column', visualIndex);
+                th.setAttribute('data-field', fieldName);
+                th.setAttribute('data-original-index', originalIndex);
+                
+                if (fieldName === 'ticker_symbol') {
+                    th.className = 'position-sticky start-0 bg-dark';
+                } else {
+                    th.className = 'draggable-header';
+                    th.setAttribute('draggable', 'true');
+                }
+                
+                const displayName = allAvailableFields[fieldName];
+                th.innerHTML = displayName;
+                
+                // Add configuration button for configurable indicators
+                const configurableFields = ['ema', 'sma', 'hma', 'macd', 'supertrend', 'keltner_upper', 'keltner_middle', 'keltner_lower', 'ao'];
+                if (configurableFields.includes(fieldName)) {
+                    th.innerHTML += ` <button class="btn btn-sm btn-outline-light ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Configure ${displayName}">+</button>`;
+                }
+                
+                // Add hide button for all non-symbol columns
+                if (fieldName !== 'ticker_symbol') {
+                    th.innerHTML += ` <button class="btn btn-sm btn-outline-danger ms-1" type="button" style="font-size: 10px; padding: 1px 4px;" title="Hide Column" onclick="hideColumn(${originalIndex})">×</button>`;
+                }
+                
+                // Set initial visibility based on original index
+                if (columnVisibility[originalIndex]) {
+                    th.style.display = '';
+                } else {
+                    th.style.display = 'none';
+                }
+                
+                headerRow.appendChild(th);
+            });
+            
+            console.log('Generated', currentColumnOrder.length, 'table headers in current order');
+        }
+        
+        // Define all available fields from all three data types
+        const allAvailableFields = {
+            // Core identification
+            'ticker_symbol': 'Symbol',
+            
+            // Dynamic data fields
+            'current_candle_open': 'Current Open',
+            'current_candle_high': 'Current High',
+            'current_candle_low': 'Current Low',
+            'current_candle_close': 'Current Close',
+            'previous_candle_open': 'Previous Open',
+            'previous_candle_high': 'Previous High',
+            'previous_candle_low': 'Previous Low',
+            'previous_candle_close': 'Previous Close',
+            'current_candle_atp': 'Current ATP',
+            'previous_candle_atp': 'Previous ATP',
+            'last_3_candles_atp': 'Last 3 ATP',
+            'prev_swing_high_1': 'Swing High 1',
+            'prev_swing_high_2': 'Swing High 2',
+            'prev_swing_high_3': 'Swing High 3',
+            'prev_swing_low_1': 'Swing Low 1',
+            'prev_swing_low_2': 'Swing Low 2',
+            'prev_swing_low_3': 'Swing Low 3',
+            'bias': 'Bias',
+            
+            // Indicator fields
+            'ema': 'EMA',
+            'sma': 'SMA',
+            'hma': 'HMA',
+            'macd': 'MACD',
+            'signal_line': 'Signal Line',
+            'supertrend': 'Supertrend',
+            'ao': 'AO',
+            'keltner_upper': 'Keltner Upper',
+            'keltner_middle': 'Keltner Middle',
+            'keltner_lower': 'Keltner Lower',
+            'pivot': 'Pivot',
+            'r1': 'R1',
+            's1': 'S1',
+            'r2': 'R2',
+            's2': 'S2',
+            'r3': 'R3',
+            's3': 'S3',
+            'camarilla_r1': 'Camarilla R1',
+            'camarilla_r2': 'Camarilla R2',
+            'camarilla_r3': 'Camarilla R3',
+            'camarilla_r4': 'Camarilla R4',
+            'camarilla_s1': 'Camarilla S1',
+            'camarilla_s2': 'Camarilla S2',
+            'camarilla_s3': 'Camarilla S3',
+            'camarilla_s4': 'Camarilla S4',
+            
+            // Static data fields - Hourly bars
+            'high_low_60_min_bar_9_am_10_am': '60MIN 9-10AM',
+            'high_low_60_min_bar_10_am_11_am': '60MIN 10-11AM', 
+            'high_low_60_min_bar_11_am_12_pm': '60MIN 11-12PM',
+            'high_low_60_min_bar_12_pm_1_pm': '60MIN 12-1PM',
+            'high_low_60_min_bar_1_pm_2_pm': '60MIN 1-2PM',
+            'high_low_60_min_bar_2_pm_3_pm': '60MIN 2-3PM',
+            'high_low_60_min_bar_3_pm_4_pm': '60MIN 3-4PM',
+            
+            // 30-minute data
+            'current_day_30_mins_top_with_date_and_time_of_the_bar': 'Current Day 30MIN Top',
+            'current_day_30_mins_bottom_with_date_and_time_of_the_bar': 'Current Day 30MIN Bottom',
+            'last_5_tops_in_30_mins_with_date_and_time_of_the_bar': 'Last 5 Tops 30MIN',
+            'last_5_bottoms_in_30_mins_with_date_and_time_of_the_bar': 'Last 5 Bottoms 30MIN',
+            
+            // Daily data
+            'day_top_latest_1_with_date': 'Day Top Latest',
+            'day_top_previous_1_with_date': 'Day Top Previous-1',
+            'day_top_previous_2_with_date': 'Day Top Previous-2',
+            'day_bottom_latest_1_with_date': 'Day Bottom Latest',
+            'day_bottom_previous_1_with_date': 'Day Bottom Previous-1',
+            'day_bottom_previous_2_with_date': 'Day Bottom Previous-2',
+            
+            // Daily aggregates
+            'highest_top_out_of_last_5_daily_tops_with_date': 'Highest 5D Top',
+            'highest_top_out_of_last_10_daily_tops_with_date': 'Highest 10D Top',
+            'highest_top_out_of_last_20_daily_tops_with_date': 'Highest 20D Top',
+            'highest_top_out_of_last_40_daily_tops_with_date': 'Highest 40D Top',
+            'lowest_bottom_out_of_last_5_daily_bottoms_with_date': 'Lowest 5D Bottom',
+            'lowest_bottom_out_of_last_10_daily_bottoms_with_date': 'Lowest 10D Bottom',
+            'lowest_bottom_out_of_last_20_daily_bottoms_with_date': 'Lowest 20D Bottom',
+            'lowest_bottom_out_of_last_40_daily_bottoms_with_date': 'Lowest 40D Bottom',
+            
+            // Daily swing points
+            'day_previous_swing_top_1_with_date': 'Day Swing Top 1',
+            'day_previous_swing_top_2_with_date': 'Day Swing Top 2',
+            'day_previous_swing_top_3_with_date': 'Day Swing Top 3',
+            'day_swing_bottom_1_with_date': 'Day Swing Bottom 1',
+            'day_previous_swing_bottom_2_with_date': 'Day Swing Bottom 2',
+            'day_previous_swing_bottom_3_with_date': 'Day Swing Bottom 3',
+            
+            // Previous Friday data
+            'previous_friday_high': 'Previous Friday High',
+            'previous_friday_low': 'Previous Friday Low',
+            'previous_friday_close': 'Previous Friday Close',
+            
+            // Expiry week data
+            'expiry_week_open': 'Expiry Week Open',
+            'expiry_week_high': 'Expiry Week High',
+            'expiry_week_low': 'Expiry Week Low',
+            'expiry_week_vwap': 'Expiry Week VWAP',
+            'expiry_week_close': 'Expiry Week Close',
+            'expiry_week_high_low_volume_bar': 'Expiry Week HLV Bar',
+            
+            // Rollover week data
+            'rollover_week_open': 'Rollover Week Open',
+            'rollover_week_high': 'Rollover Week High',
+            'rollover_week_low': 'Rollover Week Low',
+            'roll_over_week_vwap': 'Rollover Week VWAP',
+            'rollover_week_close': 'Rollover Week Close',
+            'roll_over_week_high_low_volume_bar': 'Rollover Week HLV Bar',
+            
+            // Weekly data
+            'week_top_latest_1_with_date': 'Week Top Latest',
+            'week_top_previous_1_with_date': 'Week Top Previous-1',
+            'week_top_previous_2_with_date': 'Week Top Previous-2',
+            'highest_top_out_of_last_4_weekly_tops_with_date': 'Highest 4W Top',
+            'highest_top_out_of_last_8_weekly_tops_with_date': 'Highest 8W Top',
+            'highest_top_out_of_last_12_weekly_tops_with_date': 'Highest 12W Top',
+            'highest_top_out_of_last_16_weekly_tops_with_date': 'Highest 16W Top',
+            'week_bottom_latest_1_with_date': 'Week Bottom Latest',
+            'week_bottom_previous_1_with_date': 'Week Bottom Previous-1',
+            'week_bottom_previous_2_with_date': 'Week Bottom Previous-2',
+            'lowest_bottom_out_of_last_4_weekly_bottoms_with_date': 'Lowest 4W Bottom',
+            'lowest_bottom_out_of_last_8_weekly_bottoms_with_date': 'Lowest 8W Bottom',
+            'lowest_bottom_out_of_last_12_weekly_bottoms_with_date': 'Lowest 12W Bottom',
+            'lowest_bottom_out_of_last_16_weekly_bottoms_with_date': 'Lowest 16W Bottom',
+            
+            // Monthly data
+            'month_top_1_with_date': 'Month Top 1',
+            'month_top_2_with_date': 'Month Top 2',
+            'month_top_3_with_date': 'Month Top 3',
+            'highest_top_out_of_last_2_monthly_tops_with_date': 'Highest 2M Top',
+            'highest_top_out_of_last_4_monthly_tops_with_date': 'Highest 4M Top',
+            'highest_top_out_of_last_6_monthly_tops_with_date': 'Highest 6M Top',
+            'month_bottom_1_with_date': 'Month Bottom 1',
+            'month_bottom_2_with_date': 'Month Bottom 2',
+            'month_bottom_3_with_date': 'Month Bottom 3',
+            'lowest_bottom_out_of_last_2_monthly_bottoms_with_date': 'Lowest 2M Bottom',
+            'lowest_bottom_out_of_last_4_monthly_bottoms_with_date': 'Lowest 4M Bottom',
+            'lowest_bottom_out_of_last_6_monthly_bottoms_with_date': 'Lowest 6M Bottom'
+        };
+        
+        // Create mapping from field names to indices
+        const fieldNameToIndex = {};
+        const fieldNames = Object.keys(allAvailableFields);
+        fieldNames.forEach((fieldName, index) => {
+            fieldNameToIndex[fieldName] = index;
+        });
+        
+        // Data type categorization for easier management
+        const fieldCategories = {
+            'dynamic': [
+                'current_candle_open', 'current_candle_high', 'current_candle_low', 'current_candle_close',
+                'previous_candle_open', 'previous_candle_high', 'previous_candle_low', 'previous_candle_close',
+                'current_candle_atp', 'previous_candle_atp', 'last_3_candles_atp',
+                'prev_swing_high_1', 'prev_swing_high_2', 'prev_swing_high_3',
+                'prev_swing_low_1', 'prev_swing_low_2', 'prev_swing_low_3'
+            ],
+            'indicators': [
+                'ema', 'sma', 'hma', 'macd', 'signal_line', 'supertrend', 'ao',
+                'keltner_upper', 'keltner_middle', 'keltner_lower',
+                'pivot', 'r1', 's1', 'r2', 's2', 'r3', 's3',
+                'camarilla_r1', 'camarilla_r2', 'camarilla_r3', 'camarilla_r4',
+                'camarilla_s1', 'camarilla_s2', 'camarilla_s3', 'camarilla_s4'
+            ],
+            'static': [
+                // Hourly bars
+                'high_low_60_min_bar_9_am_10_am', 'high_low_60_min_bar_10_am_11_am', 'high_low_60_min_bar_11_am_12_pm',
+                'high_low_60_min_bar_12_pm_1_pm', 'high_low_60_min_bar_1_pm_2_pm', 'high_low_60_min_bar_2_pm_3_pm', 'high_low_60_min_bar_3_pm_4_pm',
+                
+                // 30-minute data
+                'current_day_30_mins_top_with_date_and_time_of_the_bar', 'current_day_30_mins_bottom_with_date_and_time_of_the_bar',
+                'last_5_tops_in_30_mins_with_date_and_time_of_the_bar', 'last_5_bottoms_in_30_mins_with_date_and_time_of_the_bar',
+                
+                // Daily data
+                'day_top_latest_1_with_date', 'day_top_previous_1_with_date', 'day_top_previous_2_with_date',
+                'day_bottom_latest_1_with_date', 'day_bottom_previous_1_with_date', 'day_bottom_previous_2_with_date',
+                
+                // Daily aggregates
+                'highest_top_out_of_last_5_daily_tops_with_date', 'highest_top_out_of_last_10_daily_tops_with_date',
+                'highest_top_out_of_last_20_daily_tops_with_date', 'highest_top_out_of_last_40_daily_tops_with_date',
+                'lowest_bottom_out_of_last_5_daily_bottoms_with_date', 'lowest_bottom_out_of_last_10_daily_bottoms_with_date',
+                'lowest_bottom_out_of_last_20_daily_bottoms_with_date', 'lowest_bottom_out_of_last_40_daily_bottoms_with_date',
+                
+                // Daily swing points
+                'day_previous_swing_top_1_with_date', 'day_previous_swing_top_2_with_date', 'day_previous_swing_top_3_with_date',
+                'day_swing_bottom_1_with_date', 'day_previous_swing_bottom_2_with_date', 'day_previous_swing_bottom_3_with_date',
+                
+                // Previous Friday data
+                'previous_friday_high', 'previous_friday_low', 'previous_friday_close',
+                
+                // Expiry week data
+                'expiry_week_open', 'expiry_week_high', 'expiry_week_low', 'expiry_week_vwap', 'expiry_week_close', 'expiry_week_high_low_volume_bar',
+                
+                // Rollover week data
+                'rollover_week_open', 'rollover_week_high', 'rollover_week_low', 'roll_over_week_vwap', 'rollover_week_close', 'roll_over_week_high_low_volume_bar',
+                
+                // Weekly data
+                'week_top_latest_1_with_date', 'week_top_previous_1_with_date', 'week_top_previous_2_with_date',
+                'highest_top_out_of_last_4_weekly_tops_with_date', 'highest_top_out_of_last_8_weekly_tops_with_date',
+                'highest_top_out_of_last_12_weekly_tops_with_date', 'highest_top_out_of_last_16_weekly_tops_with_date',
+                'week_bottom_latest_1_with_date', 'week_bottom_previous_1_with_date', 'week_bottom_previous_2_with_date',
+                'lowest_bottom_out_of_last_4_weekly_bottoms_with_date', 'lowest_bottom_out_of_last_8_weekly_bottoms_with_date',
+                'lowest_bottom_out_of_last_12_weekly_bottoms_with_date', 'lowest_bottom_out_of_last_16_weekly_bottoms_with_date',
+                
+                // Monthly data
+                'month_top_1_with_date', 'month_top_2_with_date', 'month_top_3_with_date',
+                'highest_top_out_of_last_2_monthly_tops_with_date', 'highest_top_out_of_last_4_monthly_tops_with_date', 'highest_top_out_of_last_6_monthly_tops_with_date',
+                'month_bottom_1_with_date', 'month_bottom_2_with_date', 'month_bottom_3_with_date',
+                'lowest_bottom_out_of_last_2_monthly_bottoms_with_date', 'lowest_bottom_out_of_last_4_monthly_bottoms_with_date', 'lowest_bottom_out_of_last_6_monthly_bottoms_with_date'
+            ]
         };
 
         function updateConnectionStatus(status, text) {
@@ -602,6 +779,36 @@
             new bootstrap.Modal(document.getElementById('keltnerModal')).show();
         }
 
+        // Timeframe selection handlers
+        function setupTimeframeHandlers() {
+            const timeframeOptions = document.querySelectorAll('.timeframe-option');
+            const timeframeButton = document.getElementById('timeframeButton');
+            
+            timeframeOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const timeframe = this.getAttribute('data-timeframe');
+                    const displayText = this.getAttribute('data-display');
+                    
+                    // Update current config
+                    currentConfig.timeframe = timeframe;
+                    
+                    // Update button text
+                    timeframeButton.textContent = displayText;
+                    
+                    // Update active state
+                    timeframeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    console.log(`Timeframe changed to: ${timeframe} minutes (${displayText})`);
+                    
+                    // Reconnect with new timeframe
+                    reconnectWithNewConfig();
+                });
+            });
+        }
+
         // Save button handlers
         function setupModalSaveHandlers() {
             // General indicator save
@@ -686,7 +893,11 @@
             const th = e.target.closest('th');
             if (!th) return;
             
-            draggedColumn = parseInt(th.getAttribute('data-column'));
+            draggedColumn = {
+                visualIndex: parseInt(th.getAttribute('data-column')),
+                fieldName: th.getAttribute('data-field'),
+                originalIndex: parseInt(th.getAttribute('data-original-index'))
+            };
             th.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', th.outerHTML);
@@ -704,10 +915,12 @@
             const th = e.target.closest('th');
             if (!th) return;
             
-            const targetColumn = parseInt(th.getAttribute('data-column'));
-            if (targetColumn !== 0 && targetColumn !== draggedColumn) { // Don't allow dropping on Symbol column
+            const targetFieldName = th.getAttribute('data-field');
+            const targetVisualIndex = parseInt(th.getAttribute('data-column'));
+            
+            if (targetFieldName !== 'ticker_symbol' && draggedColumn && targetVisualIndex !== draggedColumn.visualIndex) { // Don't allow dropping on Symbol column
                 th.classList.add('drag-over');
-                console.log('Drag enter on column:', targetColumn);
+                console.log('Drag enter on column:', targetFieldName, 'at visual index:', targetVisualIndex);
             }
         }
 
@@ -725,33 +938,20 @@
             const th = e.target.closest('th');
             if (!th) return false;
             
-            const targetColumn = parseInt(th.getAttribute('data-column'));
+            const targetFieldName = th.getAttribute('data-field');
+            const targetVisualIndex = parseInt(th.getAttribute('data-column'));
             
-            // Don't allow dropping on Symbol column (index 0)
-            if (targetColumn === 0 || draggedColumn === 0) {
+            // Don't allow dropping on Symbol column
+            if (targetFieldName === 'ticker_symbol' || !draggedColumn || draggedColumn.fieldName === 'ticker_symbol') {
                 console.log('Drop not allowed on Symbol column');
                 return false;
             }
             
-            if (draggedColumn !== targetColumn) {
-                console.log('Dropping column', draggedColumn, 'onto', targetColumn);
+            if (draggedColumn.visualIndex !== targetVisualIndex) {
+                console.log('Dropping column', draggedColumn.fieldName, 'from position', draggedColumn.visualIndex, 'to position', targetVisualIndex);
                 
-                // Find the actual position indices in the DOM
-                const headerRow = document.querySelector('thead tr');
-                const headers = Array.from(headerRow.children);
-                
-                let fromIndex = -1;
-                let toIndex = -1;
-                
-                headers.forEach((header, index) => {
-                    const colIndex = parseInt(header.getAttribute('data-column'));
-                    if (colIndex === draggedColumn) fromIndex = index;
-                    if (colIndex === targetColumn) toIndex = index;
-                });
-                
-                if (fromIndex !== -1 && toIndex !== -1) {
-                    reorderColumns(fromIndex, toIndex);
-                }
+                // Reorder the currentColumnOrder array
+                reorderColumnOrder(draggedColumn.visualIndex, targetVisualIndex);
             }
             
             return false;
@@ -766,65 +966,35 @@
             console.log('Drag ended');
         }
 
-        function reorderColumns(fromIndex, toIndex) {
-            const table = document.getElementById('indicatorTable');
-            const headerRow = table.querySelector('thead tr');
-            const headers = Array.from(headerRow.children);
+        function reorderColumnOrder(fromIndex, toIndex) {
+            // Reorder the currentColumnOrder array
+            const newColumnOrder = [...currentColumnOrder];
+            const draggedField = newColumnOrder.splice(fromIndex, 1)[0];
+            newColumnOrder.splice(toIndex, 0, draggedField);
             
-            // Get the original data-column values before moving
-            const fromOriginalColumn = parseInt(headers[fromIndex].getAttribute('data-column'));
-            const toOriginalColumn = parseInt(headers[toIndex].getAttribute('data-column'));
+            // Update the current column order
+            currentColumnOrder = newColumnOrder;
             
-            // Move header
-            const draggedHeader = headers[fromIndex];
-            const targetHeader = headers[toIndex];
+            console.log('Column order updated:', currentColumnOrder);
             
-            if (fromIndex < toIndex) {
-                headerRow.insertBefore(draggedHeader, targetHeader.nextSibling);
-            } else {
-                headerRow.insertBefore(draggedHeader, targetHeader);
-            }
+            // Regenerate table headers with new order
+            generateTableHeaders();
             
-            // Move data cells in all rows
-            const dataRows = table.querySelectorAll('tbody tr');
-            dataRows.forEach(row => {
-                const cells = Array.from(row.children);
-                const draggedCell = cells[fromIndex];
-                const targetCell = cells[toIndex];
-                
-                if (draggedCell && targetCell) {
-                    if (fromIndex < toIndex) {
-                        row.insertBefore(draggedCell, targetCell.nextSibling);
-                    } else {
-                        row.insertBefore(draggedCell, targetCell);
-                    }
-                }
-            });
-            
-            // Update column order tracking - track the original data-column values
-            const newColumnOrder = [];
-            const updatedHeaders = Array.from(headerRow.children);
-            updatedHeaders.forEach(header => {
-                newColumnOrder.push(parseInt(header.getAttribute('data-column')));
-            });
-            columnOrder = newColumnOrder;
-            
-            // Update data-column attributes to match new positions
-            updateColumnAttributes();
-            
-            console.log('Columns reordered. New order:', columnOrder);
-        }
-
-        function updateColumnAttributes() {
-            // Re-setup drag and drop for updated elements
+            // Re-setup drag and drop for the new headers
             setupDragAndDrop();
             
-            console.log('Column attributes updated and drag-drop re-initialized');
+            // Update table data with new column order
+            if (combinedData.length > 0) {
+                updateTable(combinedData);
+            }
+            
+            console.log('Columns reordered. New order:', currentColumnOrder);
         }
 
         // Column Visibility Functions
         function hideColumn(columnIndex) {
-            if (columnIndex === 0) {
+            const fieldName = fieldNames[columnIndex];
+            if (fieldName === 'ticker_symbol') {
                 alert('Cannot hide the Symbol column');
                 return;
             }
@@ -832,41 +1002,47 @@
             columnVisibility[columnIndex] = false;
             updateTableVisibility();
             updateColumnVisibilityModal();
-            console.log('Hidden column:', columnIndex);
+            console.log('Hidden column:', fieldName, 'at index', columnIndex);
         }
 
         function showColumn(columnIndex) {
             columnVisibility[columnIndex] = true;
             updateTableVisibility();
             updateColumnVisibilityModal();
-            console.log('Shown column:', columnIndex);
+            console.log('Shown column:', fieldNames[columnIndex], 'at index', columnIndex);
         }
 
         function updateTableVisibility() {
-            // Hide/show header columns
+            // Hide/show header columns based on original index
             const headers = document.querySelectorAll('thead th');
             headers.forEach(header => {
-                const columnIndex = parseInt(header.getAttribute('data-column'));
-                if (columnVisibility[columnIndex]) {
+                const originalIndex = parseInt(header.getAttribute('data-original-index'));
+                if (columnVisibility[originalIndex]) {
                     header.style.display = '';
                 } else {
                     header.style.display = 'none';
                 }
             });
 
-            // Clear the table body - next SSE data update will recreate with correct columns
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="${Object.values(columnVisibility).filter(visible => visible).length}" class="text-center">
-                        <div class="spinner-border text-light spinner-border-sm" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <div class="mt-2">Updating column layout...</div>
-                    </td>
-                </tr>
-            `;
+            // Update the table body with current combined data if available
+            if (combinedData.length > 0) {
+                updateTable(combinedData);
+            } else {
+                // Show loading indicator
+                const visibleColumnCount = Object.values(columnVisibility).filter(visible => visible).length;
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="${visibleColumnCount}" class="text-center">
+                            <div class="spinner-border text-light spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="mt-2">Updating column layout...</div>
+                        </td>
+                    </tr>
+                `;
+            }
             
-            console.log('Column visibility updated, waiting for next data update');
+            console.log('Column visibility updated');
         }
 
         function setupColumnVisibilityModal() {
@@ -877,18 +1053,21 @@
             technicalColumns.innerHTML = '';
             pivotColumns.innerHTML = '';
             
-            // Technical indicators (1-10)
-            const technicalIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-            technicalIndices.forEach(index => {
-                const checkbox = createColumnCheckbox(index);
-                technicalColumns.appendChild(checkbox);
-            });
-            
-            // Pivot points and support/resistance (11-26)
-            const pivotIndices = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
-            pivotIndices.forEach(index => {
-                const checkbox = createColumnCheckbox(index);
-                pivotColumns.appendChild(checkbox);
+            // Group fields by category using original field order for consistency
+            fieldNames.forEach((fieldName, originalIndex) => {
+                if (fieldName === 'ticker_symbol') return; // Skip symbol column
+                
+                const checkbox = createColumnCheckbox(originalIndex, fieldName);
+                
+                // Categorize fields
+                if (fieldCategories.indicators.includes(fieldName) || fieldCategories.dynamic.includes(fieldName)) {
+                    technicalColumns.appendChild(checkbox);
+                } else if (fieldCategories.static.includes(fieldName)) {
+                    pivotColumns.appendChild(checkbox);
+                } else {
+                    // Default to technical columns for uncategorized fields
+                    technicalColumns.appendChild(checkbox);
+                }
             });
             
             // Setup modal buttons
@@ -896,7 +1075,7 @@
             document.getElementById('hideAllOptional').addEventListener('click', hideAllOptionalColumns);
         }
 
-        function createColumnCheckbox(columnIndex) {
+        function createColumnCheckbox(columnIndex, fieldName) {
             const div = document.createElement('div');
             div.className = 'form-check mb-2';
             
@@ -916,7 +1095,7 @@
             const label = document.createElement('label');
             label.className = 'form-check-label text-light';
             label.setAttribute('for', `column-${columnIndex}`);
-            label.textContent = columnNames[columnIndex];
+            label.textContent = allAvailableFields[fieldName];
             
             div.appendChild(checkbox);
             div.appendChild(label);
@@ -943,11 +1122,16 @@
         }
 
         function hideAllOptionalColumns() {
-            // Hide all except Symbol (0), EMA (1), SMA (2), MACD (4), Supertrend (6)
-            const essentialColumns = [0, 1, 2, 4, 6];
-            Object.keys(columnVisibility).forEach(index => {
-                columnVisibility[index] = essentialColumns.includes(parseInt(index));
+            // Hide all except essential columns
+            const essentialColumns = [
+                'ticker_symbol', 'current_candle_close', 'bias', 'ema', 'sma', 'macd', 'supertrend',
+                'pivot', 'r1', 's1'
+            ];
+            
+            fieldNames.forEach((fieldName, originalIndex) => {
+                columnVisibility[originalIndex] = essentialColumns.includes(fieldName);
             });
+            
             updateTableVisibility();
             updateColumnVisibilityModal();
             console.log('Hidden all optional columns');
@@ -968,7 +1152,7 @@
             if (disconnectTimeout) clearTimeout(disconnectTimeout);
 
             const queryParams = new URLSearchParams({
-                data_types: 'indicators',
+                data_types: 'dynamic,static,indicators',
                 timeframe: currentConfig.timeframe,
                 ema: currentConfig.ema,
                 sma: currentConfig.sma,
@@ -1009,28 +1193,107 @@
                     console.log('Received unified stream response:', response);
                     
                     // Handle different message types from unified stream
-                    if (response.type === 'indicators') {
+                    if (response.type === 'dynamic') {
+                        console.log('Processing dynamic data:', response.data);
+                        console.log('Processing time:', response.processing_time, 'seconds');
+                        storeDynamicData(response.data);
+                        mergeCombinedData();
+                    } else if (response.type === 'static') {
+                        console.log('Processing static data:', response.data);
+                        console.log('Processing time:', response.processing_time, 'seconds');
+                        storeStaticData(response.data);
+                        mergeCombinedData();
+                    } else if (response.type === 'indicators') {
                         console.log('Processing indicators data:', response.data);
                         console.log('Processing time:', response.processing_time, 'seconds');
-                        updateTable(response.data);
+                        storeIndicatorData(response.data);
+                        mergeCombinedData();
+                    } else if (response.type === 'error') {
+                        console.error('Error from unified stream:', response.error);
+                        updateConnectionStatus('error', `Error: ${response.error}`);
+                    }
+                    
+                    // Update connection status and timers for any successful data
+                    if (response.type !== 'error') {
                         updateLastUpdatedTime();
-                        // On every message, reset disconnect timer
                         if (disconnectTimeout) clearTimeout(disconnectTimeout);
                         updateConnectionStatus('connected', 'Connected');
                         disconnectTimeout = setTimeout(function() {
                             updateConnectionStatus('error', 'Disconnected');
                         }, DISCONNECT_DELAY);
-                    } else if (response.type === 'error') {
-                        console.error('Error from unified stream:', response.error);
-                        updateConnectionStatus('error', `Error: ${response.error}`);
-                    } else {
-                        console.log('Received other data type:', response.type);
-                        // Ignore other data types (dynamic, static) since we only requested indicators
                     }
                 } catch (error) {
                     console.error('Error parsing unified SSE data:', error);
                 }
             };
+        }
+
+        // Functions to store and merge data from different streams
+        function storeDynamicData(data) {
+            if (Array.isArray(data)) {
+                data.forEach(ticker => {
+                    const symbol = ticker.ticker_symbol;
+                    if (symbol) {
+                        if (!latestData.dynamic[symbol]) {
+                            latestData.dynamic[symbol] = {};
+                        }
+                        Object.assign(latestData.dynamic[symbol], ticker);
+                    }
+                });
+            }
+        }
+
+        function storeStaticData(data) {
+            if (Array.isArray(data)) {
+                data.forEach(ticker => {
+                    const symbol = ticker.ticker_symbol;
+                    if (symbol) {
+                        if (!latestData.static[symbol]) {
+                            latestData.static[symbol] = {};
+                        }
+                        Object.assign(latestData.static[symbol], ticker);
+                    }
+                });
+            }
+        }
+
+        function storeIndicatorData(data) {
+            if (Array.isArray(data)) {
+                data.forEach(ticker => {
+                    const symbol = ticker.ticker_symbol;
+                    if (symbol) {
+                        if (!latestData.indicators[symbol]) {
+                            latestData.indicators[symbol] = {};
+                        }
+                        Object.assign(latestData.indicators[symbol], ticker);
+                    }
+                });
+            }
+        }
+
+        function mergeCombinedData() {
+            combinedData = [];
+            
+            // Get all unique ticker symbols from all data types
+            const allSymbols = new Set();
+            ['dynamic', 'static', 'indicators'].forEach(dataType => {
+                Object.keys(latestData[dataType]).forEach(symbol => allSymbols.add(symbol));
+            });
+            
+            // Merge data for each symbol
+            allSymbols.forEach(symbol => {
+                const mergedTicker = {
+                    ticker_symbol: symbol,
+                    ...latestData.dynamic[symbol] || {},
+                    ...latestData.static[symbol] || {},
+                    ...latestData.indicators[symbol] || {}
+                };
+                combinedData.push(mergedTicker);
+            });
+            
+            // Update the table with merged data
+            updateTable(combinedData);
+            console.log('Merged data for', allSymbols.size, 'symbols with', Object.keys(allAvailableFields).length, 'potential fields');
         }
 
                 function updateTable(data) {
@@ -1053,20 +1316,15 @@
             data.forEach(ticker => {
                 const row = document.createElement('tr');
                 
-                // Get all headers and filter for visible ones
-                const headers = document.querySelectorAll('thead th');
-                const visibleHeaders = Array.from(headers).filter(header => {
-                    const columnIndex = parseInt(header.getAttribute('data-column'));
-                    return columnVisibility[columnIndex];
-                });
-                
-                visibleHeaders.forEach((header, position) => {
-                    const originalColumnIndex = parseInt(header.getAttribute('data-column'));
-                    const fieldName = dataFieldMapping[originalColumnIndex];
+                // Iterate through current column order and create cells for visible columns
+                currentColumnOrder.forEach((fieldName) => {
+                    const originalIndex = fieldNameToIndex[fieldName];
+                    if (!columnVisibility[originalIndex]) return; // Skip hidden columns
+                    
                     const cell = document.createElement('td');
                     
-                    // Handle Symbol column (always first visually but may be at different data-column)
-                    if (originalColumnIndex === 0) {
+                    // Handle Symbol column
+                    if (fieldName === 'ticker_symbol') {
                         cell.className = 'position-sticky start-0 bg-dark fw-bold';
                         cell.textContent = ticker[fieldName] || '-';
                     } else {
@@ -1075,10 +1333,8 @@
                         if (typeof value === 'number') {
                             cell.textContent = value.toFixed(2);
                             
-                            // Add color coding based on field name, not index
-                            if (fieldName === 'signal_line') {
-                                cell.className = value > 0 ? 'text-success' : 'text-danger';
-                            } else if (fieldName === 'ao') {
+                            // Add color coding based on field name
+                            if (fieldName === 'signal_line' || fieldName === 'ao') {
                                 cell.className = value > 0 ? 'text-success' : 'text-danger';
                             }
                         } else {
@@ -1103,13 +1359,18 @@
                 tableBody.appendChild(row);
             });
             
-            console.log(`Table updated with ${visibleColumnCount} visible columns`);
+            console.log(`Table updated with ${visibleColumnCount} visible columns for ${data.length} tickers in current order`);
         }
 
         // Initialize connection when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the new column structure
+            initializeColumnVisibility();
+            generateTableHeaders();
+            
             setupIndicatorButtons();
             setupModalSaveHandlers();
+            setupTimeframeHandlers();
             setupDragAndDrop();
             setupColumnVisibilityModal();
             createEventSource();
