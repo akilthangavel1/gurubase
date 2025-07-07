@@ -2,6 +2,13 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from dashboard.models import TickerBase
 
+# Import xalert models to handle foreign key relationships
+try:
+    from xalert.models import UserStrategySubscription, StrategySignal, StrategyPerformance
+    XALERT_AVAILABLE = True
+except ImportError:
+    XALERT_AVAILABLE = False
+
 
 class Command(BaseCommand):
     help = 'Delete all TickerBase objects and their associated sub tables'
@@ -36,6 +43,16 @@ class Command(BaseCommand):
             self.stdout.write(f'    - {ticker}_future_historical_data')
             self.stdout.write(f'    - {ticker}_future_websocket_data')
             self.stdout.write(f'    - {ticker}_future_daily_historical_data')
+        
+        if XALERT_AVAILABLE:
+            self.stdout.write(
+                self.style.WARNING(
+                    '\nThis will also delete related xalert objects:'
+                )
+            )
+            self.stdout.write('  - UserStrategySubscription objects')
+            self.stdout.write('  - StrategySignal objects')
+            self.stdout.write('  - StrategyPerformance objects')
 
         # Confirm deletion unless --confirm flag is used
         if not options['confirm']:
@@ -71,6 +88,31 @@ class Command(BaseCommand):
                         self.stdout.write(
                             self.style.ERROR(f'  ✗ Failed to delete table {table_name}: {e}')
                         )
+
+        # Delete related objects in xalert app first to avoid foreign key constraints
+        if XALERT_AVAILABLE:
+            self.stdout.write('\nDeleting related xalert objects...')
+            try:
+                # Delete UserStrategySubscription objects related to these tickers
+                user_subs_deleted = 0
+                for ticker in tickers:
+                    ticker_obj = TickerBase.objects.filter(ticker_symbol=ticker).first()
+                    if ticker_obj:
+                        subs_count, _ = UserStrategySubscription.objects.filter(ticker=ticker_obj).delete()
+                        user_subs_deleted += subs_count
+                        
+                        signals_count, _ = StrategySignal.objects.filter(ticker=ticker_obj).delete()
+                        perf_count, _ = StrategyPerformance.objects.filter(ticker=ticker_obj).delete()
+                        
+                        self.stdout.write(f'  ✓ Deleted {subs_count} subscriptions, {signals_count} signals, {perf_count} performance records for {ticker}')
+                
+                self.stdout.write(
+                    self.style.SUCCESS(f'Successfully deleted related xalert objects.')
+                )
+            except Exception as e:
+                self.stdout.write(
+                    self.style.ERROR(f'Error deleting related xalert objects: {e}')
+                )
 
         # Delete TickerBase objects
         self.stdout.write('\nDeleting TickerBase objects...')
