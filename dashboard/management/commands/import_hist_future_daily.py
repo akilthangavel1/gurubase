@@ -97,8 +97,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Processing ticker: {ticker.ticker_symbol}"))
                 # from_date = (datetime.now() - timedelta(days=6)).strftime("%d/%m/%Y")
                 # to_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
-                from_date = "27/06/2025"
-                to_date = "27/07/2025"
+                from_date = "27/07/2024"
+                to_date = "20/07/2025"
                 symbol = future_format_symbol(ticker.ticker_symbol.upper())
                 resolution = "D"
                 client_id = "MMKQTWNJH3-100"
