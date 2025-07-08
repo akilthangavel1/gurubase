@@ -147,6 +147,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Kolkata'  # Set to Indian timezone
+CELERY_ENABLE_UTC = False
 
 # Security Settings - Disable SSL redirect in development
 SECURE_SSL_REDIRECT = True # Set to True in production
