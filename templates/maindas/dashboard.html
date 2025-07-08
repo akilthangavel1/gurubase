@@ -415,7 +415,8 @@
         function initializeColumnVisibility() {
             // Essential columns that should be visible by default
             const essentialColumns = [
-                'ticker_symbol', 'current_candle_close', 'bias', 'ema', 'sma', 'macd', 'supertrend',
+                'ticker_symbol', 'sector', 'subsector', 'marketcap', 'ltp', 'daily_change', 'weekly_change',
+                'current_candle_close', 'bias', 'ema', 'sma', 'macd', 'supertrend',
                 'pivot', 'r1', 's1'
             ];
             
@@ -475,8 +476,14 @@
         
         // Define all available fields from all three data types
         const allAvailableFields = {
-            // Core identification
+            // Core identification and essential market data (placed first)
             'ticker_symbol': 'Symbol',
+            'sector': 'Sector',
+            'subsector': 'Subsector', 
+            'marketcap': 'Market Cap',
+            'ltp': 'LTP',
+            'daily_change': 'Daily Change',
+            'weekly_change': 'Weekly Change',
             
             // Dynamic data fields
             'current_candle_open': 'Current Open',
@@ -628,6 +635,7 @@
         // Data type categorization for easier management
         const fieldCategories = {
             'dynamic': [
+                'sector', 'subsector', 'marketcap', 'ltp', 'daily_change', 'weekly_change',
                 'current_candle_open', 'current_candle_high', 'current_candle_low', 'current_candle_close',
                 'previous_candle_open', 'previous_candle_high', 'previous_candle_low', 'previous_candle_close',
                 'current_candle_atp', 'previous_candle_atp', 'last_3_candles_atp',
@@ -1124,7 +1132,8 @@
         function hideAllOptionalColumns() {
             // Hide all except essential columns
             const essentialColumns = [
-                'ticker_symbol', 'current_candle_close', 'bias', 'ema', 'sma', 'macd', 'supertrend',
+                'ticker_symbol', 'sector', 'subsector', 'marketcap', 'ltp', 'daily_change', 'weekly_change',
+                'current_candle_close', 'bias', 'ema', 'sma', 'macd', 'supertrend',
                 'pivot', 'r1', 's1'
             ];
             
@@ -1331,7 +1340,20 @@
                         const value = ticker[fieldName];
                         
                         if (typeof value === 'number') {
-                            cell.textContent = value.toFixed(2);
+                            // Special formatting for different field types
+                            if (fieldName === 'marketcap') {
+                                // Format market cap in crores
+                                cell.textContent = (value / 10000000).toFixed(0) + ' Cr';
+                            } else if (fieldName === 'daily_change' || fieldName === 'weekly_change') {
+                                // Format as percentage with color coding
+                                cell.textContent = value.toFixed(2) + '%';
+                                cell.className = value > 0 ? 'text-success' : value < 0 ? 'text-danger' : 'text-warning';
+                            } else if (fieldName === 'ltp') {
+                                // Format LTP as currency
+                                cell.textContent = '₹' + value.toFixed(2);
+                            } else {
+                                cell.textContent = value.toFixed(2);
+                            }
                             
                             // Add color coding based on field name
                             if (fieldName === 'signal_line' || fieldName === 'ao') {
