@@ -159,10 +159,10 @@ CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Prevent memory leaks
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True  # Retry connection on startup
 
 # Security Settings - Disable SSL redirect in development
-SECURE_SSL_REDIRECT = False # Set to True in production
-SESSION_COOKIE_SECURE = False # Set to True in production
-CSRF_COOKIE_SECURE = False # Set to True in production
-# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True # Set to True in production
+SESSION_COOKIE_SECURE = True # Set to True in production
+CSRF_COOKIE_SECURE = True # Set to True in production
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 
@@ -189,7 +189,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET')
 
 # Add these settings
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
-SOCIAL_AUTH_REDIRECT_IS_HTTPS = False # Set to True in production
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True # Set to True in production
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
