@@ -1,0 +1,248 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>WebSocket Data Monitor</h1>
+        <div>
+            <a href="{% url 'ticker_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Back to Tickers
+            </a>
+            <button id="autoRefreshBtn" class="btn btn-outline-primary" onclick="toggleAutoRefresh()">
+                <i class="fas fa-play"></i> Auto Refresh
+            </button>
+        </div>
+    </div>
+    
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% else %}
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ summary.total_tickers }}</h4>
+                        <small>Total Tickers</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ summary.active_futures_tickers }}</h4>
+                        <small>Active Futures</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ summary.active_regular_tickers }}</h4>
+                        <small>Active Regular</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body text-center">
+                        <h4>{{ summary.total_futures_records|floatformat:0 }}</h4>
+                        <small>Futures Records</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ summary.total_regular_records|floatformat:0 }}</h4>
+                        <small>Regular Records</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-dark text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ summary.total_records|floatformat:0 }}</h4>
+                        <small>Total Records</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line"></i> Real-Time Data Status
+                    <span class="badge bg-light text-dark ms-2" id="lastUpdated">
+                        Last Updated: {{ "now"|date:"M d, Y H:i:s" }}
+                    </span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0" id="websocketTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Name</th>
+                                <th>Sector</th>
+                                <th class="text-center">Futures Data</th>
+                                <th class="text-center">Regular Data</th>
+                                <th class="text-center">Latest Futures Price</th>
+                                <th class="text-center">Latest Regular Price</th>
+                                <th class="text-center">Last Updated</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in stats %}
+                            <tr>
+                                <td class="fw-bold">{{ stat.ticker.ticker_symbol|upper }}</td>
+                                <td>{{ stat.ticker.ticker_name }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ stat.ticker.get_ticker_sector_display }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if stat.futures_count > 0 %}
+                                        <span class="badge bg-success">{{ stat.futures_count }} records</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">No data</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if stat.regular_count > 0 %}
+                                        <span class="badge bg-info">{{ stat.regular_count }} records</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">No data</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if stat.futures_latest_price %}
+                                        <span class="text-success fw-bold">₹{{ stat.futures_latest_price|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if stat.regular_latest_price %}
+                                        <span class="text-primary fw-bold">₹{{ stat.regular_latest_price|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if stat.futures_latest or stat.regular_latest %}
+                                        {% if stat.futures_latest > stat.regular_latest|default_if_none:stat.futures_latest %}
+                                            <small class="text-success">{{ stat.futures_latest|date:"M d H:i:s" }}</small>
+                                        {% else %}
+                                            <small class="text-primary">{{ stat.regular_latest|date:"M d H:i:s" }}</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <small class="text-muted">Never</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'websocket_data' stat.ticker.ticker_symbol %}" 
+                                       class="btn btn-sm btn-outline-primary" title="View WebSocket Data">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-info-circle"></i> No ticker data available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Multi-WebSocket Usage Instructions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>For 200-250 Stocks (Multiple Connections):</h6>
+                        <div class="bg-dark text-light p-3 rounded">
+                            <code>python manage.py start_websocket_multi --max-stocks 250</code>
+                        </div>
+                        <small class="text-muted">Creates 5 connections (50 stocks each) for 250 stocks</small>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Customizable Options:</h6>
+                        <ul class="small">
+                            <li><code>--stocks-per-connection 50</code> - Stocks per connection</li>
+                            <li><code>--max-stocks 250</code> - Total stocks to process</li>
+                            <li><code>--litemode</code> - Enable lite mode</li>
+                            <li><code>--connection-delay 2</code> - Delay between connections</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+let autoRefreshInterval;
+let isAutoRefreshing = false;
+
+function toggleAutoRefresh() {
+    const btn = document.getElementById('autoRefreshBtn');
+    
+    if (isAutoRefreshing) {
+        clearInterval(autoRefreshInterval);
+        btn.innerHTML = '<i class="fas fa-play"></i> Auto Refresh';
+        btn.className = 'btn btn-outline-primary';
+        isAutoRefreshing = false;
+    } else {
+        autoRefreshInterval = setInterval(() => {
+            location.reload();
+        }, 10000); // Refresh every 10 seconds
+        btn.innerHTML = '<i class="fas fa-pause"></i> Stop Auto Refresh';
+        btn.className = 'btn btn-warning';
+        isAutoRefreshing = true;
+    }
+}
+
+// DataTable initialization
+$(document).ready(function() {
+    $('#websocketTable').DataTable({
+        "order": [[7, "desc"]], // Sort by last updated
+        "pageLength": 25,
+        "responsive": true,
+        "columnDefs": [
+            { "orderable": false, "targets": 8 } // Actions column not sortable
+        ]
+    });
+});
+
+// Clean up interval when page is unloaded
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});
+
+// Update last updated timestamp
+function updateLastUpdated() {
+    document.getElementById('lastUpdated').textContent = 
+        'Last Updated: ' + new Date().toLocaleString();
+}
+
+// Auto-update timestamp every minute
+setInterval(updateLastUpdated, 60000);
+</script>
+
+{% endblock %} 

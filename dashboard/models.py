@@ -172,3 +172,25 @@ class AccessToken(models.Model):
 
     def __str__(self):
         return self.value
+
+class TickerPriceData(models.Model):
+    """Model for real-time ticker price data"""
+    ticker = models.ForeignKey(TickerBase, on_delete=models.CASCADE, related_name='price_data')
+    ltp = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Last Traded Price")
+    daily_change_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    daily_change_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    weekly_change_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    weekly_change_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    previous_day_close = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    previous_week_close = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'dashboard_tickerpricedata'  # Use existing table
+        verbose_name = 'Ticker Price Data'
+        verbose_name_plural = 'Ticker Price Data'
+        ordering = ['-last_updated']
+    
+    def __str__(self):
+        return f"{self.ticker.ticker_symbol} - ₹{self.ltp} ({self.daily_change_percentage:+.2f}%)"

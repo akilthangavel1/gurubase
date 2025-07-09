@@ -42,3 +42,8 @@ server {
     }
 }
 python manage.py import_tickers tickerdata.xlsx
+# Test with small numbers
+python manage.py start_websocket_multi --max-stocks 10 --stocks-per-connection 5
+
+# Production usage
+python manage.py start_websocket_multi --max-stocks 250 --stocks-per-connection 50

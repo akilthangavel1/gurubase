@@ -7,7 +7,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 import asyncio
 import pandas as pd
 from asgiref.sync import sync_to_async
-from .models import TickerBase
+from .models import TickerBase, TickerPriceData
 import time
 from .fyers_functions import get_live_data
 from django.db import connection
@@ -17,8 +17,25 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login, authenticate
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+def future_format_symbol(symbol):
+    """
+    Format symbol for Fyers futures API using the user's preferred format
+    Returns symbols in format: NSE:SYMBOL25JULFUT
+    """
+    if symbol == "BAJAJAUTO":
+        return "NSE:" + "BAJAJ-AUTO" + "25JULFUT"
+    elif symbol == "MM":
+        return "NSE:" + "M&M" + "25JULFUT"
+    elif symbol == "MMFIN":
+        return "NSE:" + "M&MFIN" + "25JULFUT"
+    else:
+        return "NSE:" + symbol + "25JULFUT"
+
 
 # Create your views here.
 
@@ -318,9 +335,31 @@ def ticker_delete(request, pk):
     if request.method == 'POST':
         try:
             ticker_name = ticker.ticker_name
+            ticker_symbol = ticker.ticker_symbol
+            
+            # Delete the dynamically created tables for this ticker
+            with connection.cursor() as cursor:
+                table_names = [
+                    f"{ticker_symbol}_historical_data",
+                    f"{ticker_symbol}_websocket_data",
+                    f"{ticker_symbol}_future_historical_data",
+                    f"{ticker_symbol}_future_websocket_data",
+                    f"{ticker_symbol}_future_daily_historical_data"
+                ]
+                
+                for table_name in table_names:
+                    try:
+                        cursor.execute(f'DROP TABLE IF EXISTS "{table_name}" CASCADE')
+                        logger.info(f"Dropped table: {table_name}")
+                    except Exception as e:
+                        logger.warning(f"Error dropping table {table_name}: {str(e)}")
+            
+            # Delete the ticker (Django will handle related TickerPriceData and xalert records via CASCADE)
             ticker.delete()
-            messages.success(request, f'Ticker {ticker_name} deleted successfully!')
+            messages.success(request, f'Ticker {ticker_name} and all related data deleted successfully!')
+            
         except Exception as e:
+            logger.error(f"Error deleting ticker {ticker_name}: {str(e)}")
             messages.error(request, f'Error deleting ticker: {str(e)}')
         return redirect('ticker_list')
     
@@ -345,27 +384,198 @@ def is_staff(user):
 # @login_required
 # @user_passes_test(is_staff)
 def clear_ticker_data(request):
+    """Clear all ticker data (historical, websocket, and centralized price data) from the database"""
     if request.method == 'POST':
-        ticker_symbol = request.POST.get('ticker_symbol')
         try:
-            with connection.cursor() as cursor:
-                # Clear historical data
-                table_name = f"{ticker_symbol}_historical_data"
-                cursor.execute(f"TRUNCATE TABLE {table_name}")
+            tickers = TickerBase.objects.all()
+            
+            # Clear centralized TickerPriceData first
+            cleared_price_data = TickerPriceData.objects.all().delete()
+            logger.info(f"Cleared {cleared_price_data[0]} centralized price data records")
+            
+            for ticker in tickers:
+                table_names = [
+                    f"{ticker.ticker_symbol}_historical_data",
+                    f"{ticker.ticker_symbol}_websocket_data",
+                    f"{ticker.ticker_symbol}_future_historical_data",
+                    f"{ticker.ticker_symbol}_future_websocket_data",
+                    f"{ticker.ticker_symbol}_future_daily_historical_data"
+                ]
                 
-                # Clear future historical data
-                future_table_name = f"{ticker_symbol}_future_historical_data"
-                cursor.execute(f"TRUNCATE TABLE {future_table_name}")
-                
-                # Clear future daily historical data
-                future_daily_table_name = f"{ticker_symbol}_future_daily_historical_data"
-                cursor.execute(f"TRUNCATE TABLE {future_daily_table_name}")
-                
-            messages.success(request, f'Successfully cleared data for {ticker_symbol}')
+                with connection.cursor() as cursor:
+                    for table_name in table_names:
+                        try:
+                            # Check if table exists first
+                            cursor.execute("""
+                                SELECT EXISTS (
+                                    SELECT 1 
+                                    FROM information_schema.tables 
+                                    WHERE table_name = %s
+                                )
+                            """, [table_name.lower()])
+                            
+                            if cursor.fetchone()[0]:
+                                cursor.execute(f'TRUNCATE TABLE "{table_name}" CASCADE')
+                                logger.info(f"Cleared data from {table_name}")
+                        except Exception as e:
+                            logger.error(f"Error clearing {table_name}: {str(e)}")
+                            continue
+            
+            messages.success(request, "All ticker data including centralized price data has been cleared successfully!")
+            
         except Exception as e:
-            messages.error(request, f'Error clearing data: {str(e)}')
-        
+            logger.error(f"Error clearing ticker data: {str(e)}")
+            messages.error(request, f"Error clearing data: {str(e)}")
+    
     return redirect('ticker_list')
+
+
+def websocket_data(request, ticker_symbol):
+    """Display centralized TickerPriceData for a specific ticker"""
+    ticker = get_object_or_404(TickerBase, ticker_symbol=ticker_symbol)
+    
+    try:
+        # Get price data from centralized TickerPriceData model
+        price_data = TickerPriceData.objects.filter(ticker=ticker).order_by('-last_updated')[:100]
+        
+        # Convert to format expected by template
+        centralized_data = []
+        for data in price_data:
+            centralized_data.append({
+                'timestamp': data.last_updated,
+                'ltp': float(data.ltp) if data.ltp else None,
+                'daily_change_amount': float(data.daily_change_amount) if data.daily_change_amount else None,
+                'daily_change_percentage': float(data.daily_change_percentage) if data.daily_change_percentage else None,
+                'previous_day_close': float(data.previous_day_close) if data.previous_day_close else None,
+            })
+        
+        # For template compatibility, use the same data for both regular and futures
+        # since we now have a unified centralized approach
+        return render(request, 'dashboard/websocket_data.html', {
+            'ticker': ticker,
+            'regular_data': centralized_data,  # For template compatibility
+            'futures_data': centralized_data,  # Main centralized data
+            'centralized_data': centralized_data,  # New field for future template updates
+            'total_records': len(centralized_data)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in websocket_data for {ticker_symbol}: {str(e)}")
+        return render(request, 'dashboard/websocket_data.html', {
+            'ticker': ticker,
+            'error': f"An error occurred: {str(e)}"
+        })
+
+
+def websocket_data_api(request, ticker_symbol):
+    """API endpoint to return websocket data as JSON for AJAX calls"""
+    ticker = get_object_or_404(TickerBase, ticker_symbol=ticker_symbol)
+    
+    try:
+        # Get price data from centralized TickerPriceData model
+        price_data = TickerPriceData.objects.filter(ticker=ticker).order_by('-last_updated')[:100]
+        
+        # Convert to format expected by frontend
+        centralized_data = []
+        for data in price_data:
+            centralized_data.append({
+                'timestamp': data.last_updated.strftime('%b %d, %Y %H:%M:%S') if data.last_updated else None,
+                'ltp': float(data.ltp) if data.ltp else None,
+                'daily_change_amount': float(data.daily_change_amount) if data.daily_change_amount else None,
+                'daily_change_percentage': float(data.daily_change_percentage) if data.daily_change_percentage else None,
+                'previous_day_close': float(data.previous_day_close) if data.previous_day_close else None,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'ticker': {
+                'name': ticker.ticker_name,
+                'symbol': ticker.ticker_symbol.upper(),
+                'sector': ticker.get_ticker_sector_display(),
+                'market_cap': ticker.get_ticker_market_cap_display()
+            },
+            'regular_data': centralized_data,  # For template compatibility
+            'futures_data': centralized_data,  # Main centralized data
+            'total_records': len(centralized_data)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in websocket_data_api for {ticker_symbol}: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f"An error occurred: {str(e)}"
+        })
+
+
+def websocket_monitor(request):
+    """Monitor centralized TickerPriceData collection statistics across all tickers"""
+    try:
+        from django.db.models import Count, Max
+        from datetime import datetime
+        
+        # Get all tickers
+        tickers = TickerBase.objects.all()
+        stats = []
+        
+        # Get price data statistics for each ticker
+        for ticker in tickers:
+            # Get the price data for this ticker
+            price_data = TickerPriceData.objects.filter(ticker=ticker)
+            
+            ticker_stats = {
+                'ticker': ticker,
+                'regular_count': 0,  # For template compatibility
+                'futures_count': price_data.count(),  # All data is now centralized
+                'regular_latest': None,  # For template compatibility
+                'futures_latest': None,
+                'regular_latest_price': None,  # For template compatibility  
+                'futures_latest_price': None
+            }
+            
+            # Get latest price data if exists
+            if price_data.exists():
+                latest_data = price_data.order_by('-last_updated').first()
+                ticker_stats['futures_latest'] = latest_data.last_updated
+                ticker_stats['futures_latest_price'] = float(latest_data.ltp) if latest_data.ltp else None
+                
+                # For template compatibility, also set regular data to show unified view
+                ticker_stats['regular_latest'] = latest_data.last_updated
+                ticker_stats['regular_latest_price'] = float(latest_data.ltp) if latest_data.ltp else None
+                ticker_stats['regular_count'] = price_data.count()
+            
+            stats.append(ticker_stats)
+        
+        # Sort by most recent activity
+        min_datetime = datetime.min.replace(tzinfo=datetime.now().tzinfo)
+        stats.sort(key=lambda x: max(
+            x['regular_latest'] or min_datetime,
+            x['futures_latest'] or min_datetime
+        ), reverse=True)
+        
+        # Calculate summary statistics
+        total_price_records = TickerPriceData.objects.count()
+        active_tickers = TickerPriceData.objects.values('ticker').distinct().count()
+        
+        summary = {
+            'total_tickers': len(tickers),
+            'total_regular_records': total_price_records,  # Show centralized data as regular
+            'total_futures_records': total_price_records,  # Show centralized data as futures
+            'total_records': total_price_records,
+            'active_regular_tickers': active_tickers,
+            'active_futures_tickers': active_tickers,
+        }
+        
+        return render(request, 'dashboard/websocket_monitor.html', {
+            'stats': stats,
+            'summary': summary
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in websocket_monitor: {str(e)}")
+        return render(request, 'dashboard/websocket_monitor.html', {
+            'error': f"An error occurred: {str(e)}"
+        })
+
 
 # @login_required
 # @user_passes_test(is_staff)

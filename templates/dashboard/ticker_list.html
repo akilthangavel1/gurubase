@@ -123,7 +123,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Tickers</h2>
-    <a href="{% url 'ticker_create' %}" class="btn btn-primary">Add New Ticker</a>
+    <div>
+        <a href="{% url 'websocket_monitor' %}" class="btn btn-success me-2">
+            <i class="fas fa-chart-line"></i> WebSocket Monitor
+        </a>
+        <a href="{% url 'ticker_create' %}" class="btn btn-primary">Add New Ticker</a>
+    </div>
 </div>
 
 <div class="table-responsive">
@@ -149,6 +154,8 @@
                 <td>
                     <a href="{% url 'ticker_update' ticker.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
                     <a href="{% url 'ticker_delete' ticker.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    <a href="{% url 'websocket_data' ticker.ticker_symbol %}" class="btn btn-sm btn-outline-success">WebSocket Data</a>
+                    <a href="{% url 'historical_data_detail' ticker.ticker_symbol %}" class="btn btn-sm btn-outline-info">Historical Data</a>
                 </td>
             </tr>
             {% empty %}
